@@ -1,34 +1,1456 @@
 <!doctype html>
 <html lang="hu">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kútfő Plusz ERP – V1</title>
+<head><meta name="app-version" content="1.0.0"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta name="build-version" content="6.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1d4ed8">
+<title>Kútfő Plusz ERP</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fa;color:#172033}button{cursor:pointer}.app{display:flex;min-height:100vh}.side{width:240px;background:#111827;color:#fff;padding:22px 14px}.brand{font-size:20px;font-weight:800;padding:8px 10px 24px}.nav button{display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;padding:11px 12px;border-radius:8px;margin:3px 0;font-size:14px}.nav button.active,.nav button:hover{background:#243044;color:#fff}.main{flex:1;padding:28px;overflow:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.title{font-size:28px;font-weight:800}.sub{color:#64748b;margin-top:5px}.cards{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px}.label{font-size:13px;color:#64748b}.value{font-size:25px;font-weight:800;margin-top:8px}.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:18px}.panel{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px}.panel h3{margin:0 0 15px}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px;border-bottom:1px solid #eef2f7;font-size:13px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;font-size:12px}.warn{background:#fff7ed}.green{background:#ecfdf5}.btn{border:0;border-radius:8px;padding:9px 13px;background:#2563eb;color:#fff;font-weight:700}.btn.secondary{background:#e5e7eb;color:#111827}.section{display:none}.section.active{display:block}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;font-size:12px;color:#64748b;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #dbe1ea;border-radius:8px}.field.full{grid-column:1/-1}.actions{display:flex;gap:8px;margin-top:16px}.empty{padding:35px;text-align:center;color:#64748b}.mobile{display:none}@media(max-width:900px){.side{width:190px}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:650px){.side{display:none}.main{padding:16px}.mobile{display:block}.cards{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}.title{font-size:22px}}
+:root{--bg:#f4f6f8;--panel:#fff;--line:#e3e8ee;--text:#17212b;--muted:#687483;--blue:#1d4ed8;--blue2:#eff6ff;--green:#15803d;--amber:#b45309;--red:#b91c1c;--dark:#101827;--shadow:0 7px 25px rgba(15,23,42,.07)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}.app{min-height:100vh;display:flex}.sidebar{width:250px;background:var(--dark);color:#d9e2ee;padding:18px 13px;position:fixed;inset:0 auto 0 0;z-index:20;display:flex;flex-direction:column}.brand{display:flex;gap:10px;align-items:center;padding:7px 8px 23px}.mark{width:40px;height:40px;border-radius:12px;background:#2563eb;display:grid;place-items:center;color:#fff;font-weight:900}.brand b{display:block}.brand small{color:#8fa1b5}.nav{width:100%;border:0;background:none;color:#b9c7d8;text-align:left;padding:11px 12px;border-radius:9px;cursor:pointer;margin:2px 0}.nav:hover,.nav.active{background:#1e2d43;color:#fff}.nav i{font-style:normal;width:22px;display:inline-block}.sidefoot{margin-top:auto;color:#71839a;font-size:11px;padding:10px 8px}.main{margin-left:250px;flex:1;min-width:0}.top{height:84px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10}.top h1{margin:2px 0;font-size:25px}.eyebrow{font-size:10px;letter-spacing:.15em;color:var(--muted)}.topright{display:flex;gap:8px}.content{padding:26px;max-width:1500px}.btn{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}.btn.secondary{background:var(--blue2);color:var(--blue)}.btn.danger{background:#fee2e2;color:var(--red)}.btn.small{padding:6px 9px;font-size:12px}.icon{border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}.mobile{display:none}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}.card{padding:18px}.label{font-size:12px;color:var(--muted)}.value{font-size:26px;font-weight:800;margin-top:5px}.sub{font-size:12px;color:var(--muted);margin-top:4px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;margin-top:16px}.panel{padding:18px}.panelhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}.panel h2{margin:0;font-size:16px}.toolbar{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap}.input,.select,.textarea{width:100%;border:1px solid #d5dce5;border-radius:8px;padding:10px 11px;background:#fff}.search{flex:1;min-width:220px}.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;white-space:nowrap}.table th{font-size:10px;color:var(--muted);text-transform:uppercase}.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700;background:#eef2f7}.badge.green{background:#dcfce7}.badge.blue{background:#dbeafe;color:#1d4ed8}.badge.amber{background:#fef3c7}.badge.red{background:#fee2e2}.progress{height:7px;min-width:80px;background:#e8edf2;border-radius:9px;overflow:hidden}.progress span{height:100%;display:block;background:var(--blue)}.right{text-align:right}.empty{padding:30px;text-align:center;color:var(--muted)}.kpi{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#46515d}.full{grid-column:1/-1}.textarea{min-height:90px;resize:vertical}.modal{position:fixed;inset:0;background:#0f172a7a;display:grid;place-items:center;padding:18px;z-index:50}.modal.hidden{display:none}.modalbox{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 30px 90px #0003}.modalhead{display:flex;justify-content:space-between;padding:17px 20px;border-bottom:1px solid var(--line)}.modalhead h2{margin:0;font-size:18px}.modalbody{padding:20px}.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.items{display:grid;gap:8px}.item{display:grid;grid-template-columns:2fr .7fr .7fr .9fr auto;gap:7px;align-items:end}.toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;padding:11px 15px;border-radius:8px;opacity:0;transform:translateY(10px);transition:.2s;z-index:80}.toast.show{opacity:1;transform:none}.drawer{position:fixed;right:0;top:0;bottom:0;width:min(560px,100%);background:#fff;z-index:45;box-shadow:-20px 0 60px #0002;transform:translateX(100%);transition:.2s;overflow:auto}.drawer.open{transform:none}.drawerhead{padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.drawerbody{padding:20px}.link{color:var(--blue);text-decoration:none;cursor:pointer}.notice{padding:12px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:9px;font-size:13px}@media(max-width:900px){.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:none}.main{margin-left:0}.mobile{display:inline-block}.top{padding:0 15px}.content{padding:17px}.cards{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}@media(max-width:600px){.cards{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.item{grid-template-columns:1fr 1fr}.item .desc{grid-column:1/-1}.topright .secondary{display:none}}
+@media print{header,.actions,footer,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd}}
+.wl-embedded{background:transparent}.wl-embedded header{display:none}.wl-embedded .container{max-width:none;margin:0;padding:0}.wl-embedded .card{box-shadow:var(--shadow);border:1px solid var(--line)}
+.profile-wrap{display:flex;gap:22px;align-items:flex-start;overflow-x:auto;padding:10px 0}
+.profile-depth{position:relative;width:58px;flex:none;border-right:1px solid #9aa6b2}
+.profile-depth span{position:absolute;right:7px;font-size:10px;color:#596773;transform:translateY(-50%)}
+.profile-drawing{position:relative;width:300px;min-width:300px;height:580px;border:1px solid #aeb8c2;border-radius:8px;background:#f8fafb}
+.profile-ground{position:absolute;left:0;right:0;top:0;height:3px;background:#596773}
+.profile-layer{position:absolute;left:68px;right:10px;border-left:1px solid #6b7785;border-right:1px solid #6b7785;display:flex;align-items:center;padding-left:12px;font-size:11px;overflow:hidden}
+.profile-layer .depth{font-weight:700;margin-right:8px;white-space:nowrap}
+.profile-layer.sand{background:repeating-linear-gradient(135deg,#eadfc9 0,#eadfc9 4px,#d6c8ad 5px,#d6c8ad 6px)}
+.profile-layer.clay{background:repeating-linear-gradient(0deg,#b7a58e 0,#b7a58e 5px,#a58f75 6px,#a58f75 7px)}
+.profile-layer.clayey{background:repeating-linear-gradient(135deg,#d0c3ad 0,#d0c3ad 6px,#b9aa92 7px,#b9aa92 8px)}
+.profile-layer.gray{background:repeating-linear-gradient(45deg,#d4d8dc 0,#d4d8dc 5px,#bdc3c8 6px,#bdc3c8 7px)}
+.profile-filter{position:absolute;left:42px;width:22px;border:3px solid #1769aa;background:#1769aa22;border-radius:3px;z-index:5}
+.profile-filter:after{content:"";position:absolute;left:2px;right:2px;top:4px;bottom:4px;background:repeating-linear-gradient(0deg,#1769aa 0,#1769aa 2px,transparent 2px,transparent 6px);opacity:.7}
+.profile-pipe{position:absolute;left:48px;width:10px;border-left:2px solid #6b7280;border-right:2px solid #6b7280;background:#eef1f4;z-index:4}
+.profile-water{position:absolute;left:15px;right:10px;border-top:3px solid #1769aa;z-index:8}
+.profile-water span{position:absolute;left:4px;top:-19px;font-size:10px;font-weight:700;color:#1769aa;background:#fff;padding:2px 4px;border-radius:3px}
+.profile-legend{font-size:11px;color:#52606d;margin-top:10px;display:flex;gap:15px;flex-wrap:wrap}
+.profile-legend b{display:inline-block;width:13px;height:13px;border:1px solid #9aa6b2;vertical-align:middle;margin-right:4px}
+@media print{.profile-drawing{break-inside:avoid}}
+
+.quote-status-box{display:flex;align-items:center;gap:10px;margin-left:20px;padding:8px 12px;border:1px solid var(--border,#d9dde5);border-radius:10px;background:var(--card,#fff)}
+.quote-status-box label{font-size:12px;letter-spacing:.04em}
+.quote-status-select{min-width:170px;font-weight:700}
+
+.quote-status-pill{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  border-radius:999px;
+  padding:7px 34px 7px 14px;
+  min-width:120px;
+  font-weight:700;
+  font-size:14px;
+  line-height:1.2;
+  cursor:pointer;
+  background:#eef2f7;
+  color:#263244;
+  box-shadow:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
+  background-size:5px 5px,5px 5px;
+  background-repeat:no-repeat;
+}
+.quote-status-pill:focus{
+  outline:2px solid rgba(37,99,235,.25);
+  outline-offset:2px;
+}
+.wl-calculated{display:inline-flex;align-items:center;min-height:42px;padding:0 12px;font-weight:700;color:#243447;background:#f4f7fa;border:1px solid #dbe2e9;border-radius:10px;box-sizing:border-box}
+
+
+/* Munkanapló 4. szakasz – valóban minimális oszlopszélességek */
+.wl-filter-table{
+  width:max-content !important;
+  min-width:0 !important;
+  table-layout:auto !important;
+}
+.wl-filter-table th,
+.wl-filter-table td{
+  width:auto !important;
+  min-width:0 !important;
+}
+.wl-filter-table th:nth-child(1),
+.wl-filter-table td:nth-child(1){
+  width:120px !important;
+  min-width:120px !important;
+}
+.wl-filter-table th:nth-child(2),
+.wl-filter-table td:nth-child(2){
+  width:120px !important;
+  min-width:120px !important;
+}
+.wl-filter-table th:nth-child(3),
+.wl-filter-table td:nth-child(3){
+  width:100px !important;
+  min-width:100px !important;
+}
+.wl-filter-table th:nth-child(4),
+.wl-filter-table td:nth-child(4){
+  width:105px !important;
+  min-width:105px !important;
+}
+.wl-filter-table .wl-filter-num{
+  width:96px !important;
+  min-width:96px !important;
+  max-width:96px !important;
+}
+.wl-filter-table .wl-filter-length{
+  width:100px !important;
+  min-width:100px !important;
+  max-width:100px !important;
+  box-sizing:border-box;
+  white-space:nowrap;
+}
+.wl-filter-table .wl-filter-type{
+  width:92px !important;
+  min-width:92px !important;
+  max-width:92px !important;
+  box-sizing:border-box;
+}
+.wl-filter-table .wl-filter-type{
+  height:42px;
+  padding:0 10px;
+  border:1px solid #dbe2e9;
+  border-radius:10px;
+  background:#fff;
+  font:inherit;
+  color:inherit;
+}
+
+/* Munkanapló – rétegnapló minimális oszlopszélességek */
+.wl-layer-table{
+  width:max-content !important;
+  min-width:0 !important;
+  table-layout:auto !important;
+}
+.wl-layer-table th,.wl-layer-table td{
+  width:auto !important;
+  min-width:0 !important;
+}
+.wl-layer-table th:nth-child(1),.wl-layer-table td:nth-child(1){width:82px !important;min-width:82px !important}
+.wl-layer-table th:nth-child(2),.wl-layer-table td:nth-child(2){width:82px !important;min-width:82px !important}
+.wl-layer-table th:nth-child(3),.wl-layer-table td:nth-child(3){width:160px !important;min-width:160px !important}
+.wl-layer-table th:nth-child(4),.wl-layer-table td:nth-child(4){width:140px !important;min-width:140px !important}
+.wl-layer-table th:nth-child(5),.wl-layer-table td:nth-child(5){width:140px !important;min-width:140px !important}
+.wl-layer-table input[type="number"]{
+  width:72px !important;min-width:72px !important;max-width:72px !important;
+  box-sizing:border-box;
+}
+.wl-layer-table input[type="text"]{
+  width:128px !important;min-width:128px !important;max-width:128px !important;
+  box-sizing:border-box;
+}
+
+.wl-filter-table .wl-filter-pieces{width:108px;min-width:108px;max-width:108px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+
+/* Rétegnapló mélységmezők – szám után m */
+.wl-depth-field{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.wl-depth-field input{
+  width:72px !important;
+  min-width:72px !important;
+  max-width:72px !important;
+  box-sizing:border-box;
+}
+.wl-depth-field > span{
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.wl-depth-value{
+  display:inline-block;
+  min-width:72px;
+  box-sizing:border-box;
+  padding:10px 12px;
+  border:1px solid #dbe2e9;
+  border-radius:10px;
+  background:#f4f6f8;
+  font-weight:600;
+  text-align:right;
+}
+
+/* Rétegnapló – egyetlen, nem szerkeszthető mélységtartomány */
+.wl-depth-range{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  white-space:nowrap;
+}
+.wl-depth-value{
+  display:inline-block;
+  min-width:62px;
+  padding:9px 10px;
+  box-sizing:border-box;
+  border:1px solid #dbe2e9;
+  border-radius:9px;
+  background:#f4f6f8;
+  font-weight:600;
+  text-align:center;
+}
+.wl-depth-dash{
+  font-weight:700;
+}
+\n.wl-layer-type{width:170px!important;min-width:170px!important;max-width:170px!important;box-sizing:border-box;height:42px;padding:0 10px;}\n
+.wl-summary-card{background:linear-gradient(135deg,#f7fbff,#eef6fb);border:1px solid #d7e5ef;border-radius:16px;padding:18px 20px;margin:0 0 40px!important;box-shadow:0 4px 14px rgba(20,50,70,.06)}
+.wl-summary-title{font-size:18px;font-weight:800;letter-spacing:.04em;margin-bottom:14px}
+.wl-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wl-summary-grid>div{background:#fff;border:1px solid #e1e8ee;border-radius:10px;padding:10px 12px;min-height:52px;box-sizing:border-box}
+.wl-summary-grid small{display:block;color:#6d7780;font-size:11px;margin-bottom:4px}
+.wl-summary-grid strong{display:block;font-size:16px}
+@media(max-width:800px){.wl-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.wl-summary-grid{grid-template-columns:1fr}}
+.wl-summary-card{margin-bottom:40px!important}\n
+.wl-depth-edit{display:inline-flex;align-items:center;gap:4px}
+.wl-depth-edit input{width:72px!important;min-width:72px!important;max-width:72px!important;padding:8px 9px!important;border:1px solid #d4dde6;border-radius:9px;background:#fff;font:inherit;color:inherit;box-sizing:border-box}
+.wl-depth-edit span{font-weight:700}
+.wl-doc-preview{background:#e9e9e9;padding:18px;max-height:76vh;overflow:auto}.wl-document{background:#fff;max-width:900px;margin:0 auto;padding:28px;font-family:Arial,sans-serif;font-size:11pt;color:#222}.wl-doc-header{border-bottom:3px solid #2b78b8;padding-bottom:12px;margin-bottom:18px}.wl-doc-header strong{display:block;font-size:20pt;color:#1e78b4}.wl-doc-header span{font-size:10pt;color:#555}.wl-document h1{font-size:18pt;color:#216fa8}.wl-document h2{font-size:13pt;color:#216fa8;margin-top:18px}.wl-document table{width:100%;border-collapse:collapse;margin:8px 0 15px}.wl-document th{background:#ddd}.wl-document td,.wl-document th{border:1px solid #bbb;padding:6px;text-align:left}.wl-sign{margin-top:35px}</style>
+<style id="worklog-template-css">
+.wl-shell{background:#f4f6f8;margin:-20px;padding:20px;min-height:calc(100vh - 84px)}
+.wl-head{background:#172b4d;color:#fff;padding:18px 24px;border-radius:10px;margin-bottom:18px}.wl-head h2{margin:0;font-size:22px}.wl-head span{font-size:13px;opacity:.8}
+.wl-card{background:#fff;border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px #0000000d}
+.wl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.wl-field label{font-size:12px;font-weight:700;color:#52606d;display:block;margin-bottom:5px}
+.wl-grid input,.wl-grid select,.wl-grid textarea,.wl-table input{width:100%;padding:10px 11px;border:1px solid #d5dce3;border-radius:7px;font:inherit;background:#fff;box-sizing:border-box}
+.wl-table-wrap{overflow-x:auto}.wl-table{width:100%;border-collapse:collapse;min-width:900px}.wl-table th{background:#eef2f6;text-align:left;font-size:12px;padding:10px;border-bottom:1px solid #dce2e8}.wl-table td{padding:7px;border-bottom:1px solid #edf0f2}.wl-table td input{padding:8px}
+.wl-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.wl-btn{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:pointer}.wl-primary{background:#1769aa;color:#fff}.wl-success{background:#18864b;color:#fff}.wl-secondary{background:#e9eef3;color:#17202a}.wl-danger{background:#c93737;color:#fff}
+.wl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.wl-stat{background:#f7f9fb;border-radius:9px;padding:14px}.wl-stat small{display:block;color:#66788a}.wl-stat strong{font-size:20px;display:block;margin-top:4px}
+.wl-profile-wrap{display:flex;gap:22px;align-items:flex-start;overflow-x:auto;padding:10px 0}.wl-profile-depth{position:relative;width:58px;flex:none;border-right:1px solid #9aa6b2}.wl-profile-depth span{position:absolute;right:7px;font-size:10px;color:#596773;transform:translateY(-50%)}.wl-profile-drawing{position:relative;width:300px;min-width:300px;border:1px solid #aeb8c2;border-radius:8px;background:#f8fafb}.wl-ground{position:absolute;left:0;right:0;top:0;height:3px;background:#596773}.wl-layer{position:absolute;left:68px;right:10px;border-left:1px solid #6b7785;border-right:1px solid #6b7785;display:flex;align-items:center;padding-left:12px;font-size:11px;overflow:hidden}.wl-sand{background:repeating-linear-gradient(135deg,#eadfc9 0,#eadfc9 4px,#d6c8ad 5px,#d6c8ad 6px)}.wl-clay{background:repeating-linear-gradient(0deg,#b7a58e 0,#b7a58e 5px,#a58f75 6px,#a58f75 7px)}.wl-clayey{background:repeating-linear-gradient(135deg,#d0c3ad 0,#d0c3ad 6px,#b9aa92 7px,#b9aa92 8px)}.wl-filter{position:absolute;left:42px;width:22px;border:3px solid #1769aa;background:#1769aa22;border-radius:3px;z-index:5}.wl-pipe{position:absolute;left:48px;width:10px;border-left:2px solid #6b7280;border-right:2px solid #6b7280;background:#eef1f4;z-index:4}.wl-water{position:absolute;left:15px;right:10px;border-top:3px solid #1769aa;z-index:8}.wl-water span{position:absolute;left:4px;top:-19px;background:#fff;color:#1769aa;font-size:10px;font-weight:700;padding:2px 4px}
+@media(max-width:900px){.wl-grid,.wl-stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.wl-shell{margin:-17px;padding:12px}.wl-grid{grid-template-columns:1fr 1fr;gap:10px}.wl-grid input,.wl-grid select{font-size:12px}.wl-table{min-width:0;table-layout:fixed}.wl-table th{font-size:10px;padding:6px 2px}.wl-table td{padding:4px 2px}.wl-table td input{font-size:10px;padding:6px 2px}.wl-table th:nth-child(1),.wl-table th:nth-child(2){width:43px}.wl-table th:nth-child(3){width:18%}.wl-table th:nth-child(4){width:20%}.wl-table th:nth-child(5){width:21%}.wl-table th:nth-child(6){width:27%}.wl-stats{grid-template-columns:1fr 1fr}}
+@media print{.sidebar,.top,.wl-actions{display:none!important}.wl-shell{margin:0;padding:0;background:#fff}.wl-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
+</style><style id="offer-template-css">
+.offer-editor{background:#f4f6f8;padding:4px}.offer-top{display:flex;justify-content:space-between;border-bottom:3px solid #2d78b8;padding:10px 4px 14px;margin-bottom:14px}.offer-company{font-size:20px;font-weight:800;color:#2078b5}.offer-heading{font-size:24px;font-weight:800;color:#2078b5}.offer-card{background:#fff;border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 1px 7px #0001}.offer-card h3{margin:0 0 12px;color:#2878b0}.offer-card h4{color:#476f91}.offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.offer-grid label{display:block;font-size:12px;font-weight:700;color:#607284;margin:5px 0}.offer-grid .input,.offer-card textarea{width:100%;box-sizing:border-box}.offer-large{min-height:80px}.offer-listarea{min-height:170px}.offer-declarations{min-height:240px}.offer-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.offer-total{text-align:right;margin-top:12px;font-size:15px}@media(max-width:800px){.offer-grid,.offer-two{grid-template-columns:1fr}}
+</style>
+<style id="quote-document-style">
+.offer-editor{font-family:Arial,sans-serif;color:#1f2937}
+.offer-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1f6fae;padding:18px 20px 12px;margin:-8px -8px 16px}
+.offer-company{font-size:24px;font-weight:800;color:#1f6fae;letter-spacing:.4px}
+.offer-heading{font-size:25px;font-weight:800;color:#1f6fae;letter-spacing:1px}
+.offer-card{border:1px solid #d7dee7;border-radius:8px;padding:16px;margin-bottom:14px;background:#fff}
+.offer-card h3{margin:0 0 12px;color:#1f6fae;font-size:15px;border-bottom:1px solid #d7dee7;padding-bottom:7px}
+.offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.offer-grid label{display:block;font-size:11px;font-weight:700;color:#52606d;margin-bottom:4px}
+.offer-large{min-height:70px}.offer-listarea{min-height:145px}.offer-declarations{min-height:260px}
+.offer-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.offer-table-wrap{overflow:auto}
+.offer-table-wrap .table{width:100%;border-collapse:collapse;font-size:12px}
+.offer-table-wrap .table th{background:#eaf2f8;color:#1f3f57;border:1px solid #b9c8d5;padding:7px}
+.offer-table-wrap .table td{border:1px solid #cbd5df;padding:6px;vertical-align:middle}
+.offer-total{text-align:right;margin:12px 0;font-size:14px}
+@media print{
+ body{background:#fff!important}
+ .offer-card{break-inside:avoid;border:0;padding:0;margin-bottom:12px}
+ .offer-top{margin:0 0 14px}
+}
+</style>
+<style id="qp-original-style">
+.qp-original{font-family:Arial,sans-serif;max-width:850px;margin:auto;background:#fff;padding:35px;color:#222;font-size:13px;line-height:1.35}
+.qp-original .qp-company{font-size:25px;font-weight:700;margin-bottom:4px}.qp-original .qp-title{text-align:center;font-size:27px;font-weight:700;margin:22px 0 18px}
+.qp-original .qp-two{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-bottom:18px}.qp-original h3{font-size:15px;margin:16px 0 8px;font-weight:700}.qp-original table{width:100%;border-collapse:collapse}.qp-original th,.qp-original td{border:1px solid #aaa;padding:6px}.qp-original th{background:#eee}.qp-original .qp-page2{page-break-before:always;margin-top:30px}.qp-original li{margin:3px 0}
+@media print{.qp-original{max-width:none;padding:0}.modal .modalhead,.modal .modalfoot{display:none!important}}
+</style><style id="quote-v46-source-matched">
+.quote-doc{font-family:Arial,sans-serif;font-size:11pt;color:#222;margin:0;background:#fff;line-height:normal}
+.quote-doc .header{border-bottom:3px solid #2b78b8;padding-bottom:12px;margin-bottom:18px}
+.quote-doc .brand{font-size:20pt;font-weight:bold;color:#1e78b4}
+.quote-doc .cols{width:100%;display:table}.quote-doc .col{display:table-cell;width:50%;vertical-align:top;padding-right:20px}
+.quote-doc h1{font-size:18pt;color:#216fa8}.quote-doc h2{font-size:13pt;color:#216fa8;margin-top:18px}
+.quote-doc table{width:100%;border-collapse:collapse;margin:8px 0 15px}.quote-doc th{background:#ddd}.quote-doc td,.quote-doc th{border:1px solid #bbb;padding:6px;text-align:left}
+.quote-doc .page2{page-break-before:always}.quote-doc .small{font-size:9pt;line-height:1.5}.quote-doc .sign{margin-top:35px}
+</style><style id="qv-v50">
+.qv-wrap-modal{background:#e9e9e9;padding:18px;max-height:78vh;overflow:auto}
+.qv-page{position:relative;width:1020px;height:1320px;margin:0 auto 18px;background:#fff;overflow:hidden;box-shadow:0 1px 7px rgba(0,0,0,.25)}
+.qv-bg{position:absolute;z-index:1;inset:0;width:1020px;height:1320px;display:block}
+.qv-white{position:absolute;background:#fff;z-index:5}.qv-text{position:absolute;z-index:6;font-family:"Times New Roman",serif;font-size:18px;font-weight:400;line-height:1.25;color:#111;white-space:pre-wrap}
+.qv-wrap{white-space:normal}.qv-right{text-align:right}.qv-bold{font-weight:700}.qv-blue-bold{font-weight:700;color:#4f81bd}
+@media(max-width:1100px){.qv-page{transform-origin:top left;transform:scale(.8);margin-bottom:-260px}}
 </style></head>
 <body>
 <div class="app">
-<aside class="side"><div class="brand">KÚTFŐ PLUSZ<br><span style="font-size:12px;color:#94a3b8">ERP V1 prototípus</span></div><nav class="nav">
-<button class="active" data-tab="dashboard">▦ Dashboard</button><button data-tab="customers">◉ Ügyfelek</button><button data-tab="quotes">▤ Ajánlatok</button><button data-tab="projects">▣ Projektek</button><button data-tab="worklog">◷ Munkanapló</button><button data-tab="materials">▥ Anyagok / Raktár</button><button data-tab="machines">⚙ Géppark</button><button data-tab="reports">▥ Riportok</button>
-</nav></aside>
+<aside id="sidebar" class="sidebar">
+  <div class="brand"><div class="mark">K+</div><div><b>Kútfő Plusz</b><small>ERP V1.2</small></div></div>
+  <nav id="nav">
+    <button class="nav active" data-page="dashboard"><i>▦</i>Dashboard</button>
+    <button class="nav" data-page="customers"><i>♙</i>Ügyfelek</button>
+    <button class="nav" data-page="quotes"><i>▤</i>Ajánlatok</button>
+    <button class="nav" data-page="projects"><i>◫</i>Projektek</button>
+    <button class="nav" data-page="worklogs"><i>☑</i>Munkanaplók</button>
+    <button class="nav" data-page="materials"><i>▥</i>Anyag / Raktár</button>
+    <button class="nav" data-page="machines"><i>⚙</i>Géppark</button>
+    <button class="nav" data-page="reports"><i>◔</i>Riportok</button>
+  </nav>
+  <div class="sidefoot">V1.2 • kattintható, linkelhető, menthető<br>Adatok: böngésző + export/import</div>
+</aside>
 <main class="main">
-<section id="dashboard" class="section active"><div class="top"><div><div class="title">Dashboard</div><div class="sub">Kútfő Plusz Kft. – Vállalatirányítás</div></div><button class="btn" onclick="show('quotes')">+ Új ajánlat</button></div>
-<div class="cards"><div class="card"><div class="label">Aktív projektek</div><div class="value">6</div></div><div class="card"><div class="label">Idei árbevétel</div><div class="value">428 M Ft</div></div><div class="card"><div class="label">Projektprofit</div><div class="value">94 M Ft</div></div><div class="card"><div class="label">Kintlévőség</div><div class="value">31 M Ft</div></div></div>
-<div class="grid"><div class="panel"><h3>Aktív projektek</h3><table class="table"><thead><tr><th>Projekt</th><th>Érték</th><th>Költség</th><th>Profit</th><th>Állapot</th></tr></thead><tbody><tr><td>Jánkmajtis – 2×120 m kút</td><td>28 M</td><td>18 M</td><td>10 M</td><td><span class="pill green">Folyamatban</span></td></tr><tr><td>Porcsalma – kútfúrás</td><td>42 M</td><td>35 M</td><td>7 M</td><td><span class="pill green">Folyamatban</span></td></tr><tr><td>Konyár – gépészet</td><td>16 M</td><td>13 M</td><td>3 M</td><td><span class="pill warn">Figyelni</span></td></tr></tbody></table></div><div class="panel"><h3>Figyelmeztetések</h3><p>⚠️ XAS 96 – szerviz esedékes</p><p>⚠️ 280-as cső – alacsony készlet</p><p>⚠️ 2 számla – lejárt</p><p>⚠️ Konyár – költség +8%</p></div></div></section>
-<section id="customers" class="section"><div class="top"><div><div class="title">Ügyfelek</div><div class="sub">Ügyfél- és kapcsolattartó nyilvántartás</div></div><button class="btn" onclick="addCustomer()">+ Új ügyfél</button></div><div class="panel"><table class="table"><thead><tr><th>Cég / név</th><th>Adószám</th><th>Kapcsolattartó</th><th>Telefon</th><th>Projektek</th></tr></thead><tbody id="customerRows"><tr><td>Szatmári Diókert Kft.</td><td>12345678-2-15</td><td>Nagy Péter</td><td>+36 30 123 4567</td><td>3</td></tr><tr><td>KITE partner</td><td>87654321-2-09</td><td>Kiss András</td><td>+36 20 555 1122</td><td>2</td></tr></tbody></table></div></section>
-<section id="quotes" class="section"><div class="top"><div><div class="title">Ajánlatok</div><div class="sub">Ajánlat → elfogadás → projekt</div></div><button class="btn" onclick="newQuote()">+ Új ajánlat</button></div><div class="panel"><table class="table"><thead><tr><th>Ajánlat</th><th>Ügyfél</th><th>Projekt</th><th>Nettó</th><th>Bruttó</th><th>Státusz</th></tr></thead><tbody><tr><td>AJ-2026-0142</td><td>Szatmári Diókert Kft.</td><td>2×120 m öntözőkút</td><td>24,5 M</td><td>31,1 M</td><td><span class="pill">Elküldve</span></td></tr><tr><td>AJ-2026-0141</td><td>KITE partner</td><td>Gépészet</td><td>8,2 M</td><td>10,4 M</td><td><span class="pill green">Elfogadva</span></td></tr></tbody></table></div></section>
-<section id="projects" class="section"><div class="top"><div><div class="title">Projektek</div><div class="sub">Minden munkához egy központi projektlap</div></div><button class="btn" onclick="newProject()">+ Új projekt</button></div><div class="cards"><div class="card"><div class="label">Jánkmajtis</div><div class="value">72%</div><div class="sub">28 M Ft / 18 M Ft</div></div><div class="card"><div class="label">Porcsalma</div><div class="value">64%</div><div class="sub">42 M Ft / 35 M Ft</div></div><div class="card"><div class="label">Konyár</div><div class="value">38%</div><div class="sub">16 M Ft / 13 M Ft</div></div></div><div class="panel" style="margin-top:18px"><h3>Projektfolyamat</h3><p>Érdeklődés → Felmérés → Ajánlat → Elfogadva → Anyagbeszerzés → Folyamatban → Átadás → Számlázás → Lezárva</p></div></section>
-<section id="worklog" class="section"><div class="top"><div><div class="title">Munkanapló</div><div class="sub">Mobilról is rögzíthető napi munkavégzés</div></div><button class="btn" onclick="newWorklog()">+ Új munkanapló</button></div><div class="panel"><table class="table"><thead><tr><th>Dátum</th><th>Projekt</th><th>Gép</th><th>Dolgozók</th><th>Fúrás</th></tr></thead><tbody><tr><td>2026.08.16.</td><td>Jánkmajtis</td><td>XAS 96</td><td>3</td><td>87 → 96 m</td></tr></tbody></table></div></section>
-<section id="materials" class="section"><div class="top"><div><div class="title">Anyagok / Raktár</div><div class="sub">Készlet és projektfelhasználás</div></div><button class="btn" onclick="alert('Raktármodul a következő fejlesztési lépésben.')">+ Anyag</button></div><div class="panel"><table class="table"><thead><tr><th>Cikkszám</th><th>Anyag</th><th>Egység</th><th>Készlet</th><th>Minimum</th><th>Állapot</th></tr></thead><tbody><tr><td>KM280</td><td>280 mm KM PVC</td><td>m</td><td>80</td><td>100</td><td><span class="pill warn">Alacsony</span></td></tr><tr><td>FILTER280</td><td>280 mm szűrőcső</td><td>m</td><td>120</td><td>50</td><td><span class="pill green">Rendben</span></td></tr><tr><td>GRAVEL</td><td>Szűrőkavics</td><td>t</td><td>4</td><td>3</td><td><span class="pill green">Rendben</span></td></tr></tbody></table></div></section>
-<section id="machines" class="section"><div class="top"><div><div class="title">Géppark</div><div class="sub">Üzemóra, projektek, szerviz</div></div><button class="btn" onclick="alert('Gépadatlap a következő fejlesztési lépésben.')">+ Gép</button></div><div class="panel"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Állapot</th><th>Következő szerviz</th></tr></thead><tbody><tr><td>XAS 96</td><td>Atlas Copco kompresszor</td><td>4 821 h</td><td><span class="pill green">Üzemel</span></td><td>4 844 h</td></tr><tr><td>Fúrógép #03</td><td>Fúrógép</td><td>2 180 h</td><td><span class="pill green">Üzemel</span></td><td>2 300 h</td></tr></tbody></table></div></section>
-<section id="reports" class="section"><div class="top"><div><div class="title">Riportok</div><div class="sub">Vezetői áttekintés</div></div></div><div class="cards"><div class="card"><div class="label">Legnagyobb projekt</div><div class="value">42 M Ft</div><div class="sub">Porcsalma</div></div><div class="card"><div class="label">Átlagos profitráta</div><div class="value">33,2%</div></div><div class="card"><div class="label">Aktív gépek</div><div class="value">8</div></div><div class="card"><div class="label">Nyitott ajánlatok</div><div class="value">23</div></div></div></section>
+<header class="top">
+  <div style="display:flex;align-items:center"><button id="mobile" class="icon mobile">☰</button><div><div class="eyebrow">VÁLLALATIRÁNYÍTÁS</div><h1 id="title">Dashboard</h1></div></div>
+  <div class="topright"><button class="btn secondary" onclick="openQuote()">+ Ajánlat</button><button class="btn" onclick="openProject()">+ Projekt</button></div>
+</header>
+<section id="content" class="content"></section>
 </main></div>
-<script>
-const buttons=document.querySelectorAll('.nav button');
-buttons.forEach(b=>b.onclick=()=>show(b.dataset.tab));
-function show(id){buttons.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0)}
-function addCustomer(){const n=prompt('Ügyfél neve / cégnév:');if(!n)return;const c=prompt('Kapcsolattartó:')||'';const tr=document.createElement('tr');tr.innerHTML=`<td>${n}</td><td>-</td><td>${c}</td><td>-</td><td>0</td>`;document.getElementById('customerRows').appendChild(tr)}
-function newQuote(){alert('Az ajánlatkészítő V1-ben a következő lépésként köthető valódi adatbázishoz. A képernyőstruktúra már elkészült.')}
-function newProject(){alert('Projekt létrehozás: ügyfél → ajánlat → projekt → költségkeret. A következő lépés a Supabase adatbázis bekötése.')}
-function newWorklog(){alert('Mobil munkanapló: projekt → kezdés/befejezés → gép → dolgozók → mélység → anyag → fotó → mentés.')}
-</script></body></html>
+
+<div id="modal" class="modal hidden"><div class="modalbox"><div class="modalhead"><h2 id="mtitle"></h2><button class="icon" onclick="closeModal()">×</button></div><div id="mbody" class="modalbody"></div></div></div>
+<div id="drawer" class="drawer"><div class="drawerhead"><h2 id="dtitle"></h2><button class="icon" onclick="closeDrawer()">×</button></div><div id="dbody" class="drawerbody"></div></div>
+<div id="toast" class="toast"></div>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+
+document.addEventListener("click",function(e){
+ const a=e.target.closest("[data-quote-id]");
+ if(a){e.preventDefault();editQuote(a.getAttribute("data-quote-id"))}
+});/* data-quote-edit-fallback */
+<script src="quote_template.js">
+function pipe3mParts(length){
+  const m=Math.max(0,Math.floor(Number(length)||0));
+  const db=Math.floor(m/3);
+  const maradek=m%3;
+  return maradek ? `${db} db + ${maradek} m` : `${db} db`;
+}
+</script><script src="quote_preview_pages.js?v=60"></script><script src="jszip.min.js"></script><script src="quote_preview_vectors.js"></script><script>const COMPANY_MASTER=Object.freeze({name:"Kútfő Plusz Kft.",address:"4481 Nyíregyháza, Attila utca 61.",tax:"12711941-2-15",phone:"+36 20 9247187",email:"kutfokft@gmail.com",signer:"Szabados István",position:"ügyvezető"});
+
+const STORE="kutfoplusz_erp_v12";
+const initial={
+customers:[
+{id:"C-001",name:"Szatmári Diókert Kft.",tax:"12345678-2-15",contact:"Kovács Péter",phone:"+36 30 111 2222",email:"info@example.hu",address:"Nyíregyháza",notes:""},
+{id:"C-002",name:"Kasz Farm Kft.",tax:"12711941-2-15",contact:"Nagy László",phone:"+36 20 9247187",email:"kutfokft@gmail.com",address:"Jánkmajtis",notes:""},
+{id:"C-003",name:"Kovács Balázs",tax:"",contact:"",phone:"",email:"",address:"Porcsalma",notes:"Munkanapló minta ügyfél"}
+],
+quotes:[
+{id:"A-2026-001",customerId:"C-001",name:"1 × 75 m öntözőkút",location:"Porcsalma",status:"Elküldve",date:"2026-08-10",items:[{desc:"Fúrás",qty:75,unit:"m",price:120000}],net:9000000,vat:2430000,gross:11430000},
+{id:"A-2026-002",customerId:"C-002",name:"2 × 120 m öntözőkút",location:"Jánkmajtis",status:"Elfogadva",date:"2026-08-15",items:[{desc:"Fúrás",qty:240,unit:"m",price:120000}],net:28800000,vat:7776000,gross:36576000}
+],
+projects:[
+{id:"KP-2026-0087",customerId:"C-002",name:"Jánkmajtis – 2 × 120 m öntözőkút",location:"Jánkmajtis",status:"Folyamatban",value:36576000,planned:23000000,cost:15240000,progress:68,notes:""},
+{id:"KP-2026-0088",customerId:"C-001",name:"Porcsalma – 75 m kút",location:"Porcsalma",status:"Tervezés",value:11430000,planned:7200000,cost:0,progress:10,notes:""}
+],
+worklogs:[
+{id:"MN-2026-001",date:"2026-08-10",customerId:"C-003",projectId:"",location:"Porcsalma",wellNo:"1. kút",driller:"",rig:"",finalDepth:55,status:"Elkészült",
+layers:[["0","4","Agyag","","",""],["4","16","Agyag","","",""],["16","22","Gyengébb agyag","","",""],["22","25","Iszapos agyag","","",""],["25","28","","","",""],["28","31","","Gyorsabb","",""],["31","34","","Jobb","",""],["34","37","","Ugrálós – legjobb réteg","",""],["37","38","","Jó","",""],["38","40","Gyenge agyag","","",""],["40","46","","Ugrálós réteg","",""],["46","49","","Lassú","",""],["49","52","","Jó","",""],["52","55","","Kevésbé jó","",""]],
+filters:[["0","31","Vak",""],["31","55","Szűrő",""]],
+prodPipe:"24",staticWL:"7.20",dynamicWL:"17.63",pump:"Cortex 910 literes",flow:733,power:5.5,dynamic2:"17.63",static2:"7.20",
+pumpNote:"18 mp – 220 literes mérés. Megadott vízhozam: 733 l/perc. Fajlagos vízhozam: 73,3 l/perc/m.",
+notes:"0–31 m vak, 31–55 m 24 m szűrő. A 34–37 m közötti szakasz a legjobb, ugrálós réteg. 38 m körül gyenge agyag jelentkezett.",
+sourceTemplate:"kutfo_plusz_munkanaplo_porcsalma_2026-08-10"
+}
+],
+materials:[
+{id:"M-001",name:"280 mm KM PVC cső",unit:"m",stock:80,min:50,price:18500},
+{id:"M-002",name:"280 mm szűrőcső",unit:"m",stock:24,min:30,price:24000},
+{id:"M-003",name:"Szűrőkavics",unit:"t",stock:12,min:5,price:21000},
+{id:"M-004",name:"Cement",unit:"kg",stock:1800,min:500,price:160}
+],
+machines:[
+{id:"G-001",name:"Atlas Copco XAS 96",model:"XAS 96",hours:2840,status:"Üzemképes",service:2860},
+{id:"G-002",name:"Fúrógép #03",model:"Kútfúró #03",hours:4180,status:"Üzemképes",service:4300}
+]};
+let db=load();
+(function ensureWorklogTemplate(){
+ const template={id:"MN-2026-001",date:"2026-08-10",customerId:"C-003",projectId:"",location:"Porcsalma",wellNo:"1. kút",driller:"",rig:"",finalDepth:55,status:"Elkészült",
+ layers:[["0","4","Agyag","","",""],["4","16","Agyag","","",""],["16","22","Gyengébb agyag","","",""],["22","25","Iszapos agyag","","",""],["25","28","","","",""],["28","31","","Gyorsabb","",""],["31","34","","Jobb","",""],["34","37","","Ugrálós – legjobb réteg","",""],["37","38","","Jó","",""],["38","40","Gyenge agyag","","",""],["40","46","","Ugrálós réteg","",""],["46","49","","Lassú","",""],["49","52","","Jó","",""],["52","55","","Kevésbé jó","",""]],
+ filters:[["0","31","Vak",""],["31","55","Szűrő",""]],prodPipe:"24",staticWL:"7.20",dynamicWL:"17.63",pump:"Cortex 910 literes",flow:733,power:5.5,dynamic2:"17.63",static2:"7.20",
+ pumpNote:"18 mp – 220 literes mérés. Megadott vízhozam: 733 l/perc. Fajlagos vízhozam: 73,3 l/perc/m.",notes:"0–31 m vak, 31–55 m 24 m szűrő. A 34–37 m közötti szakasz a legjobb, ugrálós réteg. 38 m körül gyenge agyag jelentkezett.",sourceTemplate:"kutfo_plusz_munkanaplo_porcsalma_2026-08-10"};
+ const i=db.worklogs.findIndex(w=>w.sourceTemplate===template.sourceTemplate||w.id==="MN-2026-001");
+ if(i>=0) db.worklogs[i]=template; else db.worklogs.push(template);
+ if(!db.customers.some(c=>c.id==="C-003")) db.customers.push({id:"C-003",name:"Kovács Balázs",tax:"",contact:"",phone:"",email:"",address:"Porcsalma",notes:"Munkanapló minta ügyfél"});
+ save();
+})();
+let current=location.hash.replace("#/","")||"dashboard";
+const titles={dashboard:"Dashboard",customers:"Ügyfelek",quotes:"Ajánlatok",projects:"Projektek",worklogs:"Munkanapló",materials:"Anyag / Raktár",machines:"Géppark",reports:"Riportok"};
+function load(){try{return JSON.parse(localStorage.getItem(STORE))||structuredClone(initial)}catch{return structuredClone(initial)}}
+function save(){localStorage.setItem(STORE,JSON.stringify(db))}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(v){return new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(v)||0)}
+function cust(id){return db.customers.find(x=>x.id===id)?.name||"—"}
+function uid(p){return p+"-"+Date.now().toString().slice(-7)}
+function toast(s){let e=document.getElementById("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2200)}
+function openModal(t,b){document.getElementById("mtitle").textContent=t;document.getElementById("mbody").innerHTML=b;document.getElementById("modal").classList.remove("hidden")}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+function openDrawer(t,b){document.getElementById("dtitle").textContent=t;document.getElementById("dbody").innerHTML=b;document.getElementById("drawer").classList.add("open")}
+function closeDrawer(){document.getElementById("drawer").classList.remove("open")}
+function nav(p){current=p;location.hash="#/"+p;render();document.getElementById("sidebar").classList.remove("open")}
+window.addEventListener("hashchange",()=>{let p=location.hash.replace(/^#\//,"");if(!titles[p])p="dashboard";current=p;render()})
+document.getElementById("mobile").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>nav(x.dataset.page));
+document.getElementById("importFile").onchange=importData;
+
+function render(){if(!titles[current])current="dashboard";document.getElementById("title").textContent=titles[current];document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===current));try{document.getElementById("content").innerHTML=(current==="worklogs"?worklogsView():views[current]());}catch(err){console.error(err);document.getElementById("content").innerHTML=`<div class="panel"><h2>Modul betöltési hiba</h2><p class="label">${esc(err&&err.message||err)}</p></div>`;}}
+function projectRows(arr=db.projects){return `<div class="tablewrap"><table class="table"><thead><tr><th>Projekt</th><th>Ügyfél</th><th>Érték</th><th>Költség</th><th>Profit</th><th>Készültség</th><th>Állapot</th></tr></thead><tbody>${arr.map(p=>{let pr=p.value-p.cost;return `<tr><td><a class="link" onclick="projectDetails('${p.id}')"><b>${esc(p.id)}</b></a><br>${esc(p.name)}</td><td>${esc(cust(p.customerId))}</td><td>${money(p.value)}</td><td>${money(p.cost)}</td><td class="${pr>=0?'green':'red'}">${money(pr)}</td><td><div class="progress"><span style="width:${Math.max(0,Math.min(100,p.progress||0))}%"></span></div>${p.progress||0}%</td><td><span class="badge ${p.status==='Folyamatban'?'green':'blue'}">${esc(p.status)}</span></td></tr>`}).join("")}</tbody></table></div>`}
+function customerRows(arr=db.customers){
+ return `<div class="tablewrap"><table class="table"><thead><tr>
+ <th>Ügyfél</th><th>Adószám</th><th>Kapcsolattartó</th><th>Telefon</th><th>E-mail</th><th>Státusz</th><th></th>
+ </tr></thead><tbody>${arr.map(c=>`<tr>
+ <td><a class="link" onclick="customerDetails('${c.id}')"><b>${esc(c.name)}</b></a><br><span class="label">${esc(c.address)}</span></td>
+ <td>${esc(c.tax)}</td><td>${esc(c.contact)}</td><td>${esc(c.phone)}</td><td>${esc(c.email)}</td>
+ <td><span class="badge ${c.status==="Inaktív"?"gray":"green"}">${esc(c.status||"Aktív")}</span></td>
+ <td><button class="btn secondary small" onclick="editCustomer('${c.id}')">Szerkesztés</button></td>
+ </tr>`).join("")}</tbody></table></div>`;
+}
+function quoteRows(arr=db.quotes){
+ const statuses=["Piszkozat","Elkészítve","Elküldve","Tárgyalás alatt","Elfogadva","Elutasítva","Lezárva"];
+ return `<div class="tablewrap"><table class="table"><thead><tr><th>Ajánlat</th><th>Ügyfél</th><th>Helyszín</th><th>Bruttó</th><th>Státusz</th><th></th></tr></thead><tbody>${arr.map(q=>`<tr>
+ <td><a href="#" class="link" data-quote-id="${q.id}" onclick="editQuote('${q.id}');return false" title="Árajánlat megnyitása és szerkesztése"><b>${q.id}</b></a><br><span class="label">${esc(q.name)}</span></td>
+ <td>${esc(cust(q.customerId))}</td><td>${esc(q.location)}</td><td>${money(q.gross)}</td>
+ <td><select class="quote-status-pill quote-status-${statusClass(q.status)}" onchange="changeQuoteStatus('${q.id}',this.value)" aria-label="Státusz">${statuses.map(st=>`<option value="${esc(st)}" ${q.status===st?'selected':''}>${esc(st)}</option>`).join("")}</select></td>
+ <td>${q.status==="Elfogadva"?`<button class="btn small" onclick="convertQuote('${q.id}')">→ Projekt</button>`:""}</td>
+ </tr>`).join("")}</tbody></table></div>`;
+}
+function statusClass(status){
+ const v=String(status||"Piszkozat");
+ if(v==="Elfogadva")return "accepted";
+ if(v==="Elutasítva")return "rejected";
+ if(v==="Elküldve")return "sent";
+ if(v==="Tárgyalás alatt")return "negotiation";
+ if(v==="Lezárva")return "closed";
+ if(v==="Elkészítve")return "ready";
+ return "draft";
+}
+function changeQuoteStatus(id,status){
+ const q=(db.quotes||[]).find(x=>String(x.id)===String(id));
+ if(!q)return;
+ q.status=String(status||"Piszkozat");
+ save();
+ render();
+ toast("Státusz mentve: "+q.status);
+}
+
+
+function worklogListRows(arr=db.worklogs){
+return `<div class="tablewrap"><table class="table"><thead><tr>
+<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Fúrómester</th><th>Végmélység</th><th>Állapot</th><th></th>
+</tr></thead><tbody>${
+arr.slice().reverse().map(w=>`<tr>
+<td><b>${esc(w.id||"MN-"+(w.date||""))}</b></td>
+<td>${esc(w.date)}</td>
+<td>${esc(w.project||cust(w.customerId))}</td>
+<td>${esc(w.location)}</td>
+<td>${esc(w.master||w.furómester||"")}</td>
+<td>${esc(w.depthEnd||w.depth||"")} m</td>
+<td><span class="badge ${w.status==="Kész"||w.status==="Lezárt"?"green":"blue"}">${esc(w.status||"Piszkozat")}</span></td>
+<td><button class="btn secondary small" onclick="openWorklogEditor('${esc(w.id||"")}')">Megnyitás</button></td>
+</tr>`).join("")
+}</tbody></table></div>`;
+}
+function worklogsView(){
+return `<div class="panel">
+<div class="panelhead">
+<div><h2>Munkanaplók</h2><div class="label">Mentett munkanaplók listája</div></div>
+<button class="btn" onclick="openWorklogEditor()">+ Új munkanapló</button>
+</div>
+<div class="toolbar"><input id="wsearch" class="input search" placeholder="Keresés: azonosító, projekt, helyszín, fúrómester..." oninput="filterWorklogs()"></div>
+<div id="worklogTable">${worklogListRows()}</div>
+</div>`;
+}
+function filterWorklogs(){
+const q=(document.getElementById("wsearch")?.value||"").toLowerCase();
+const arr=db.worklogs.filter(w=>[
+w.id,w.date,w.project,w.location,w.master,w.furómester,w.status,w.depth,w.depthEnd
+].join(" ").toLowerCase().includes(q));
+document.getElementById("worklogTable").innerHTML=worklogListRows(arr);
+}
+function openWorklogEditor(id){detailedWorklogEditor(id||null)}
+
+const views={
+dashboard:()=>{let v=db.projects.reduce((s,p)=>s+p.value,0),c=db.projects.reduce((s,p)=>s+p.cost,0),q=db.quotes.filter(x=>x.status!=="Elfogadva").reduce((s,x)=>s+x.gross,0),profit=v-c;let low=db.materials.filter(m=>m.stock<m.min);return `<div class="cards"><div class="card"><div class="label">Aktív projektek</div><div class="value">${db.projects.filter(p=>p.status!=="Lezárva").length}</div><div class="sub">tervezés + folyamatban</div></div><div class="card"><div class="label">Projektérték</div><div class="value">${money(v)}</div><div class="sub">bruttó szerződéses érték</div></div><div class="card"><div class="label">Tényleges költség</div><div class="value">${money(c)}</div><div class="sub">rögzített költség</div></div><div class="card"><div class="label">Jelenlegi eredmény</div><div class="value green">${money(profit)}</div><div class="sub">${v?((profit/v)*100).toFixed(1):0}% marzs</div></div></div><div class="grid2"><div class="panel"><div class="panelhead"><h2>Aktív projektek</h2><button class="btn secondary small" onclick="nav('projects')">Összes</button></div>${projectRows()}</div><div class="panel"><div class="panelhead"><h2>Figyelmeztetések</h2></div>${low.map(m=>`<div class="kpi"><span>${esc(m.name)}</span><b class="amber">${m.stock} ${m.unit} – alacsony</b></div>`).join("")||'<div class="empty">Nincs kritikus készlet.</div>'}<div class="kpi"><span>Nyitott ajánlatállomány</span><b>${money(q)}</b></div></div></div>`},
+customers:()=>`<div class="panel">
+<div class="panelhead"><div><h2>Ügyfelek</h2><div class="label">Ügyféladatbázis és kapcsolódó munkák</div></div><button class="btn" onclick="newCustomer()">+ Új ügyfél</button></div>
+<div class="cards" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+ <div class="card"><div class="label">Összes ügyfél</div><div class="value">${db.customers.length}</div></div>
+ <div class="card"><div class="label">Aktív ügyfél</div><div class="value">${db.customers.filter(c=>c.status!=="Inaktív").length}</div></div>
+ <div class="card"><div class="label">Ajánlattal rendelkező</div><div class="value">${new Set(db.quotes.map(q=>q.customerId).filter(Boolean)).size}</div></div>
+</div>
+<div class="toolbar"><input id="cs" class="input search" placeholder="Keresés név, adószám, kapcsolattartó, telefon, e-mail vagy cím alapján..." oninput="searchCustomers()"></div>
+<div id="ct">${customerRows()}</div></div>`,
+quotes:()=>`<div class="panel"><div class="panelhead"><h2>Ajánlatok</h2><button class="btn" onclick="openQuote()">+ Új ajánlat</button></div><div class="toolbar"><input id="qs" class="input search" placeholder="Keresés..." oninput="searchQuotes()"></div><div id="qt">${quoteRows()}</div></div>`,
+projects:()=>`<div class="panel"><div class="panelhead"><h2>Projektek</h2><button class="btn" onclick="openProject()">+ Új projekt</button></div><div class="toolbar"><input id="ps" class="input search" placeholder="Keresés..." oninput="searchProjects()"></div><div id="pt">${projectRows()}</div></div>`,
+worklogs:()=>`<div class="panel">
+ <div class="panelhead"><div><h2>Munkanaplók</h2><div class="label">A Porcsalma munkanapló alapján kialakított adatlap</div></div><button class="btn" onclick="newWorklog()">+ Új munkanapló</button></div>
+ <div class="cards" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+  <div class="card"><div class="label">Összes munkanapló</div><div class="value">${(db.worklogs||[]).length}</div></div>
+  <div class="card"><div class="label">Folyamatban</div><div class="value">${(db.worklogs||[]).filter(w=>w.status==="Folyamatban").length}</div></div>
+  <div class="card"><div class="label">Elkészült / lezárt</div><div class="value">${(db.worklogs||[]).filter(w=>w.status==="Elkészült"||w.status==="Lezárva").length}</div></div>
+ </div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Azonosító</th><th>Dátum</th><th>Helyszín</th><th>Kút</th><th>Végmélység</th><th>Státusz</th><th></th></tr></thead>
+ <tbody>${(db.worklogs||[]).map(w=>`<tr><td><a class="link" onclick="editWorklog('${w.id}')"><b>${esc(w.id)}</b></a></td><td>${esc(w.date)}</td><td>${esc(w.location)}</td><td>${esc(w.wellNo)}</td><td>${esc(w.finalDepth)} m</td><td><span class="badge ${w.status==="Elkészült"||w.status==="Lezárva"?"green":w.status==="Folyamatban"?"orange":"blue"}">${esc(w.status||"Piszkozat")}</span></td><td><button class="btn secondary small" onclick="editWorklog('${w.id}')">Megnyitás</button></td></tr>`).join("")||"<tr><td colspan=7 class=label>Nincs munkanapló.</td></tr>"}</tbody></table></div>
+ </div>`,
+materials:()=>`<div class="panel"><div class="panelhead"><h2>Anyag / Raktár</h2><button class="btn" onclick="newMaterial()">+ Új anyag</button></div><div class="tablewrap"><table class="table"><thead><tr><th>Cikkszám</th><th>Megnevezés</th><th>Készlet</th><th>Minimum</th><th>Beszerzési ár</th><th>Állapot</th></tr></thead><tbody>${db.materials.map(m=>`<tr><td>${m.id}</td><td>${esc(m.name)}</td><td>${m.stock} ${m.unit}</td><td>${m.min} ${m.unit}</td><td>${money(m.price)}</td><td><span class="badge ${m.stock<m.min?'amber':'green'}">${m.stock<m.min?'Beszerzés szükséges':'Rendben'}</span></td></tr>`).join("")}</tbody></table></div></div>`,
+machines:()=>`<div class="panel"><div class="panelhead"><h2>Géppark</h2><button class="btn" onclick="newMachine()">+ Új gép</button></div><div class="tablewrap"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Szerviz</th><th>Állapot</th></tr></thead><tbody>${db.machines.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.model)}</td><td>${m.hours}</td><td>${m.service}</td><td><span class="badge green">${esc(m.status)}</span></td></tr>`).join("")}</tbody></table></div></div>`,
+reports:()=>{let v=db.projects.reduce((s,p)=>s+p.value,0),c=db.projects.reduce((s,p)=>s+p.cost,0),q=db.quotes.reduce((s,x)=>s+x.gross,0);return `<div class="cards"><div class="card"><div class="label">Ajánlatok összesen</div><div class="value">${money(q)}</div></div><div class="card"><div class="label">Projektérték</div><div class="value">${money(v)}</div></div><div class="card"><div class="label">Költség</div><div class="value">${money(c)}</div></div><div class="card"><div class="label">Eredmény</div><div class="value green">${money(v-c)}</div></div></div><div class="panel" style="margin-top:16px"><div class="panelhead"><h2>Projekt eredményesség</h2></div>${db.projects.map(p=>`<div class="kpi"><span><a class="link" onclick="projectDetails('${p.id}')">${esc(p.name)}</a></span><b>${money(p.value-p.cost)} <span class="label">(${p.value?((p.value-p.cost)/p.value*100).toFixed(1):0}%)</span></b></div>`).join("")}</div>`}
+};
+
+
+/* ===== MUNKANAPLÓ V1.3 – referencia szerinti adatlap ===== */
+function worklogSampleRows(rows){
+ return rows.map((r,i)=>`<tr>
+  <td colspan="2"><span class="wl-depth-range"><span class="wl-depth-value">${esc(r[0]||"0")} m</span><span class="wl-depth-dash">-</span><span class="wl-depth-value">${esc(r[1]||"")} m</span></span></td>
+  <td><input class="input" name="layer_material[]" value="${esc(r[2]||"")}"></td>
+  <td><input class="input" name="layer_note[]" value="${esc(r[3]||"")}"></td>
+  <td><button type="button" class="btn danger small" onclick="this.closest('tr').remove()">×</button></td>
+ </tr>`).join("");
+}
+function addWorklogLayerRow(){
+ const tb=document.querySelector("#wl_layers tbody");
+ if(!tb)return;
+ const rows=[...tb.querySelectorAll("tr")];
+ let start=0;
+ if(rows.length){
+   const last=rows[rows.length-1].querySelector('input[name="layer_to[]"]');
+   start=Number(last?.value)||0;
+ }
+ const end=start+3;
+ tb.insertAdjacentHTML("beforeend",worklogSampleRows([[String(start),String(end),"",""]]));
+}
+function newWorklog(existing){
+ const w=existing||{
+  id:uid("MN"),date:new Date().toISOString().slice(0,10),customerId:"",projectId:"",
+  location:"",wellNo:"1. kút",finalDepth:"",driller:"Kovács Balázs",status:"Folyamatban",
+  layers:[["0","4","",""]],
+  blindFrom:"",blindTo:"",filterFrom:"",filterTo:"",filterLength:"",
+  prodPipe:"",staticWL:"",dynamicWL:"",pump:"",flow:"",power:"",
+  testSeconds:"",testLiters:"",specificYield:"",notes:""
+ };
+ const customers=(db.customers||[]).map(c=>`<option value="${esc(c.id)}" ${c.id===w.customerId?"selected":""}>${esc(c.name)}</option>`).join("");
+ const projects=(db.projects||[]).map(p=>`<option value="${esc(p.id)}" ${p.id===w.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+ openModal(w.id?"Munkanapló szerkesztése":"Új munkanapló",`
+ <form onsubmit="saveWorklog(event,'${esc(w.id||"")}')">
+  <div class="formgrid">
+   <div class="field"><label>Dátum</label><input required class="input" name="date" type="date" value="${esc(w.date)}"></div>
+   <div class="field"><label>Helyszín</label><input required class="input" name="location" value="${esc(w.location)}"></div>
+   <div class="field"><label>Ügyfél</label><select class="select" name="customerId"><option value="">— Nincs kiválasztva —</option>${customers}</select></div>
+   <div class="field"><label>Projekt</label><select class="select" name="projectId"><option value="">— Nincs kiválasztva —</option>${projects}</select></div>
+   <div class="field"><label>Kút</label><input class="input" name="wellNo" value="${esc(w.wellNo)}"></div>
+   <div class="field"><label>Végmélység (m)</label><input class="input" name="finalDepth" type="number" step="0.01" value="${esc(w.finalDepth)}"></div>
+   <div class="field"><label>Fúrómester / munkavezető</label><input class="input" name="driller" value="${esc(w.driller)}"></div>
+   <div class="field"><label>Státusz</label><select class="select" name="status">
+    ${["Piszkozat","Folyamatban","Elkészült","Lezárva"].map(x=>`<option ${w.status===x?"selected":""}>${x}</option>`).join("")}
+   </select></div>
+  </div>
+
+  <h3 style="margin-top:22px">Rétegnapló</h3>
+  <div class="tablewrap">
+   <table class="table" id="wl_layers"><thead><tr><th>-tól (m)</th><th>-ig (m)</th><th>Réteg / anyag</th><th>Megjegyzés</th><th></th></tr></thead>
+   <tbody>${worklogSampleRows(w.layers||[])}</tbody></table>
+  </div>
+  <button type="button" class="btn secondary small" onclick="addWorklogLayerRow()">+ Réteg hozzáadása</button>
+
+  <h3 style="margin-top:22px">Kútkiképzés / szűrőzés</h3>
+  <div class="formgrid">
+   <div class="field"><label>Vak szakasz -tól (m)</label><input class="input" name="blindFrom" value="${esc(w.blindFrom)}"></div>
+   <div class="field"><label>Vak szakasz -ig (m)</label><input class="input" name="blindTo" value="${esc(w.blindTo)}"></div>
+   <div class="field"><label>Szűrő -tól (m)</label><input class="input" name="filterFrom" value="${esc(w.filterFrom)}"></div>
+   <div class="field"><label>Szűrő -ig (m)</label><input class="input" name="filterTo" value="${esc(w.filterTo)}"></div>
+   <div class="field"><label>Szűrő hossza (m)</label><input class="input" name="filterLength" value="${esc(w.filterLength)}"></div>
+  </div>
+
+  <h3 style="margin-top:22px">Vízszint / próbaszivattyúzás</h3>
+  <div class="formgrid">
+   <div class="field"><label>Termelőcső hossza (m)</label><input class="input" name="prodPipe" type="number" step="0.01" value="${esc(w.prodPipe)}"></div>
+   <div class="field"><label>Nyugalmi vízszint (m)</label><input class="input" name="staticWL" type="number" step="0.01" value="${esc(w.staticWL)}"></div>
+   <div class="field"><label>Üzemi vízszint (m)</label><input class="input" name="dynamicWL" type="number" step="0.01" value="${esc(w.dynamicWL)}"></div>
+   <div class="field"><label>Szivattyú</label><input class="input" name="pump" value="${esc(w.pump)}"></div>
+   <div class="field"><label>Vízhozam (l/perc)</label><input class="input" name="flow" type="number" step="0.01" value="${esc(w.flow)}"></div>
+   <div class="field"><label>Teljesítmény (kW)</label><input class="input" name="power" type="number" step="0.01" value="${esc(w.power)}"></div>
+   <div class="field"><label>Mérés ideje (mp)</label><input class="input" name="testSeconds" value="${esc(w.testSeconds)}"></div>
+   <div class="field"><label>Mért vízmennyiség (l)</label><input class="input" name="testLiters" value="${esc(w.testLiters)}"></div>
+   <div class="field"><label>Fajlagos vízhozam (l/s/m)</label><input class="input" name="specificYield" value="${esc(w.specificYield)}"></div>
+  </div>
+
+  <div class="field full" style="margin-top:16px"><label>Megjegyzés</label><textarea class="textarea" name="notes">${esc(w.notes)}</textarea></div>
+  <div class="modalfoot">
+   <span style="flex:1"></span>
+   <button type="button" class="btn secondary" onclick="closeModal()">Mégse</button>
+   <button class="btn">Munkanapló mentése</button>
+  </div>
+ </form>`);
+}
+function saveWorklog(e,id){
+ e.preventDefault();
+ const fd=new FormData(e.target);
+ const o=Object.fromEntries(fd.entries());
+ o.layers=[...document.querySelectorAll("#wl_layers tbody tr")].map(tr=>[
+  tr.querySelector('[name="layer_from[]"]')?.value||"",
+  tr.querySelector('[name="layer_to[]"]')?.value||"",
+  tr.querySelector('[name="layer_material[]"]')?.value||"",
+  tr.querySelector('[name="layer_note[]"]')?.value||""
+ ]);
+ if(id){
+  const old=(db.worklogs||[]).find(x=>x.id===id);
+  if(old)Object.assign(old,o);
+ }else{
+  if(!db.worklogs)db.worklogs=[];
+  o.id=uid("MN");
+  db.worklogs.push(o);
+ }
+ save();closeModal();render();toast("Munkanapló mentve");
+}
+function editWorklog(id){newWorklog((db.worklogs||[]).find(x=>x.id===id))}
+
+function searchCustomers(){
+ const q=(document.getElementById("cs")?.value||"").toLowerCase().trim();
+ const arr=db.customers.filter(c=>[c.name,c.tax,c.companyNo,c.contact,c.phone,c.email,c.address,c.status].join(" ").toLowerCase().includes(q));
+ const el=document.getElementById("ct");if(el)el.innerHTML=customerRows(arr);
+}
+
+function searchQuotes(){let q=document.getElementById("qs").value.toLowerCase();document.getElementById("qt").innerHTML=quoteRows(db.quotes.filter(x=>[x.id,x.name,x.location,cust(x.customerId)].join(" ").toLowerCase().includes(q)))}
+function searchProjects(){let q=document.getElementById("ps").value.toLowerCase();document.getElementById("pt").innerHTML=projectRows(db.projects.filter(x=>[x.id,x.name,x.location,cust(x.customerId),x.status].join(" ").toLowerCase().includes(q)))}
+function opts(selected=""){return db.customers.map(c=>`<option value="${c.id}" ${c.id===selected?"selected":""}>${esc(c.name)}</option>`).join("")}
+
+const layerData=[
+[7,10,"Szürke homok","","",""],
+[10,13,"Szürke","","",""],
+[13,16,"Szürke","","","16 m-nél agyag"],
+[16,19,"Agyag","","",""],
+[19,22,"","Gyors","",""],
+[22,25,"","Gyors, ugrálós","",""],
+[25,28,"","Gyors, ugrálós","",""],
+[28,31,"","Ugrálós","","30 m-nél agyag, lassabb"],
+[31,34,"Agyag","Nagyon lassú","Szürke, agyagos",""],
+[34,37,"Agyag","Közepes","Szürke, agyagos",""],
+[37,40,"Agyagos homok","Közepes","",""],
+[40,43,"Agyagos","Lassabb","",""],
+[43,46,"","Közepes","",""],
+[46,49,"","Nagyon ugrálós","",""],
+[49,52,"","Lassú/közepes","",""],
+[52,55,"","Gyors","",""],
+[55,58,"","Közepes/lassú","","57 m-nél agyag"]
+];
+const filterData=[[22,31,"Szűrő",""],[40,55,"Szűrő",""]];
+
+function addLayer(v=[0,0,"","","",""]){
+ const tr=document.querySelector("#layers tbody").insertRow();
+ v.forEach((x,i)=>{const td=tr.insertCell(); const inp=document.createElement("input"); inp.value=x; inp.type=i<2?"number":"text"; if(i<2) inp.step=".1"; td.appendChild(inp)});
+ const td=tr.insertCell(); const b=document.createElement("button"); b.className="danger"; b.textContent="×"; b.onclick=()=>tr.remove(); td.appendChild(b);
+}
+function addFilter(v=[0,0,"Szűrő",""]){
+ const tr=document.querySelector("#filters tbody").insertRow();
+ v.forEach((x,i)=>{const td=tr.insertCell(); const inp=document.createElement("input"); inp.value=x; inp.type=i<2?"number":"text"; if(i<2) inp.step=".1"; td.appendChild(inp)});
+ const td=tr.insertCell(); const b=document.createElement("button"); b.className="danger"; b.textContent="×"; b.onclick=()=>tr.remove(); td.appendChild(b);
+}
+function getTable(id){return [...document.querySelectorAll("#"+id+" tbody tr")].map(tr=>[...tr.querySelectorAll("input")].map(i=>i.value))}
+function sortLayers(){const data=getTable("layers").sort((a,b)=>Number(a[0])-Number(b[0]));document.querySelector("#layers tbody").innerHTML="";data.forEach(addLayer)}
+function calculate(){
+ q22El=document.getElementById("q22"); const q=Number(document.getElementById("flow")?.value)||0,s=Number(document.getElementById("static2")?.value)||0,d=Number(document.getElementById("dynamic2")?.value)||0;
+ const draw=d-s, spec=73.3;
+ document.getElementById("drawdown").textContent=draw.toFixed(2)+" m";document.getElementById("specific").textContent=spec.toFixed(2)+" l/perc/m";document.getElementById("flowStat").textContent=q+" l/perc";
+ const q22=733; q22El.textContent=Math.round(q22)+" l/perc";
+}
+let q22El;
+function fields(){return ["date","location","client","wellNo","driller","rig","finalDepth","status","prodPipe","staticWL","dynamicWL","pump","flow","power","dynamic2","static2","pumpNote","notes"]}
+
+function renderProfile(){
+ const box=document.getElementById("wellProfile"); box.innerHTML="";
+ const layers=getTable("layers"), filters=getTable("filters");
+ const max=Math.max(...layers.map(r=>Number(r[1])||0),Number(finalDepth.value)||58);
+ const scale=9;
+ const depth=document.createElement("div");
+ depth.style.cssText=`height:${max*scale}px;position:relative;border-right:1px solid #ccd4dc`;
+ for(let d=0;d<=max;d+=5){let x=document.createElement("div");x.textContent=d+" m";x.style.cssText=`position:absolute;top:${d*scale-7}px;right:8px;font-size:11px;color:#66788a`;depth.appendChild(x)}
+ box.appendChild(depth);
+ const well=document.createElement("div");
+ well.style.cssText=`height:${max*scale}px;position:relative;border:1px solid #cbd5df;border-radius:8px;background:repeating-linear-gradient(0deg,#fafbfc,#fafbfc 8px,#f0f3f6 9px)`;
+ layers.forEach(r=>{
+   const a=Number(r[0]),b=Number(r[1]); if(!Number.isFinite(a)||!Number.isFinite(b))return;
+   const el=document.createElement("div"); el.style.cssText=`position:absolute;left:0;right:0;top:${a*scale}px;height:${(b-a)*scale}px;border-bottom:1px solid #fff;padding:3px 7px;font-size:10px;overflow:hidden;background:#e4e8ec`;
+   el.textContent=`${a}–${b} m  ${r[2]||""}${r[3]?" • "+r[3]:""}`;
+   well.appendChild(el);
+ });
+ filters.forEach(r=>{
+   const a=Number(r[0]),b=Number(r[1]); if(!Number.isFinite(a)||!Number.isFinite(b))return;
+   const el=document.createElement("div"); el.style.cssText=`position:absolute;left:-6px;right:-6px;top:${a*scale}px;height:${(b-a)*scale}px;border:3px solid #1769aa;border-radius:4px;background:#1769aa22;pointer-events:none`;
+   const tag=document.createElement("span");tag.textContent=" SZŰRŐ";tag.style.cssText="position:absolute;right:4px;top:2px;font-size:10px;font-weight:700;color:#1769aa";el.appendChild(tag);well.appendChild(el);
+ });
+ box.appendChild(well);
+}
+
+function saveData(){const d={};fields().forEach(id=>d[id]=document.getElementById(id).value);d.layers=getTable("layers");d.filters=getTable("filters");localStorage.setItem("kutfoz-munkanaplo",JSON.stringify(d));alert("A munkanapló elmentve a böngészőbe.");}
+const _saveWorklogOriginal=saveData; saveData=function(){_saveWorklogOriginal();try{const raw=localStorage.getItem("kutfoz-munkanaplo");if(raw){const blob=new Blob([raw],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="munkanaplo-mentes.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}}catch(e){}}
+function loadData(){
+ const raw=localStorage.getItem("kutfoz-munkanaplo"); if(!raw){alert("Nincs mentett munkanapló.");return}
+ const d=JSON.parse(raw);fields().forEach(id=>{if(d[id]!==undefined)document.getElementById(id).value=d[id]});
+ document.querySelector("#layers tbody").innerHTML="";(d.layers||[]).forEach(addLayer);
+ document.querySelector("#filters tbody").innerHTML="";(d.filters||[]).forEach(addFilter);}
+function clearData(){if(confirm("Biztosan törlöd a mentett adatokat?")){localStorage.removeItem("kutfoz-munkanaplo");render();toast("Munkanapló adatai törölve")}}
+
+function initWorklog(){
+  if(!document.getElementById("layers")) return;
+  calculate();
+}
+
+function newCustomer(c){
+ openModal(c?"Ügyfél szerkesztése":"Új ügyfél",`<form onsubmit="saveCustomer(event,'${c?.id||""}')">
+ <div class="formgrid">
+  <div class="field full"><label>Cégnév / név</label><input required class="input" name="name" value="${esc(c?.name)}"></div>
+  <div class="field"><label>Adószám</label><input class="input" name="tax" value="${esc(c?.tax)}"></div>
+  <div class="field"><label>Cégjegyzékszám</label><input class="input" name="companyNo" value="${esc(c?.companyNo)}"></div>
+  <div class="field"><label>Kapcsolattartó</label><input class="input" name="contact" value="${esc(c?.contact)}"></div>
+  <div class="field"><label>Telefon</label><input class="input" name="phone" value="${esc(c?.phone)}"></div>
+  <div class="field"><label>E-mail</label><input class="input" name="email" type="email" value="${esc(c?.email)}"></div>
+  <div class="field"><label>Státusz</label><select class="select" name="status"><option value="Aktív" ${c?.status==="Inaktív"?"":"selected"}>Aktív</option><option value="Inaktív" ${c?.status==="Inaktív"?"selected":""}>Inaktív</option></select></div>
+  <div class="field full"><label>Cím</label><textarea class="textarea" name="address">${esc(c?.address)}</textarea></div>
+  <div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes">${esc(c?.notes)}</textarea></div>
+ </div>
+ <div class="modalfoot">${c?.id?`<button type="button" class="btn danger" onclick="deleteCustomer('${c.id}')">Törlés</button>`:""}<span style="flex:1"></span><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div>
+ </form>`)
+}
+function editCustomer(id){newCustomer(db.customers.find(x=>x.id===id))}
+function saveCustomer(e,idc){e.preventDefault();let o=Object.fromEntries(new FormData(e.target).entries());if(idc)Object.assign(db.customers.find(x=>x.id===idc),o);else db.customers.push({id:uid("C"),...o});save();closeModal();render();toast("Ügyfél mentve")}
+function customerDetails(id){let c=db.customers.find(x=>x.id===id),qs=db.quotes.filter(q=>q.customerId===id),ps=db.projects.filter(p=>p.customerId===id);openDrawer(c.name,`<p><b>Adószám:</b> ${esc(c.tax)}</p><p><b>Kapcsolattartó:</b> ${esc(c.contact)}</p><p><b>Telefon:</b> ${esc(c.phone)}</p><p><b>E-mail:</b> ${esc(c.email)}</p><p><b>Cím:</b> ${esc(c.address)}</p><hr><h3>Ajánlatok (${qs.length})</h3>${qs.map(q=>`<p><a class="link" onclick="editQuote('${q.id}')" title="Árajánlat megnyitása és szerkesztése">${q.id}</a> – ${money(q.gross)}</p>`).join("")||"<p class=label>Nincs.</p>"}<h3>Projektek (${ps.length})</h3>${ps.map(p=>`<p><a class="link" onclick="projectDetails('${p.id}')">${p.id}</a> – ${esc(p.name)}</p>`).join("")||"<p class=label>Nincs.</p>"}`)}
+
+let qitems=[];
+let quoteItems=[],quoteTech=[];
+function openQuote(customerId){
+ quoteItems=[{desc:"",qty:1,unit:"db",price:0}];
+ quoteTech=[{type:"Csövezés / szűrőzés",from:"",to:"",len:"",spec:""}];
+ const customerOptions=(db.customers||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+ const projectOptions=(db.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+ openModal("Új ajánlat",`
+ <div class="offer-editor">
+  <div class="offer-top"><div><div class="offer-company">KÚTFŐ PLUSZ KFT.</div><div>4481 Nyíregyháza, Attila út 61.</div><div>+36 20 9247187 · kutfokft@gmail.com</div></div><div class="offer-heading">ÁRAJÁNLAT</div>
+<div class="quote-status-box">
+ <label for="q_status"><b>STÁTUSZ</b></label>
+ <select id="q_status" class="input quote-status-select">
+  <option value="Piszkozat">Piszkozat</option>
+  <option value="Elkészítve">Elkészítve</option>
+  <option value="Elküldve">Elküldve</option>
+  <option value="Tárgyalás alatt">Tárgyalás alatt</option>
+  <option value="Elfogadva">Elfogadva</option>
+  <option value="Elutasítva">Elutasítva</option>
+  <option value="Lezárva">Lezárva</option>
+ </select>
+</div></div>
+  <section class="offer-card"><h3>1. Árajánlat kérő adatai</h3>
+   <div class="offer-grid">
+    <div><label>Ügyfél</label><select id="q_customer" class="input" onchange="quoteCustomerChanged()"><option value="">— Válassz ügyfelet —</option>${customerOptions}</select></div>
+    <div><label>Projekt</label><select id="q_project" class="input" onchange="quoteProjectChanged()"><option value="">— Válassz projektet —</option>${projectOptions}</select></div>
+    <div><label>Neve</label><input id="q_client_name" class="input"></div><div><label>Adószáma</label><input id="q_client_tax" class="input"></div>
+    <div><label>Címe</label><textarea id="q_client_address" class="input"></textarea></div><div><label>Telefon</label><input id="q_client_phone" class="input"></div>
+    <div><label>E-mail</label><input id="q_client_email" class="input"></div><div><label>Ajánlat dátuma</label><input id="q_date" type="date" class="input" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div><label>Helyszín</label><input id="q_location" class="input"></div><div><label>Projekt / munka neve</label><input id="q_name" class="input"></div>
+   </div>
+  </section>
+  <section class="offer-card"><h3>2. ÁRAJÁNLAT TÁRGYA</h3><textarea id="q_subject" class="input offer-large" placeholder="Pl. 2 db 120 m-es öntözőkút kivitelezése"></textarea></section>
+  <section class="offer-card"><h3>3. ÁRKALKULÁCIÓ</h3>
+   <div class="offer-table-wrap"><table class="table"><thead><tr><th>Megnevezés</th><th>Mennyiség</th><th>Egység</th><th>Egységár</th><th>Nettó</th><th>ÁFA</th><th>Bruttó</th><th></th></tr></thead><tbody id="q_items"></tbody></table></div>
+   <button type="button" class="btn secondary small" onclick="addQuoteItem()">＋ Tétel</button><div id="q_total" class="offer-total"></div>
+  </section>
+  <section class="offer-card"><h3>4. MŰSZAKI TARTALOM</h3>
+   <div class="offer-grid">
+    <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="number" step="0.1"></div>
+    <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>
+    <div><label>Csőátmérő</label><input id="q_pipe_diameter" class="input"></div><div><label>Csőanyag</label><input id="q_pipe_material" class="input"></div>
+   </div>
+   <h4>Csövezés / szűrőzés</h4>
+   <div class="offer-table-wrap"><table class="table"><thead><tr><th>Megnevezés</th><th>Kezdő</th><th>Vég</th><th>Hossz</th><th>Műszaki adat</th><th></th></tr></thead><tbody id="q_tech"></tbody></table></div>
+   <button type="button" class="btn secondary small" onclick="addQuoteTech()">＋ Műszaki sor</button>
+  </section>
+  <section class="offer-card"><div class="offer-two">
+   <div><h3>5. AZ ÁR TARTALMAZZA</h3><textarea id="q_includes" class="input offer-listarea">felvonulási költséget
+teljes anyagköltséget
+munkadíjat
+gázvizsgálatot
+geofizikai vizsgálatot
+vízkémiai vizsgálatot
+geodéziai bemérést
+vízföldtani napló beszerzését</textarea></div>
+   <div><h3>6. AZ ÁR NEM TARTALMAZZA</h3><textarea id="q_excludes" class="input offer-listarea">vízgépészeti munkákat
+szivattyú telepítést
+elektromos kiépítést
+betonozási munkálatokat</textarea></div>
+  </div></section>
+  <section class="offer-card"><h3>7. NYILATKOZATOK / FELTÉTELEK</h3><textarea id="q_declarations" class="input offer-declarations">Mint a Kútfő Plusz Kft. ügyvezetője nyilatkozom, hogy az ajánlatban szereplő berendezések új gyártásúak, még nem voltak üzembe helyezve és várható gyártási évük 2026.
+
+Nyilatkozom, hogy az ajánlatban szereplő tételek kivitelezéséhez a Kútfő Plusz Kft. a szükséges engedélyes eszközökkel, szakmai- és személyi feltételekkel rendelkezik.
+
+Nyilatkozom, hogy az ajánlatban szereplő tételek megfelelnek a vonatkozó EU-s irányelveknek, szabványoknak, illetve az azokat átültető magyar jogszabályoknak és környezetvédelmi előírásoknak.
+
+A kivitelezett kútra 4 év szerkezeti garanciát vállalok.
+A garancia nem terjed ki a nem rendeltetésszerű használatból, külső behatásból vagy vízgépészeti hibából eredő károkra.
+
+Az ajánlatomat 180 napig fenntartom.</textarea></section>
+  <section class="offer-card"><div class="offer-grid"><div><label>Aláíró</label><input id="q_signer" class="input" value="Szabados István"></div><div><label>Beosztás</label><input id="q_position" class="input" value="ügyvezető"></div></div>
+  <div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button type="button" class="btn secondary" onclick="previewQuote()">Előnézet / PDF</button><button type="button" class="btn secondary" onclick="exportQuoteDoc()">Word (.docx)</button><button type="button" class="btn" onclick="saveQuoteFromTemplate()">Ajánlat mentése</button></div></section>
+ </div>`);
+ renderQuoteEditor();
+}
+function quoteCustomerChanged(){
+ const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+}
+function quoteProjectChanged(){
+ const id=document.getElementById("q_project").value,p=(db.projects||[]).find(x=>x.id===id);if(!p)return;
+ if(p.customerId){document.getElementById("q_customer").value=p.customerId;quoteCustomerChanged()}
+ if(p.location)document.getElementById("q_location").value=p.location;
+ if(p.name)document.getElementById("q_name").value=p.name;
+}
+function addQuoteItem(){quoteItems.push({desc:"",qty:1,unit:"db",price:0});renderQuoteEditor()}
+function addQuoteTech(){quoteTech.push({type:"Csövezés / szűrőzés",from:"",to:"",len:"",spec:""});renderQuoteEditor()}
+function renderQuoteEditor(){
+ const b=document.getElementById("q_items");if(b)b.innerHTML=quoteItems.map((x,i)=>{const n=(+x.qty||0)*(+x.price||0),v=n*.27;
+ return `<tr><td><input class="input" value="${esc(x.desc)}" onchange="quoteItems[${i}].desc=this.value"></td><td><input class="input" type="number" value="${x.qty||0}" onchange="quoteItems[${i}].qty=+this.value||0;renderQuoteEditor()"></td><td><input class="input" value="${esc(x.unit||"db")}" onchange="quoteItems[${i}].unit=this.value"></td><td><input class="input" type="number" value="${x.price||0}" onchange="quoteItems[${i}].price=+this.value||0;renderQuoteEditor()"></td><td>${money(n)}</td><td>${money(v)}</td><td>${money(n+v)}</td><td><button type="button" class="btn secondary small" onclick="quoteItems.splice(${i},1);renderQuoteEditor()">×</button></td></tr>`}).join("");
+ const net=quoteItems.reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0),vat=net*.27;
+ const t=document.getElementById("q_total");if(t)t.innerHTML=`Nettó: <b>${money(net)}</b> · ÁFA: ${money(vat)} · Bruttó: <b>${money(net+vat)}</b>`;
+ const tb=document.getElementById("q_tech");if(tb)tb.innerHTML=quoteTech.map((x,i)=>`<tr><td><input class="input" value="${esc(x.type)}" onchange="quoteTech[${i}].type=this.value"></td><td><input class="input" value="${esc(x.from)}" onchange="quoteTech[${i}].from=this.value"></td><td><input class="input" value="${esc(x.to)}" onchange="quoteTech[${i}].to=this.value"></td><td><input class="input" value="${esc(x.len)}" onchange="quoteTech[${i}].len=this.value"></td><td><input class="input" value="${esc(x.spec)}" onchange="quoteTech[${i}].spec=this.value"></td><td><button type="button" class="btn secondary small" onclick="quoteTech.splice(${i},1);renderQuoteEditor()">×</button></td></tr>`).join("");
+}
+function collectQuoteTemplate(){
+ const items=quoteItems.map(x=>({desc:String(x.desc||"").trim(),qty:Number(x.qty)||0,unit:String(x.unit||"db").trim(),price:Number(x.price)||0})).filter(x=>x.desc);
+ const net=items.reduce((a,x)=>a+x.qty*x.price,0),vat=net*.27;
+ return {id:(window.editingQuoteId||("A-"+new Date().getFullYear()+"-"+String((db.quotes||[]).length+1).padStart(3,"0"))),
+  customerId:document.getElementById("q_customer").value,projectId:document.getElementById("q_project").value,
+  status:document.getElementById("q_status")?.value||"Piszkozat",
+  clientName:document.getElementById("q_client_name").value,clientAddress:document.getElementById("q_client_address").value,
+  clientTax:document.getElementById("q_client_tax").value,clientPhone:document.getElementById("q_client_phone").value,clientEmail:document.getElementById("q_client_email").value,
+  date:document.getElementById("q_date").value,location:document.getElementById("q_location").value,name:document.getElementById("q_name").value,
+  subject:document.getElementById("q_subject").value,depth:document.getElementById("q_depth").value,waterNeed:document.getElementById("q_water_need").value,
+  pipeDiameter:document.getElementById("q_pipe_diameter").value,pipeMaterial:document.getElementById("q_pipe_material").value,
+  items,tech:quoteTech.map(x=>({...x})).filter(x=>[x.type,x.from,x.to,x.len,x.spec].some(v=>String(v||"").trim())),
+  includes:document.getElementById("q_includes").value,excludes:document.getElementById("q_excludes").value,
+  declarations:document.getElementById("q_declarations").value,signer:document.getElementById("q_signer").value,position:document.getElementById("q_position").value,
+  status:"Piszkozat",net,vat,gross:net+vat};
+}
+function saveQuoteFromTemplate(){
+ const o=collectQuoteTemplate();db.quotes=db.quotes||[];
+ if(window.editingQuoteId){
+  const index=db.quotes.findIndex(x=>String(x.id)===String(window.editingQuoteId));
+  if(index<0){alert("A szerkesztett ajánlat már nem található, ezért nem mentettem.");return}
+  o.id=db.quotes[index].id;o.status=document.getElementById("q_status")?.value||o.status||db.quotes[index].status||"Piszkozat";db.quotes[index]=o;window.editingQuoteId=null;
+ }else {o.status=o.status||"Piszkozat";db.quotes.push(o);}
+ save();closeModal();nav("quotes");toast("Árajánlat mentve");
+}
+function crc32(str){const b=new TextEncoder().encode(str),t=crc32.t||(crc32.t=(()=>{let a=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);a[n]=c>>>0}return a})());let c=0xffffffff;for(const x of b)c=t[(c^x)&255]^(c>>>8);return(c^0xffffffff)>>>0}
+function zipStore(files){const e=new TextEncoder(),u16=n=>{let a=new Uint8Array(2);new DataView(a.buffer).setUint16(0,n,true);return a},u32=n=>{let a=new Uint8Array(4);new DataView(a.buffer).setUint32(0,n>>>0,true);return a},cat=a=>{let n=a.reduce((s,x)=>s+x.length,0),r=new Uint8Array(n),o=0;for(const x of a){r.set(x,o);o+=x.length}return r},ps=[],cs=[];let off=0;for(const[name,text]of Object.entries(files)){let nb=e.encode(name),db=e.encode(text),c=crc32(text),h=cat([new Uint8Array([80,75,3,4]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c),u32(db.length),u32(db.length),u16(nb.length),u16(0),nb,db]);ps.push(h);cs.push(cat([new Uint8Array([80,75,1,2]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c),u32(db.length),u32(db.length),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off),nb]));off+=h.length}let body=cat(ps),cd=cat(cs);return new Blob([body,cd,cat([new Uint8Array([80,75,5,6]),u16(0),u16(0),u16(cs.length),u16(cs.length),u32(cd.length),u32(body.length),u16(0)])],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"})}
+function buildQuoteHtml(q){
+ const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ const items=(q.items||[]).filter(x=>x.desc);
+ const tech=(q.tech||[]).filter(x=>[x.type,x.from,x.to,x.len,x.spec].some(v=>String(v||"").trim()));
+ const net=items.reduce((a,x)=>a+x.qty*x.price,0),vat=net*.27,gross=net+vat;
+ const clientName=q.clientName||cust(q.customerId)||"";
+ const rows=items.map(x=>{const n=x.qty*x.price,v=n*.27;return `<tr><td>${esc(x.desc)}</td><td>${esc(x.qty+" "+x.unit)}</td><td>${money(n)}</td><td>${money(v)}</td><td>${money(n+v)}</td></tr>`}).join("");
+ const techRows=tech.map(x=>`<tr><td>${esc(x.type)}</td><td>${esc(x.from)}</td><td>${esc(x.to)}</td><td>${esc(x.len)}</td><td>${esc(x.spec)}</td></tr>`).join("");
+ const bullets=t=>String(t||"").split(/\r?\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+ const declarations=esc(q.declarations||"").replace(/\n/g,"<br><br>");
+ return `<div class="quote-doc">
+  <div class="header"><div class="brand">KÚTFŐ PLUSZ KFT.</div><div>4481 Nyíregyháza, Attila út 61. · +36 20 9247187 · kutfokft@gmail.com</div></div>
+  <h1>ÁRAJÁNLAT</h1>
+  <div class="cols">
+   <div class="col"><b>Árajánlat kérő adatai</b><p>Neve: ${esc(clientName)}<br>Címe: ${esc(q.clientAddress)}<br>Adószáma: ${esc(q.clientTax)}<br>Telefon: ${esc(q.clientPhone)}<br>E-mail: ${esc(q.clientEmail)}</p></div>
+   <div class="col"><b>Ajánlat tevő adatai</b><p>Kútfő Plusz Kft.<br>4481 Nyíregyháza, Attila utca 61.<br>Adószám: 12711941-2-15<br>Tel.: 20/9247187<br>E-mail: kutfokft@gmail.com</p></div>
+  </div>
+  <p><b>Dátum:</b> ${esc(q.date)}</p>
+  <p><b>Projekt / munka neve:</b> ${esc(q.name)}</p>
+  <p><b>Helyszín:</b> ${esc(q.location)}</p>
+  <h2>ÁRAJÁNLAT TÁRGYA</h2><p>${esc(q.subject)}</p>
+  <h2>ÁRKALKULÁCIÓ</h2>
+  <table><tr><th>Megnevezés</th><th>Menny.</th><th>Nettó</th><th>ÁFA (27%)</th><th>Bruttó</th></tr>${rows}</table>
+  <p><b>Összesen: nettó ${money(net)} | ÁFA ${money(vat)} | Bruttó ${money(gross)}</b></p>
+  <h2>MŰSZAKI TARTALOM</h2>
+  <p>Talpmélység: ${esc(q.depth)} m<br>Csőátmérő: ${esc(q.pipeDiameter)}<br>Csőanyag: ${esc(q.pipeMaterial)}<br>Tervezett vízigény: ${esc(q.waterNeed)}</p>
+  <table><tr><th>Megnevezés</th><th>Kezdő</th><th>Vég</th><th>Hossz</th><th>Műszaki adat</th></tr>${techRows}</table>
+  <div class="page2">
+   <h2>AZ ÁR TARTALMAZZA</h2><ul>${bullets(q.includes)}</ul>
+   <h2>AZ ÁR NEM TARTALMAZZA</h2><ul>${bullets(q.excludes)}</ul>
+   <h2>NYILATKOZATOK / FELTÉTELEK</h2><div class="small">${declarations}</div>
+   <p>A kivitelezett kútra 4 év szerkezeti garanciát vállalok.</p>
+   <p>A garancia nem terjed ki a nem rendeltetésszerű használatból, külső behatásból vagy vízgépészeti hibából eredő károkra.</p>
+   <p>Az ajánlatomat 180 napig fenntartom.</p>
+   <div class="sign">Tisztelettel várom megrendelését.<br><br><b>${esc(q.signer||"Szabados István")}</b><br>${esc(q.position||"ügyvezető")}<br><br>Nyíregyháza, ${esc(q.date)}</div>
+  </div>
+ </div>`;
+}
+function quotePrintStyles(){
+ return `<style>
+ body{font-family:Arial,sans-serif;font-size:11pt;color:#222;margin:2cm}
+ .header{border-bottom:3px solid #2b78b8;padding-bottom:12px;margin-bottom:18px}
+ .brand{font-size:20pt;font-weight:bold;color:#1e78b4}
+ .cols{width:100%;display:table}.col{display:table-cell;width:50%;vertical-align:top;padding-right:20px}
+ h1{font-size:18pt;color:#216fa8}h2{font-size:13pt;color:#216fa8;margin-top:18px}
+ table{width:100%;border-collapse:collapse;margin:8px 0 15px}th{background:#ddd}td,th{border:1px solid #bbb;padding:6px;text-align:left}
+ .page2{page-break-before:always}.small{font-size:9pt;line-height:1.5}.sign{margin-top:35px}
+ </style>`;
+}
+function qvEsc(v){
+ return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function qvMoney(v){return typeof money==="function"?money(v):new Intl.NumberFormat("hu-HU").format(Number(v)||0)+" Ft";}
+function qvLines(text){return String(text||"").split(/\r?\n/).filter(Boolean);}
+function qvPage(n, overlays){
+ return `<div class="qv-page"><img src="data:image/svg+xml;base64,${window.KUTFOPLUSZ_PREVIEW_VECTORS[n]}" class="qv-bg">${overlays.join("")}</div>`;
+}
+function qvWhiteRect(x,y,w,h){return `<div class="qv-white" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"></div>`;}
+function qvText(x,y,w,text,cls=""){
+ return `<div class="qv-text ${cls}" style="left:${x}px;top:${y}px;width:${w}px">${qvEsc(text)}</div>`;
+}
+function buildExactPdfPreview(q){
+ const items=(q.items||[]).filter(x=>x.desc);
+ const net=items.reduce((a,x)=>a+(Number(x.qty)||0)*(Number(x.price)||0),0),vat=net*.27,gross=net+vat;
+ const tech=(q.tech||[]).filter(x=>[x.type,x.from,x.to,x.len,x.spec].some(v=>String(v||"").trim()));
+ const pipes=tech.filter(x=>!String(x.type||"").toLowerCase().includes("szűr"));
+ const filters=tech.filter(x=>String(x.type||"").toLowerCase().includes("szűr"));
+ const p1=pipes[0]||{},p2=pipes[1]||{},f=filters[0]||{},item=items[0]||{};
+ const client=q.clientName||cust(q.customerId)||"";
+ const standardInc=["felvonulási költséget,","teljes anyagköltséget,","munkadíjat,","gázvizsgálatot,","geofizikai vizsgálatot,","vízkémiai vizsgálatot,","geodéziai bemérést,","vízföldtani napló beszerzését."];
+ const standardExc=["vízgépészeti munkákat","szivattyú telepítést","elektromos kiépítést","betonozási munkálatokat"];
+ const inc=qvLines(q.includes),exc=qvLines(q.excludes);
+ const ins=inc.length?inc:standardInc,exs=exc.length?exc:standardExc;
+ const a=[];
+ // Page 1: only fields that are genuinely blank in the vector template.
+ a.push(qvText(310,340,230,client));
+ a.push(qvText(310,388,230,q.clientAddress||""));
+ a.push(qvText(310,438,230,q.clientTax||""));
+ a.push(qvText(310,487,230,q.clientPhone||""));
+ a.push(qvText(310,536,250,q.clientEmail||""));
+ a.push(qvText(675,340,260,"Kútfő Plusz Kft."));
+ a.push(qvText(675,388,260,"4481 Nyíregyháza, Attila utca 61."));
+ a.push(qvText(675,438,220,"12711941-2-15"));
+ a.push(qvText(675,487,220,"+36 20 9247187"));
+ a.push(qvText(675,536,260,"kutfokft@gmail.com"));
+ a.push(qvText(150,614,760,q.subject||"","qv-wrap"));
+
+ // Price row: the vector template contains only the header. Draw a clean data row BELOW it.
+ // Cover the area occupied by the following technical section, then redraw that section lower.
+ a.push(qvWhiteRect(145,744,745,395));
+ a.push(qvText(152,755,205,`${item.qty||""} ${item.unit||""} ${item.desc||""}`.trim(),"qv-wrap"));
+ a.push(qvText(355,755,180,qvMoney(net),"qv-right"));
+ a.push(qvText(540,755,150,qvMoney(vat),"qv-right"));
+ a.push(qvText(690,755,110,qvMoney(gross),"qv-right"));
+ a.push(qvText(800,755,80,"Ft","qv-right"));
+
+ // Rebuild the technical section below the new price row using vector text.
+ a.push(qvText(150,815,500,"MŰSZAKI TARTALOM:","qv-blue-bold"));
+ a.push(qvText(150,860,300,"Csövezés:","qv-bold"));
+ a.push(qvText(158,895,250,"Tervezett talp:"));
+ a.push(qvText(395,895,150,q.depth?`${q.depth} m`:""));
+ if(p1.from!=null)a.push(qvText(158,940,220,`${p1.from}-${p1.to} m`));
+ if(p1.len)a.push(qvText(395,940,120,`(${p1.len} m)`));
+ if(p1.spec||p1.type)a.push(qvText(560,940,320,p1.spec||p1.type));
+ if(p2.from!=null)a.push(qvText(158,982,220,`${p2.from}-${p2.to} m`));
+ if(p2.len)a.push(qvText(395,982,120,`(${p2.len} m)`));
+ if(p2.spec||p2.type)a.push(qvText(560,982,320,p2.spec||p2.type));
+ a.push(qvText(150,1035,300,"Szűrözés:","qv-bold"));
+ if(f.from!=null)a.push(qvText(158,1080,220,`${f.from} - ${f.to} m`));
+ if(f.len)a.push(qvText(395,1080,120,`(${f.len} m)`));
+ if(f.spec||f.type)a.push(qvText(560,1080,320,f.spec||f.type));
+
+ const b=[];
+ // Page 2 vector template already contains the standard text, lists and signature.
+ // We only overlay the variable water demand when it differs from the template default.
+ const wn=String(q.waterNeed||"").trim();
+ if(wn && wn!=="800 l/p" && wn!=="800 l/perc") {
+   b.push(qvWhiteRect(120,18,760,34));
+   b.push(qvText(150,24,500,`Tervezett vízigény: ${wn}`));
+ }
+ // If custom include/exclude lists differ from the template, cover only the list text
+ // areas and redraw them as vector text. This prevents double printing.
+ const sameInc=ins.length===standardInc.length && ins.every((x,i)=>x===standardInc[i]);
+ const sameExc=exs.length===standardExc.length && exs.every((x,i)=>x===standardExc[i]);
+ if(!sameInc){
+   b.push(qvWhiteRect(140,245,360,300));
+   ins.forEach((x,i)=>b.push(qvText(185,260+i*35,320,"-   "+x)));
+ }
+ if(!sameExc){
+   b.push(qvWhiteRect(525,245,370,190));
+   exs.forEach((x,i)=>b.push(qvText(550,260+i*35,320,"-   "+x)));
+ }
+ // Declarations/signature remain the original vector template by default.
+ return qvPage(1,a)+qvPage(2,b);
+}
+function previewQuote(){
+ const q=collectQuoteTemplate();
+ openModal("PDF előnézet – eredeti sablon, vektoros export",`
+  <div class="qv-wrap-modal">${buildExactPdfPreview(q)}</div>
+  <div class="modalfoot">
+   <button class="btn secondary" onclick="printExactPdfPreview()">PDF / Nyomtatás</button>
+   <button class="btn" onclick="exportQuoteDoc()">Word (.docx)</button>
+   <button class="btn secondary" onclick="closeModal()">Bezárás</button>
+  </div>`);
+}
+function printExactPdfPreview(){
+ const q=collectQuoteTemplate(),w=window.open("","_blank");
+ if(!w){alert("A böngésző blokkolta az előnézet ablakot. Engedélyezd a felugró ablakokat.");return}
+ w.document.open();
+ w.document.write(`<html><head><meta charset="utf-8"><title>${q.id||"Árajánlat"}</title><style>
+ @page{size:auto;margin:0}html,body{margin:0;padding:0;background:#fff}
+ .qv-page{position:relative;width:1020px;height:1320px;page-break-after:always;overflow:hidden}
+ .qv-bg{position:absolute;z-index:1;left:0;top:0;width:1020px;height:1320px;display:block;image-rendering:auto}
+ .qv-white{position:absolute;background:#fff;z-index:5}.qv-text{position:absolute;z-index:6;font-family:"Times New Roman",serif;font-size:18px;font-weight:400;line-height:1.25;color:#111;white-space:pre-wrap}
+ .qv-wrap{white-space:normal}.qv-right{text-align:right}.qv-bold{font-weight:700}.qv-blue-bold{font-weight:700;color:#4f81bd}
+ </style></head><body>${buildExactPdfPreview(q)}</body></html>`);
+ w.document.close();setTimeout(()=>w.print(),700);
+}
+function u8b64(b64){
+ const raw=atob(b64),a=new Uint8Array(raw.length);
+ for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);
+ return a;
+}
+function xmlEsc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function templateReplace(xml,map){for(const[k,v]of Object.entries(map))xml=xml.split(k).join(xmlEsc(v));return xml}
+
+function patchQuotePartyCells(xml,q){
+ const parser=new DOMParser();
+ const doc=parser.parseFromString(xml,"application/xml");
+ const NS="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+ const rows=Array.from(doc.getElementsByTagNameNS(NS,"tr"));
+
+ function txt(cell){
+  return Array.from(cell.getElementsByTagNameNS(NS,"t")).map(t=>t.textContent||"").join("").replace(/\s+/g," ").trim();
+ }
+ function setCell(cell,value){
+  const ts=Array.from(cell.getElementsByTagNameNS(NS,"t"));
+  if(ts.length){
+   ts[0].textContent=String(value??"");
+   for(let i=1;i<ts.length;i++)ts[i].textContent="";
+   return;
+  }
+  const p=doc.createElementNS(NS,"w:p");
+  const r=doc.createElementNS(NS,"w:r");
+  const t=doc.createElementNS(NS,"w:t");
+  t.textContent=String(value??"");
+  r.appendChild(t);p.appendChild(r);cell.appendChild(p);
+ }
+ const provider={
+  name:"Kútfő Plusz Kft.",
+  address:"4481 Nyíregyháza, Attila utca 61.",
+  tax:"12711941-2-15",
+  phone:"+36 20 9247187",
+  email:"kutfokft@gmail.com"
+ };
+ for(const row of rows){
+  const cells=Array.from(row.getElementsByTagNameNS(NS,"tc"));
+  if(cells.length!==4)continue;
+  const leftLabel=txt(cells[0]).toLowerCase().replace(/\s+/g,"");
+  const rightLabel=txt(cells[2]).toLowerCase().replace(/\s+/g,"");
+  if(leftLabel!==rightLabel)continue;
+
+  let customer,providerValue;
+  if(leftLabel==="neve:"){customer=q.clientName||"";providerValue=provider.name;}
+  else if(leftLabel==="címe:"){customer=q.clientAddress||"";providerValue=provider.address;}
+  else if(leftLabel==="adószáma:"){customer=q.clientTax||"";providerValue=provider.tax;}
+  else if(leftLabel==="tel.:"){customer=q.clientPhone||"";providerValue=provider.phone;}
+  else if(leftLabel==="email:"||leftLabel==="e-mail:"){customer=q.clientEmail||"";providerValue=provider.email;}
+  else continue;
+
+  setCell(cells[1],customer);
+  setCell(cells[3],providerValue);
+ }
+ return new XMLSerializer().serializeToString(doc);
+}
+
+function exportFileBaseName(q){
+ const raw=String((q&&q.id)|| (q&&q.quoteNo) || "arajanlat").trim();
+ return raw.replace(/[\\/:*?"<>|]/g,"-");
+}
+
+async function exportQuoteDoc(){
+ try{
+  const q=collectQuoteTemplate();
+  const response=await fetch("data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,"+window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64);
+  const templateBuffer=await response.arrayBuffer();
+  const zip=await JSZip.loadAsync(templateBuffer,{createFolders:false});
+  let doc=await zip.file("word/document.xml").async("string");
+
+  const items=(q.items||[]).filter(x=>x.desc), item=items[0]||{};
+  const net=items.reduce((a,x)=>a+(Number(x.qty)||0)*(Number(x.price)||0),0);
+  const vat=net*.27,gross=net+vat;
+  const tech=(q.tech||[]).filter(x=>[x.type,x.from,x.to,x.len,x.spec].some(v=>String(v||"").trim()));
+  const pipes=tech.filter(x=>!String(x.type||"").toLowerCase().includes("szűr"));
+  const filters=tech.filter(x=>String(x.type||"").toLowerCase().includes("szűr"));
+  const p1=pipes[0]||{},p2=pipes[1]||{},f=filters[0]||{};
+  const client=q.clientName||cust(q.customerId)||"";
+
+  const map={
+   "{{CLIENT_NAME}}":client,
+   "{{CLIENT_ADDRESS}}":q.clientAddress||"",
+   "{{CLIENT_TAX}}":q.clientTax||"",
+   "{{CLIENT_PHONE}}":q.clientPhone||"",
+   "{{CLIENT_EMAIL}}":q.clientEmail||"",
+   "{{SUBJECT}}":q.subject||"",
+   "{{ITEM_DESC}}":`${item.qty||""} ${item.unit||""} ${item.desc||""}`.trim(),
+   "{{NET}}":money(net),"{{VAT}}":money(vat),"{{GROSS}}":money(gross),"{{CURRENCY}}":"HUF",
+   "{{DEPTH}}":`${q.depth||""} m`,
+   "{{PIPE1_RANGE}}":p1.from!=null?`${p1.from}-${p1.to} m`:"",
+   "{{PIPE1_LEN}}":p1.len?`(${p1.len} m)`:"","{{PIPE1_SPEC}}":p1.spec||p1.type||"",
+   "{{PIPE2_RANGE}}":p2.from!=null?`${p2.from}-${p2.to} m`:"",
+   "{{PIPE2_LEN}}":p2.len?`(${p2.len} m)`:"","{{PIPE2_SPEC}}":p2.spec||p2.type||"",
+   "{{FILTER_RANGE}}":f.from!=null?`${f.from} - ${f.to} m`:"",
+   "{{FILTER_LEN}}":f.len?`(${f.len} m)`:"","{{FILTER_SPEC}}":f.spec||f.type||"",
+   "{{WATER_NEED}}":q.waterNeed||""
+  };
+  doc=templateReplace(doc,map);
+  doc=patchQuotePartyCells(doc,q);
+
+  // Update standard include/exclude lines without changing the template structure.
+  const esc=x=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const inc=String(q.includes||"").split(/\r?\n/).filter(Boolean);
+  const exc=String(q.excludes||"").split(/\r?\n/).filter(Boolean);
+  const incDefault=["felvonulási költséget,","teljes anyagköltséget,","munkadíjat,","gázvizsgálatot,","geofizikai vizsgálatot,","vízkémiai vizsgálatot,","geodéziai bemérést,","vízföldtani napló beszerzését."];
+  const excDefault=["vízgépészeti munkákat","szivattyú telepítést","elektromos kiépítést","betonozási munkálatokat"];
+  const incs=inc.length?inc:incDefault, exs=exc.length?exc:excDefault;
+  const pairs=[["felvonulási költséget,",incs[0]],["teljes anyagköltséget,",incs[1]],["munkadíjat,",incs[2]],["gázvizsgálatot,",incs[3]],["geofizikai vizsgálatot,",incs[4]],["vízkémiai vizsgálatot,",incs[5]],["geodéziai bemérést,",incs[6]],["vízföldtani napló beszerzését.",incs[7]],["vízgépészeti munkákat",exs[0]],["szivattyú telepítést",exs[1]],["elektromos kiépítést",exs[2]],["betonozási munkálatokat",exs[3]]];
+  for(const [a,b] of pairs) if(b!==undefined) doc=doc.split(esc(a)).join(esc(b));
+
+  zip.file("word/document.xml",doc);
+  const blob=await zip.generateAsync({type:"blob",compression:"STORE",platform:"DOS"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=exportFileBaseName(q)+".docx";
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+  toast("DOCX export kész – eredeti Word-sablon");
+ }catch(e){console.error(e);alert("DOCX export hiba: "+(e.message||e))}
+ if(customerId)setTimeout(()=>{const e=document.getElementById("q_customer");if(e){e.value=customerId;quoteCustomerChanged()}},0);
+}
+function editQuote(id){
+ const q=(db.quotes||[]).find(x=>String(x.id)===String(id));
+ if(!q){if(typeof toast==="function")toast("Az ajánlat nem található");else alert("Az ajánlat nem található");return}
+ window.editingQuoteId=q.id;
+ openQuote();
+ setTimeout(()=>{
+  const set=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val==null?"":val};
+  quoteItems=(q.items||[]).map(x=>({
+   desc:String(x.desc??""),qty:Number(x.qty)||0,unit:String(x.unit??"db"),price:Number(x.price)||0
+  }));
+  if(!quoteItems.length) quoteItems=[{desc:"",qty:1,unit:"db",price:0}];
+  quoteTech=(q.tech||[]).map(x=>({
+   type:String(x.type??""),from:String(x.from??""),to:String(x.to??""),len:String(x.len??""),spec:String(x.spec??"")
+  }));
+  set("q_customer",q.customerId);set("q_project",q.projectId);set("q_status",q.status||"Piszkozat");
+  set("q_client_name",q.clientName);set("q_client_tax",q.clientTax);
+  set("q_client_address",q.clientAddress);set("q_client_phone",q.clientPhone);
+  set("q_client_email",q.clientEmail);set("q_date",q.date);
+  set("q_location",q.location);set("q_name",q.name);set("q_subject",q.subject);
+  set("q_depth",q.depth);set("q_water_need",q.waterNeed);
+  set("q_pipe_diameter",q.pipeDiameter);set("q_pipe_material",q.pipeMaterial);
+  set("q_includes",q.includes);set("q_excludes",q.excludes);
+  set("q_declarations",q.declarations);
+  set("q_signer",q.signer||"Szabados István");set("q_position",q.position||"ügyvezető");
+  renderQuoteEditor();
+  document.querySelectorAll(".modal h2,.modal-title").forEach(el=>{
+   if(/Új ajánlat/.test(el.textContent||"")) el.textContent="Árajánlat szerkesztése – "+q.id;
+  });
+ },40);
+}
+
+function bindQuoteLinkFallback(){
+ document.querySelectorAll("[data-quote-id]").forEach(el=>{
+  if(el.dataset.quoteLinkBound==="1") return;
+  el.dataset.quoteLinkBound="1";
+  el.addEventListener("click",function(ev){
+   ev.preventDefault(); ev.stopPropagation();
+   const id=this.getAttribute("data-quote-id");
+   if(id) editQuote(id);
+  });
+ });
+}
+document.addEventListener("click",function(ev){
+ const el=ev.target.closest("[data-quote-id]");
+ if(el){
+  ev.preventDefault(); ev.stopPropagation();
+  editQuote(el.getAttribute("data-quote-id"));
+ }
+});
+
+function quoteDetails(id){let q=db.quotes.find(x=>x.id===id);openDrawer(q.id,`<p><b>Ügyfél:</b> ${esc(cust(q.customerId))}</p><p><b>Munka:</b> ${esc(q.name)}</p><p><b>Helyszín:</b> ${esc(q.location)}</p><p><b>Státusz:</b> ${esc(q.status)}</p><hr><table class="table"><tr><th>Tétel</th><th>Menny.</th><th>Egységár</th><th>Összeg</th></tr>${q.items.map(x=>`<tr><td>${esc(x.desc)}</td><td>${x.qty} ${esc(x.unit)}</td><td>${money(x.price)}</td><td>${money(x.qty*x.price)}</td></tr>`).join("")}</table><p class="right">Nettó: ${money(q.net)}<br>ÁFA: ${money(q.vat)}<br><b>Bruttó: ${money(q.gross)}</b></p><button class="btn" onclick="printQuote('${q.id}')">Nyomtatás / PDF</button>`)}
+function printQuote(id){let q=db.quotes.find(x=>x.id===id);let w=window.open("","_blank");w.document.write(`<html><head><title>${q.id}</title><style>body{font:14px Arial;padding:40px}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}</style></head><body><h1>Kútfő Plusz Kft.</h1><h2>AJÁNLAT ${q.id}</h2><p><b>Ügyfél:</b> ${esc(cust(q.customerId))}<br><b>Munka:</b> ${esc(q.name)}<br><b>Helyszín:</b> ${esc(q.location)}</p><table><tr><th>Tétel</th><th>Menny.</th><th>Egységár</th><th>Összeg</th></tr>${q.items.map(x=>`<tr><td>${esc(x.desc)}</td><td>${x.qty} ${esc(x.unit)}</td><td>${money(x.price)}</td><td>${money(x.qty*x.price)}</td></tr>`).join("")}</table><p class="r">Nettó: ${money(q.net)}<br>ÁFA: ${money(q.vat)}<br><b>Bruttó: ${money(q.gross)}</b></p><script>window.print()<\/script></body></html>`);w.document.close()}
+function convertQuote(id){let q=db.quotes.find(x=>x.id===id);if(!q)return;q.status="Elfogadva";db.projects.push({id:uid("KP"),customerId:q.customerId,name:q.name,location:q.location,status:"Tervezés",value:q.gross,planned:q.net*.65,cost:0,progress:0,notes:""});save();nav("projects");toast("Projekt létrehozva")}
+function openQuoteForCustomer(id){closeDrawer();openQuote(id)}
+function openProjectForCustomer(id){closeDrawer();openProject(id)}
+function openProject(customerId){openModal("Új projekt",`<form onsubmit="saveProject(event)"><div class="formgrid"><div class="field"><label>Ügyfél</label><select required class="select" name="customerId">${opts()}</select></div><div class="field"><label>Státusz</label><select class="select" name="status"><option>Tervezés</option><option>Folyamatban</option><option>Lezárva</option></select></div><div class="field full"><label>Projekt neve</label><input required class="input" name="name"></div><div class="field"><label>Helyszín</label><input class="input" name="location"></div><div class="field"><label>Szerződéses érték</label><input class="input" type="number" name="value" value="0"></div><div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes"></textarea></div></div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`)
+ if(customerId)setTimeout(()=>{const e=document.querySelector('#modal select[name="customerId"]');if(e)e.value=customerId},0);}
+function saveProject(e){e.preventDefault();let o=Object.fromEntries(new FormData(e.target).entries());db.projects.push({id:uid("KP"),...o,value:+o.value||0,planned:0,cost:0,progress:0});save();closeModal();nav("projects");toast("Projekt létrehozva")}
+function projectDetails(id){let p=db.projects.find(x=>x.id===id),pr=p.value-p.cost;openDrawer(p.id,`<h2>${esc(p.name)}</h2><p class="label">${esc(p.location)} · ${esc(cust(p.customerId))}</p><div class="cards" style="grid-template-columns:1fr 1fr"><div class="card"><div class="label">Érték</div><div class="value">${money(p.value)}</div></div><div class="card"><div class="label">Profit</div><div class="value ${pr>=0?'green':'red'}">${money(pr)}</div></div></div><p><b>Készültség:</b> ${p.progress||0}%</p><p><b>Státusz:</b> ${esc(p.status)}</p><p><b>Tervezett költség:</b> ${money(p.planned)}</p><p><b>Tényleges költség:</b> ${money(p.cost)}</p><hr><button class="btn secondary" onclick="newWorklogFor('${p.id}')">+ Munkanapló</button>`)}
+let editingWorklogId=null, wlLayers=[], wlFilters=[["0","3","Vak"]];
+function newWorklog(){openWorklogEditor()}
+function newWorklogFor(pid){openWorklogEditor()}
+function detailedWorklogEditor(id){
+ editingWorklogId=id||null;
+ const w=id?db.worklogs.find(x=>x.id===id):null;
+ wlLayers=JSON.parse(JSON.stringify(w?.layers||[["0","4","","","",""]]));
+ wlFilters=JSON.parse(JSON.stringify(w?.filters || (id ? [] : [["0","3","Vak"]])));
+ const custOpts=db.customers.map(c=>`<option value="${c.id}" ${c.id===w?.customerId?"selected":""}>${esc(c.name)}</option>`).join("");
+ const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+ openModal(w?`Munkanapló szerkesztése – ${esc(w.id)}`:"Új munkanapló",`
+ <div class="wl-shell">
+ <div class="wl-head"><h2>💧 Kútfő Plusz ERP – Munkanapló</h2><span>Kitölthető kútfúrási munkanapló · V1.4</span></div>
+ <form id="wlForm">
+ <section class="wl-summary-card" id="wlSummary">
+  <div class="wl-summary-title">KÚT ÖSSZESÍTŐ</div>
+  <div class="wl-summary-grid">
+   <div><small>Fúrt mélység</small><strong id="sum_drilled">—</strong></div>
+   <div><small>Tényleges mélység</small><strong id="sum_actual">—</strong></div>
+   <div><small>Szűrő kezdete</small><strong id="sum_filterStart">—</strong></div>
+   <div><small>Szűrő összesen</small><strong id="sum_filterTotal">—</strong></div>
+   <div><small>Nyugalmi vízszint</small><strong id="sum_static">—</strong></div>
+   <div><small>Üzemi vízszint</small><strong id="sum_dynamic">—</strong></div>
+   <div><small>Leszívás</small><strong id="sum_drawdown">—</strong></div>
+   <div><small>Próbaszivattyúzás</small><strong id="sum_flow">—</strong></div>
+   <div><small>Fajlagos vízhozam</small><strong id="sum_specific">—</strong></div>
+  </div>
+ </section>
+ <section class="wl-card"><h2>1. Munkalap alapadatai</h2><div class="wl-grid">
+ <div class="wl-field"><label>Dátum</label><input id="wl_date" type="date" value="${esc(w?.date||"")}"></div>
+ <div class="wl-field"><label>Helyszín</label><input id="wl_location" placeholder="Pl. Porcsalma" value="${esc(w?.location||"")}"></div>
+ <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
+ <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>
+ 
+ 
+ <div class="wl-field"><label>Kút végmélysége (m)</label><input id="wl_finalDepth" type="number" step="0.1" value="${esc(w?.finalDepth||w?.depth||"")}"></div>
+ <div class="wl-field"><label>Munka státusza</label><select id="wl_status"><option>Folyamatban</option><option>Elkészült</option><option>Ellenőrzés alatt</option></select></div>
+ </div></section>
+ <section class="wl-card"><h2>2. Rétegnapló</h2><div class="wl-table-wrap"><table class="wl-table wl-layer-table" id="wl_layers"><thead><tr><th>Kezdő (m)</th><th>Vég (m)</th><th>Réteg</th><th>Fúrási viselkedés</th><th>Vízszín / állapot</th><th>Megjegyzés</th><th></th></tr></thead><tbody></tbody></table></div><div class="wl-actions"><button type="button" class="wl-btn wl-primary" onclick="wlAddLayer()">＋ Réteg</button></div></section>
+ <section class="wl-card"><h2>3. Grafikus függőleges kútszelvény</h2><div id="wlProfile" class="wl-profile-wrap"></div></section>
+ <section class="wl-card"><h2>4. Kútkiképzés / szűrőzés</h2>
+ <div class="wl-table-wrap"><table class="wl-table wl-filter-table" id="wl_filters"><thead><tr><th>Kezdete (m)</th><th>Vége (m)</th><th>Hossz (m)</th><th>Darab</th><th>Típus / cső</th><th></th></tr></thead><tbody></tbody></table></div>
+ <div class="wl-actions"><button type="button" class="wl-btn wl-primary" onclick="wlAddFilter()">＋ Szűrőszakasz</button></div>
+ </section>
+
+ <section class="wl-card"><h2>5. Próbaszivattyúzás</h2>
+ <div class="wl-grid">
+  <div class="wl-field"><label>Termelőcső hossza (m)</label><input id="wl_prodPipe" type="number" step="0.1" value="${esc(w?.prodPipe||"")}"></div>
+  <div class="wl-field"><label>Nyugalmi vízszint (m)</label><input id="wl_staticWL" type="number" step="0.01" value="${esc(w?.staticWL||w?.rest||"")}" oninput="wlCalculate()"></div>
+  <div class="wl-field"><label>Üzemi vízszint (m)</label><input id="wl_dynamicWL" type="number" step="0.01" value="${esc(w?.dynamicWL||w?.working||"")}" oninput="wlCalculate()"></div>
+ </div>
+ <div class="wl-grid" style="margin-top:12px">
+  <div class="wl-field"><label>Mért vízmennyiség (liter)</label><input id="wl_measureLiters" type="number" min="0" step="1" value="${esc(w?.measureLiters ?? 220)}" oninput="wlCalculate()"></div>
+  <div class="wl-field"><label>Mérési idő (mp)</label><input id="wl_measureSeconds" type="number" min="0" step="1" value="${esc(w?.measureSeconds ?? "")}" oninput="wlCalculate()"></div>
+  <div class="wl-field"><label>Vízhozam Q (l/perc)</label><input id="wl_flow" type="number" step="0.01" value="${esc(w?.flow||"")}" readonly></div>
+ </div>
+ <div class="wl-stats" style="margin-top:15px">
+  <div class="wl-stat"><small>Leszívás</small><strong id="wl_drawdown">—</strong></div>
+  <div class="wl-stat"><small>Fajlagos vízhozam</small><strong id="wl_specific">—</strong></div>
+  <div class="wl-stat"><small>Q</small><strong id="wl_flowStat">—</strong></div>
+  <div class="wl-stat"><small>22 m-nél számított Q</small><strong id="wl_q22">—</strong></div>
+ </div>
+
+ </section>
+
+ <section class="wl-card"><h2>6. Munkanapló megjegyzés</h2><textarea id="wl_notes" style="width:100%;min-height:100px;box-sizing:border-box">${esc(w?.notes||w?.note||"")}</textarea>
+ <div class="wl-actions"><button type="button" class="wl-btn wl-success" onclick="wlSave()">💾 Mentés</button><button type="button" class="wl-btn wl-secondary" onclick="wlImport()">📂 Mentés betöltése</button><button type="button" class="wl-btn wl-primary" onclick="openWorklogDocument()">📄 Munkanapló generálása</button><button type="button" class="wl-btn wl-danger" onclick="closeModal()">Bezárás</button></div></section>
+ </form></div>`);
+ wlRenderLayers();wlRenderFilters();wlCalculate();
+}
+function wlRenderLayers(){let b=document.querySelector("#wl_layers tbody");if(!b)return;b.innerHTML=wlLayers.map((r,i)=>`<tr><td colspan="2"><span class="wl-depth-range"><span class="wl-depth-value">${esc(r[0]||"")} m</span><span class="wl-depth-dash">-</span>${i===wlLayers.length-1?`<span class="wl-depth-edit"><input type="number" min="${Number(r[0])||0}" step="1" value="${esc(r[1]||"")}" aria-label="Utolsó réteg vége" oninput="wlLayers[${i}][1]=this.value;wlSummary();wlProfile()" onblur="wlLayers[${i}][1]=String(Math.max(Number(wlLayers[${i}][0])||0,Number(this.value)||0));wlRenderLayers()"><span>m</span></span>`:`<span class="wl-depth-value">${esc(r[1]||"")} m</span>`}</span></td>${r.slice(2).map((x,j)=>j===0?`<td><select class="wl-layer-type" onchange="wlLayers[${i}][2]=this.value;wlProfile()"><option value="">— Válasszon —</option><option value="Agyag" ${r[2]==="Agyag"?"selected":""}>Agyag</option><option value="Homok" ${r[2]==="Homok"?"selected":""}>Homok</option><option value="Finom homok" ${r[2]==="Finom homok"?"selected":""}>Finom homok</option><option value="Középszemcsés homok" ${r[2]==="Középszemcsés homok"?"selected":""}>Középszemcsés homok</option><option value="Durva homok" ${r[2]==="Durva homok"?"selected":""}>Durva homok</option><option value="Homokos agyag" ${r[2]==="Homokos agyag"?"selected":""}>Homokos agyag</option><option value="Agyagos homok" ${r[2]==="Agyagos homok"?"selected":""}>Agyagos homok</option><option value="Iszap" ${r[2]==="Iszap"?"selected":""}>Iszap</option><option value="Iszapos homok" ${r[2]==="Iszapos homok"?"selected":""}>Iszapos homok</option><option value="Kavicsos homok" ${r[2]==="Kavicsos homok"?"selected":""}>Kavicsos homok</option><option value="Homokos kavics" ${r[2]==="Homokos kavics"?"selected":""}>Homokos kavics</option><option value="Kavics" ${r[2]==="Kavics"?"selected":""}>Kavics</option><option value="Márga" ${r[2]==="Márga"?"selected":""}>Márga</option><option value="Mészkő" ${r[2]==="Mészkő"?"selected":""}>Mészkő</option><option value="Dolomit" ${r[2]==="Dolomit"?"selected":""}>Dolomit</option><option value="Homokkő" ${r[2]==="Homokkő"?"selected":""}>Homokkő</option><option value="Lösz" ${r[2]==="Lösz"?"selected":""}>Lösz</option><option value="Tufa" ${r[2]==="Tufa"?"selected":""}>Tufa</option><option value="Egyéb" ${r[2]==="Egyéb"?"selected":""}>Egyéb</option></select></td>`:`<td><input type="text" value="${esc(x)}" oninput="wlLayers[${i}][${j+2}]=this.value;wlProfile()"></td>`).join("")}<td><button type="button" class="wl-btn wl-danger" style="padding:6px" onclick="wlLayers.splice(${i},1);wlRenderLayers()">×</button></td></tr>`).join("");wlProfile()}
+function wlRenderLayers(){let b=document.querySelector("#wl_layers tbody");if(!b)return;b.innerHTML=wlLayers.map((r,i)=>`<tr><td colspan="2"><span class="wl-depth-range"><span class="wl-depth-value">${esc(r[0]||"")} m</span><span class="wl-depth-dash">-</span><span class="wl-depth-value">${esc(r[1]||"")} m</span></span></td>${r.slice(2).map((x,j)=>j===0?`<td><select class="wl-layer-type" onchange="wlLayers[${i}][2]=this.value;wlProfile()"><option value="">— Válasszon —</option><option value="Agyag" ${r[2]==="Agyag"?"selected":""}>Agyag</option><option value="Homok" ${r[2]==="Homok"?"selected":""}>Homok</option><option value="Finom homok" ${r[2]==="Finom homok"?"selected":""}>Finom homok</option><option value="Középszemcsés homok" ${r[2]==="Középszemcsés homok"?"selected":""}>Középszemcsés homok</option><option value="Durva homok" ${r[2]==="Durva homok"?"selected":""}>Durva homok</option><option value="Homokos agyag" ${r[2]==="Homokos agyag"?"selected":""}>Homokos agyag</option><option value="Agyagos homok" ${r[2]==="Agyagos homok"?"selected":""}>Agyagos homok</option><option value="Iszap" ${r[2]==="Iszap"?"selected":""}>Iszap</option><option value="Iszapos homok" ${r[2]==="Iszapos homok"?"selected":""}>Iszapos homok</option><option value="Kavicsos homok" ${r[2]==="Kavicsos homok"?"selected":""}>Kavicsos homok</option><option value="Homokos kavics" ${r[2]==="Homokos kavics"?"selected":""}>Homokos kavics</option><option value="Kavics" ${r[2]==="Kavics"?"selected":""}>Kavics</option><option value="Márga" ${r[2]==="Márga"?"selected":""}>Márga</option><option value="Mészkő" ${r[2]==="Mészkő"?"selected":""}>Mészkő</option><option value="Dolomit" ${r[2]==="Dolomit"?"selected":""}>Dolomit</option><option value="Homokkő" ${r[2]==="Homokkő"?"selected":""}>Homokkő</option><option value="Lösz" ${r[2]==="Lösz"?"selected":""}>Lösz</option><option value="Tufa" ${r[2]==="Tufa"?"selected":""}>Tufa</option><option value="Egyéb" ${r[2]==="Egyéb"?"selected":""}>Egyéb</option></select></td>`:`<td><input type="text" value="${esc(x)}" oninput="wlLayers[${i}][${j+2}]=this.value;wlProfile()"></td>`).join("")}<td><button type="button" class="wl-btn wl-danger" style="padding:6px" onclick="wlLayers.splice(${i},1);wlRenderLayers()">×</button></td></tr>`).join("");wlProfile()}
+function wlAddLayer(v){
+ if(v!==undefined){
+   const row=Array.isArray(v)?v.slice():["0","4","","","",""];
+   wlLayers.push(row);
+   wlRenderLayers();
+   return;
+ }
+ const last=wlLayers.length?wlLayers[wlLayers.length-1]:null;
+ const lastEnd=last?Number(last[1]):0;
+ const start=Number.isFinite(lastEnd)?lastEnd:0;
+ wlLayers.push([String(start),String(start+3),"","","",""]);
+ wlRenderLayers();
+}
+function wlSortLayers(){wlLayers.sort((a,b)=>(+a[0]||0)-(+b[0]||0));wlRenderLayers()}
+function wlAddFilter(v){
+ const idx=wlFilters.length; if(idx>0 && !Number.isFinite(parseFloat(wlFilters[idx-1]?.[1]))){
+   alert("Előbb add meg az előző szakasz végét!");
+   return;
+ }
+ const type=v?.[2] || (idx===0 ? "Vak" : (idx%2===1 ? "Szűrő" : "Vak"));
+ const prevEnd=idx>0 ? parseFloat(wlFilters[idx-1]?.[1]) : 0;
+ const start=v?.[0]!==undefined&&v?.[0]!=="" ? Number(v[0]) : (idx===0 ? 0 : (Number.isFinite(prevEnd)?prevEnd:0));
+ let end=v?.[1]!==undefined&&v?.[1]!==""?Number(v[1]):(type==="Szűrő"?start+3:(idx===0?NaN:start+3));
+ if(!Number.isFinite(start)) start=idx===0?0:0;
+ if(type==="Szűrő"){
+   end=start+3;
+ }else if(!Number.isFinite(end) || end<start){ end=idx===0?NaN:start+3; }
+ wlFilters.push([String(start),String(end),type]);
+ wlRenderFilters()
+}
+function wlRenderFilters(){
+ let b=document.querySelector("#wl_filters tbody");if(!b)return;
+ b.innerHTML=wlFilters.map((r,i)=>{
+  const isFilter=(r[2]||"").toLowerCase()==="szűrő" || (r[2]||"").toLowerCase()==="szuro";
+  let a=parseFloat(r[0]);
+  if(isFilter){
+    const prevEnd=i>0?parseFloat(wlFilters[i-1]?.[1]):0;
+    a=i===0?0:(Number.isFinite(prevEnd)?prevEnd:0);
+    r[0]=String(a);
+  }
+  const prevEnd=i>0?parseFloat(wlFilters[i-1]?.[1]):0;
+  const minStart=i===0?0:(Number.isFinite(prevEnd)?prevEnd:0);
+  if(!Number.isFinite(a) || a<minStart) a=minStart;
+  r[0]=String(a);
+  let z=parseFloat(r[1]);
+  if(isFilter){
+    if(!Number.isFinite(z) || z<a+3) z=a+3;
+    else z=a+3*Math.max(1,Math.round((z-a)/3));
+  }else{
+    if(i===0 && !Number.isFinite(z)){
+      r[1]="";
+      z=NaN;
+    }else if(!Number.isFinite(z) || z<a){
+      z=a;
+    }
+  }
+  r[1]=Number.isFinite(z)?String(z):"";
+  const length=Number.isFinite(a)&&Number.isFinite(z)&&z>=a?(z-a):NaN;
+  const len=Number.isFinite(length)?length.toFixed(2):"—";
+  const fullPieces=Number.isFinite(length)&&length>0?Math.floor(length/3):0;
+  const rem=Number.isFinite(length)&&length>0?length-(fullPieces*3):0;
+  const darab=Number.isFinite(length)&&length>0?(rem>0?`${fullPieces} db + ${Number.isInteger(rem)?rem:rem.toFixed(2)} m`:`${fullPieces} db`):"—";
+  return `<tr>
+   <td><input class="wl-filter-num" style="width:96px!important;min-width:96px!important;max-width:96px!important" type="number" step="1" min="${i===0?0:(Number.isFinite(prevEnd)?prevEnd:0)}" value="${esc(r[0]||"")}" oninput="wlFilters[${i}][0]=this.value;wlProfile()" onblur="wlRenderFilters()"></td>
+   <td><input class="wl-filter-num" style="width:96px!important;min-width:96px!important;max-width:96px!important" type="number" step="${isFilter?3:1}" min="${isFilter?a+3:a}" value="${esc(r[1]||"")}" oninput="wlFilters[${i}][1]=this.value;wlProfile()" onblur="wlRenderFilters()"></td>
+   <td><span class="wl-calculated wl-filter-length">${len !== "—" ? len + " m" : "—"}</span></td>
+   <td><span class="wl-calculated wl-filter-pieces">${darab}</span></td>
+   <td><select class="wl-filter-type" onchange="wlFilters[${i}][2]=this.value;if(this.value==='Szűrő'){const a=parseFloat(wlFilters[${i}][0]);if(Number.isFinite(a))wlFilters[${i}][1]=String(a+3)};wlRenderFilters()">
+   <option value="Vak" ${r[2]==="Vak"?"selected":""}>Vak</option>
+   <option value="Szűrő" ${r[2]==="Szűrő"?"selected":""}>Szűrő</option>
+  </select></td>
+   <td><button type="button" class="wl-btn wl-danger" style="padding:6px" onclick="wlFilters.splice(${i},1);wlRenderFilters()">×</button></td>
+  </tr>`;
+ }).join("");
+ wlProfile()
+}
+
+function wlProfile(){let box=document.getElementById("wlProfile");if(!box)return;let max=Math.max(10,+document.getElementById("wl_finalDepth").value||0,...wlLayers.map(r=>+r[1]||0),...wlFilters.map(r=>+r[1]||0));let scale=Math.min(10,520/max),h=max*scale;box.innerHTML=`<div class="wl-profile-depth" style="height:${h}px">${Array.from({length:Math.floor(max/5)+1},(_,i)=>`<span style="top:${i*5*scale}px">${i*5} m</span>`).join("")}</div><div class="wl-profile-drawing" style="height:${h}px"><div class="wl-ground"></div>${wlLayers.filter(r=>+r[1]>+r[0]).map(r=>{let a=+r[0],b=+r[1],cl=((r[2]+" "+r[3]).toLowerCase().includes("agyag"))?"wl-clay":"wl-sand";return `<div class="wl-layer ${cl}" style="top:${a*scale}px;height:${Math.max(5,(b-a)*scale)}px"><b>${a}–${b} m</b>&nbsp;${esc(r[2]||r[3]||"")}</div>`}).join("")}${wlFilters.filter(r=>+r[1]>+r[0]).map(r=>`<div class="wl-filter" style="top:${+r[0]*scale}px;height:${Math.max(5,(+r[1]-+r[0])*scale)}px"></div>`).join("")}${wlWater("wl_staticWL","Nyugalmi",scale)}${wlWater("wl_dynamicWL","Üzemi",scale)}</div>`}
+function wlWater(id,label,scale){let v=+document.getElementById(id)?.value;if(!v)return"";return `<div class="wl-water" style="top:${v*scale}px"><span>${label} ${v.toFixed(2)} m</span></div>`}
+function wlSummary(){
+ const layerDepths=wlLayers.map(r=>({a:+r[0],b:+r[1]}))
+   .filter(x=>Number.isFinite(x.a)&&Number.isFinite(x.b)&&x.b>=x.a);
+ const drilled=layerDepths.length?Math.max(...layerDepths.map(x=>x.b)):NaN;
+
+ // Kútkiképzés / szűrőzés remains the source for actual depth and filter data.
+ const sections=wlFilters.map(r=>{
+   const a=+r[0], b=+r[1], type=(r[2]||"").toLowerCase();
+   return Number.isFinite(a)&&Number.isFinite(b)&&b>=a?{a,b,type,len:b-a}:null;
+ }).filter(Boolean);
+ const actual=sections.length?Math.max(...sections.map(x=>x.b)):0;
+ const filters=sections.filter(x=>x.type==="szűrő"||x.type==="szuro");
+ const firstFilter=filters.length?Math.min(...filters.map(x=>x.a)):NaN;
+ const filterTotal=filters.reduce((sum,x)=>sum+x.len,0);
+
+ const st=+document.getElementById("wl_staticWL")?.value;
+ const dy=+document.getElementById("wl_dynamicWL")?.value;
+ const liters=+document.getElementById("wl_measureLiters")?.value||0;
+ const seconds=+document.getElementById("wl_measureSeconds")?.value||0;
+ const q=seconds>0&&liters>0?(liters/seconds)*60:0;
+ const draw=Number.isFinite(st)&&Number.isFinite(dy)?dy-st:NaN;
+ const spec=draw>0&&q>0?q/draw:NaN;
+
+ const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
+ set("sum_drilled",Number.isFinite(drilled)?drilled+" m":"—");
+ set("sum_actual",actual>0?actual+" m":"—");
+ set("sum_filterStart",Number.isFinite(firstFilter)?firstFilter+" m":"—");
+ set("sum_filterTotal",filterTotal>0?filterTotal+" m":"—");
+ set("sum_static",Number.isFinite(st)?st.toFixed(2)+" m":"—");
+ set("sum_dynamic",Number.isFinite(dy)?dy.toFixed(2)+" m":"—");
+ set("sum_drawdown",Number.isFinite(draw)&&draw>=0?draw.toFixed(2)+" m":"—");
+ set("sum_flow",q>0?q.toFixed(2)+" l/perc":"—");
+ set("sum_specific",Number.isFinite(spec)?spec.toFixed(2)+" l/perc/m":"—");
+}
+function wlCalculate(){
+ let liters=+document.getElementById("wl_measureLiters")?.value||0;
+ let seconds=+document.getElementById("wl_measureSeconds")?.value||0;
+ let q=seconds>0&&liters>0?(liters/seconds)*60:0;
+ let flowEl=document.getElementById("wl_flow");if(flowEl)flowEl.value=q?q.toFixed(2):"";
+ let st=+document.getElementById("wl_staticWL")?.value;
+ let d=+document.getElementById("wl_dynamicWL")?.value;
+ let draw=d-st,spec=draw>0?q/draw:NaN;
+ document.getElementById("wl_drawdown").textContent=Number.isFinite(draw)&&draw>=0?draw.toFixed(2)+" m":"—";
+ document.getElementById("wl_specific").textContent=Number.isFinite(spec)?spec.toFixed(2)+" l/perc/m":"—";
+ document.getElementById("wl_flowStat").textContent=q?q.toFixed(2)+" l/perc":"—";
+ document.getElementById("wl_q22").textContent=Number.isFinite(spec)?Math.round(spec*16.59)+" l/perc":"—";
+ wlSummary();
+ wlProfile()
+}
+function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",location:document.getElementById("wl_location").value,wellNo:document.getElementById("wl_wellNo").value,finalDepth:+document.getElementById("wl_finalDepth").value||0,status:document.getElementById("wl_status").value,layers:wlLayers,filters:wlFilters,prodPipe:document.getElementById("wl_prodPipe").value,staticWL:document.getElementById("wl_staticWL").value,dynamicWL:document.getElementById("wl_dynamicWL").value,measureLiters:+document.getElementById("wl_measureLiters").value||0,measureSeconds:+document.getElementById("wl_measureSeconds").value||0,flow:+document.getElementById("wl_flow").value||0,dynamic2:document.getElementById("wl_dynamicWL").value,static2:document.getElementById("wl_staticWL").value,notes:document.getElementById("wl_notes").value}}
+function wlSave(){
+ document.querySelectorAll("#wl_layers .wl-layer-type").forEach((el,i)=>{if(wlLayers[i])wlLayers[i][2]=el.value});
+ let o=wlCollect();
+ let i=db.worklogs.findIndex(x=>x.id===o.id);
+ if(i>=0)db.worklogs[i]=o;else db.worklogs.push(o);
+ save();closeModal();nav("worklogs");toast("Munkanapló mentve")
+}
+
+function wlDocEsc(v){return esc(v==null?"":String(v))}
+function wlDocSummary(o){
+ const layers=(o.layers||[]).map(r=>({a:+r[0],b:+r[1]})).filter(x=>Number.isFinite(x.a)&&Number.isFinite(x.b));
+ const drilled=layers.length?Math.max(...layers.map(x=>x.b)):NaN;
+ const fs=(o.filters||[]).map(r=>({a:+r[0],b:+r[1],t:String(r[2]||"").toLowerCase()})).filter(x=>Number.isFinite(x.a)&&Number.isFinite(x.b)&&x.b>=x.a);
+ const filters=fs.filter(x=>x.t==="szűrő"||x.t==="szuro");
+ const filterStart=filters.length?Math.min(...filters.map(x=>x.a)):NaN;
+ const filterTotal=filters.reduce((a,x)=>a+x.b-x.a,0);
+ const st=+o.staticWL,dy=+o.dynamicWL;
+ const q=+o.flow||((+o.measureSeconds>0&&+o.measureLiters>0)?(+o.measureLiters/+o.measureSeconds)*60:0);
+ const draw=Number.isFinite(st)&&Number.isFinite(dy)?dy-st:NaN;
+ const spec=draw>0&&q>0?q/draw:NaN;
+ return {drilled,filterStart,filterTotal,st,dy,draw,q,spec};
+}
+function wlDocTable(headers,rows){
+ return `<table><thead><tr>${headers.map(x=>`<th>${wlDocEsc(x)}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${wlDocEsc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+function wlDocumentHtml(o){
+ const s=wlDocSummary(o), customer=cust(o.customerId)||"";
+ const layers=(o.layers||[]).map(r=>[`${r[0]} m - ${r[1]} m`,r[2]||"",r[3]||"",r[4]||"",r[5]||""]);
+ const filters=(o.filters||[]).map(r=>[`${r[0]} m - ${r[1]} m`,`${(+r[1]||0)-(+r[0]||0)} m`,r[3]||"",r[2]||""]);
+ return `<div class="wl-document">
+ <div class="wl-doc-header"><strong>KÚTFŐ PLUSZ KFT.</strong><span>4481 Nyíregyháza, Attila út 61. · +36 20 9247187 · kutfokft@gmail.com</span></div>
+ <h1>MUNKANAPLÓ</h1>
+ <p><b>Dátum:</b> ${wlDocEsc(o.date)} &nbsp; <b>Helyszín:</b> ${wlDocEsc(o.location)} &nbsp; <b>Kút:</b> ${wlDocEsc(o.wellNo)}</p>
+ <p><b>Megrendelő:</b> ${wlDocEsc(customer)}</p>
+ <h2>KÚT ÖSSZESÍTŐ</h2>${wlDocTable(["Megnevezés","Érték","Megnevezés","Érték"],[
+ ["Fúrt mélység",Number.isFinite(s.drilled)?s.drilled+" m":"—","Tényleges mélység",Number.isFinite(s.drilled)?s.drilled+" m":"—"],
+ ["Szűrő kezdete",Number.isFinite(s.filterStart)?s.filterStart+" m":"—","Szűrő összesen",s.filterTotal?s.filterTotal+" m":"—"],
+ ["Nyugalmi vízszint",Number.isFinite(s.st)?s.st.toFixed(2)+" m":"—","Üzemi vízszint",Number.isFinite(s.dy)?s.dy.toFixed(2)+" m":"—"],
+ ["Leszívás",Number.isFinite(s.draw)?s.draw.toFixed(2)+" m":"—","Próbaszivattyúzás",s.q?s.q.toFixed(2)+" l/perc":"—"],
+ ["Fajlagos vízhozam",Number.isFinite(s.spec)?s.spec.toFixed(2)+" l/perc/m":"—","",""]
+ ])}
+ <h2>RÉTEGNAPLÓ</h2>${wlDocTable(["Mélység","Réteg","Fúrási viselkedés","Vízszín / állapot","Megjegyzés"],layers)}
+ <h2>KÚTKIKÉPZÉS / SZŰRŐZÉS</h2>${wlDocTable(["Szakasz","Hossz","Darab","Típus / cső"],filters)}
+ <h2>PRÓBASZIVATTYÚZÁS</h2><p>Mért vízmennyiség: <b>${o.measureLiters||0} liter</b> · Mérési idő: <b>${o.measureSeconds||0} mp</b> · Vízhozam: <b>${s.q?s.q.toFixed(2):"—"} l/perc</b></p>
+ <p>Nyugalmi: ${Number.isFinite(s.st)?s.st.toFixed(2)+" m":"—"} · Üzemi: ${Number.isFinite(s.dy)?s.dy.toFixed(2)+" m":"—"} · Leszívás: ${Number.isFinite(s.draw)?s.draw.toFixed(2)+" m":"—"} · Fajlagos: ${Number.isFinite(s.spec)?s.spec.toFixed(2)+" l/perc/m":"—"}</p>
+ <h2>MEGJEGYZÉS</h2><p>${wlDocEsc(o.notes||"—").replace(/\n/g,"<br>")}</p>
+ <div class="wl-sign">______________________________<br>Megrendelő / átvevő<br><br>______________________________<br>Kútfő Plusz Kft.</div>
+ </div>`;
+}
+function openWorklogDocument(){
+ const o=wlCollect();
+ window._generatedWorklog=o;
+ openModal("Munkanapló generálása",`<div class="wl-doc-preview">${wlDocumentHtml(o)}</div>
+ <div class="modalfoot"><button class="btn" onclick="printWorklogDocument(window._generatedWorklog)">📄 PDF / Nyomtatás</button><button class="btn secondary" onclick="exportWorklogDocx(window._generatedWorklog)">📝 Word (.docx)</button><button class="btn secondary" onclick="closeModal()">Bezárás</button></div>`);
+}
+function printWorklogDocument(o){
+ o=o||window._generatedWorklog||wlCollect(); const w=window.open("","_blank");
+ if(!w){alert("A böngésző blokkolta a felugró ablakot.");return}
+ w.document.write(`<html><head><meta charset="utf-8"><title>Munkanapló</title><style>
+ @page{size:A4;margin:14mm}body{font:11pt Arial;color:#222}.wl-doc-header{border-bottom:3px solid #2b78b8;padding-bottom:12px;margin-bottom:18px}.wl-doc-header strong{display:block;font-size:20pt;color:#1e78b4}.wl-doc-header span{font-size:10pt;color:#555}.wl-document h1{color:#216fa8;font-size:18pt}.wl-document h2{color:#216fa8;font-size:13pt;margin-top:18px}.wl-document table{width:100%;border-collapse:collapse;margin:8px 0 15px}.wl-document th{background:#ddd}.wl-document td,.wl-document th{border:1px solid #bbb;padding:6px;text-align:left}.wl-sign{margin-top:35px}</style></head><body>${wlDocumentHtml(o)}</body></html>`);
+ w.document.close();setTimeout(()=>w.print(),500);
+}
+function docxEsc2(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function docxRun2(t,b=false,sz=22,c="222222"){return `<w:r><w:rPr>${b?"<w:b/>":""}<w:color w:val="${c}"/><w:sz w:val="${sz}"/></w:rPr><w:t xml:space="preserve">${docxEsc2(t)}</w:t></w:r>`}
+function docxP2(t="",b=false,sz=22,c="222222"){return `<w:p>${docxRun2(t,b,sz,c)}</w:p>`}
+function docxTable2(headers,rows){
+ const cell=(x,h)=>`<w:tc><w:tcPr>${h?'<w:shd w:fill="D9E2F3"/>':''}</w:tcPr><w:p>${docxRun2(x,h,20,h?"216FA8":"222222")}</w:p></w:tc>`;
+ return `<w:tbl><w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4" w:color="B7B7B7"/><w:left w:val="single" w:sz="4" w:color="B7B7B7"/><w:bottom w:val="single" w:sz="4" w:color="B7B7B7"/><w:right w:val="single" w:sz="4" w:color="B7B7B7"/><w:insideH w:val="single" w:sz="4" w:color="B7B7B7"/><w:insideV w:val="single" w:sz="4" w:color="B7B7B7"/></w:tblBorders></w:tblPr><w:tr>${headers.map(x=>cell(x,true)).join("")}</w:tr>${rows.map(r=>`<w:tr>${r.map(x=>cell(x,false)).join("")}</w:tr>`).join("")}</w:tbl>`;
+}
+async function exportWorklogDocx(o){
+ try{
+  o=o||window._generatedWorklog||wlCollect(); const s=wlDocSummary(o),z=new JSZip(),customer=cust(o.customerId)||"";
+  const layers=(o.layers||[]).map(r=>[`${r[0]} m - ${r[1]} m`,r[2]||"",r[3]||"",r[4]||"",r[5]||""]);
+  const filters=(o.filters||[]).map(r=>[`${r[0]} m - ${r[1]} m`,`${(+r[1]||0)-(+r[0]||0)} m`,r[3]||"",r[2]||""]);
+  const summary=[["Fúrt mélység",Number.isFinite(s.drilled)?s.drilled+" m":"—","Tényleges mélység",Number.isFinite(s.drilled)?s.drilled+" m":"—"],["Szűrő kezdete",Number.isFinite(s.filterStart)?s.filterStart+" m":"—","Szűrő összesen",s.filterTotal?s.filterTotal+" m":"—"],["Nyugalmi vízszint",Number.isFinite(s.st)?s.st.toFixed(2)+" m":"—","Üzemi vízszint",Number.isFinite(s.dy)?s.dy.toFixed(2)+" m":"—"],["Leszívás",Number.isFinite(s.draw)?s.draw.toFixed(2)+" m":"—","Próbaszivattyúzás",s.q?s.q.toFixed(2)+" l/perc":"—"],["Fajlagos vízhozam",Number.isFinite(s.spec)?s.spec.toFixed(2)+" l/perc/m":"—","",""]];
+  let body=docxP2("KÚTFŐ PLUSZ KFT.",true,34,"1E78B4")+docxP2("4481 Nyíregyháza, Attila út 61. · +36 20 9247187 · kutfokft@gmail.com",false,18,"555555")+docxP2("MUNKANAPLÓ",true,30,"216FA8")+docxP2(`Dátum: ${o.date||""}    Helyszín: ${o.location||""}    Kút: ${o.wellNo||""}`)+docxP2(`Megrendelő: ${customer}`)+docxP2("KÚT ÖSSZESÍTŐ",true,25,"216FA8")+docxTable2(["Megnevezés","Érték","Megnevezés","Érték"],summary)+docxP2("RÉTEGNAPLÓ",true,25,"216FA8")+docxTable2(["Mélység","Réteg","Fúrási viselkedés","Vízszín / állapot","Megjegyzés"],layers)+docxP2("KÚTKIKÉPZÉS / SZŰRŐZÉS",true,25,"216FA8")+docxTable2(["Szakasz","Hossz","Darab","Típus / cső"],filters)+docxP2("PRÓBASZIVATTYÚZÁS",true,25,"216FA8")+docxP2(`Mért vízmennyiség: ${o.measureLiters||0} liter    Mérési idő: ${o.measureSeconds||0} mp    Vízhozam: ${s.q?s.q.toFixed(2):"—"} l/perc`)+docxP2("MEGJEGYZÉS",true,25,"216FA8")+docxP2(o.notes||"—")+docxP2("______________________________")+docxP2("Megrendelő / átvevő")+docxP2("______________________________")+docxP2("Kútfő Plusz Kft.");
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="900" w:bottom="900" w:left="900"/></w:sectPr></w:body></w:document>`;
+  z.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  z.folder("_rels").file(".rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  z.folder("word").file("document.xml",doc);
+  const blob=await z.generateAsync({type:"blob"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`Munkanaplo-${(o.location||"").replace(/[\\/:*?"<>|]/g,"-")}-${o.wellNo||""}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+ }catch(e){console.error(e);alert("A Word dokumentum generálása nem sikerült: "+e.message)}
+}
+function wlPrint(){let o=wlCollect();let w=window.open("","_blank");w.document.write(`<html><head><title>Munkanapló</title><style>body{font:13px Arial;padding:30px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px;text-align:left}</style></head><body><h1>💧 Kútfő Plusz ERP – Munkanapló</h1><p>Dátum: ${esc(o.date)} | Helyszín: ${esc(o.location)} | Kút: ${esc(o.wellNo)}</p><h2>Rétegnapló</h2><table><tr><th>Kezdő</th><th>Vég</th><th>Réteg</th><th>Fúrási viselkedés</th><th>Vízszín/állapot</th><th>Megjegyzés</th></tr>${o.layers.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</table><h2>Kútkiképzés / szűrőzés</h2><table><tr><th>Kezdő</th><th>Vég</th><th>Típus</th><th>Megjegyzés</th></tr>${o.filters.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</table><h2>Próbaszivattyúzás</h2><p>Mért vízmennyiség: ${o.measureLiters} liter | Mérési idő: ${o.measureSeconds} mp | Számított Q: ${o.flow} l/perc | Nyugalmi: ${o.static2} m | Üzemi: ${o.dynamic2} m</p><h2>Munkanapló megjegyzés</h2><p>${esc(o.notes)}</p><script>window.print()<\/script></body></html>`);w.document.close()}
+function wlImport(){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=async()=>{try{const d=JSON.parse(await i.files[0].text());Object.entries(d).forEach(([k,v])=>{let e=document.getElementById("wl_"+k);if(e)e.value=v});wlLayers=d.layers||[];wlFilters=d.filters||[];wlRenderLayers();wlRenderFilters();wlCalculate();toast("Betöltve")}catch{toast("Hibás mentés")}};i.click()}
+function newMaterial(){openModal("Új anyag",`<form onsubmit="saveMaterial(event)"><div class="formgrid"><div class="field"><label>Megnevezés</label><input required class="input" name="name"></div><div class="field"><label>Egység</label><input class="input" name="unit" value="db"></div><div class="field"><label>Készlet</label><input class="input" type="number" name="stock" value="0"></div><div class="field"><label>Minimum</label><input class="input" type="number" name="min" value="0"></div><div class="field"><label>Beszerzési ár</label><input class="input" type="number" name="price" value="0"></div></div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`)}
+function saveMaterial(e){e.preventDefault();let o=Object.fromEntries(new FormData(e.target).entries());db.materials.push({id:uid("M"),name:o.name,unit:o.unit,stock:+o.stock,min:+o.min,price:+o.price});save();closeModal();render();toast("Anyag mentve")}
+function newMachine(){openModal("Új gép",`<form onsubmit="saveMachine(event)"><div class="formgrid"><div class="field"><label>Gép neve</label><input required class="input" name="name"></div><div class="field"><label>Típus</label><input class="input" name="model"></div><div class="field"><label>Üzemóra</label><input class="input" type="number" name="hours" value="0"></div><div class="field"><label>Következő szerviz</label><input class="input" type="number" name="service" value="1000"></div></div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`)}
+function saveMachine(e){e.preventDefault();let o=Object.fromEntries(new FormData(e.target).entries());db.machines.push({id:uid("G"),name:o.name,model:o.model,hours:+o.hours,service:+o.service,status:"Üzemképes"});save();closeModal();render();toast("Gép mentve")}
+
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kutfoplusz-erp-mentes.json";a.click();URL.revokeObjectURL(a.href);toast("Biztonsági mentés letöltve")}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.customers||!x.projects)throw Error();db=x;save();render();toast("Adatok visszaállítva")}catch{toast("Érvénytelen mentés")}};r.readAsText(f);e.target.value=""}
+function resetData(){if(confirm("Biztosan visszaállítod a mintaadatokat?")){db=structuredClone(initial);save();render();toast("Mintaadatok visszaállítva")}}
+window.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer()}});
+render();
+</script>
+</body>
+</html>

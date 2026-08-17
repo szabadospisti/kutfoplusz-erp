@@ -1,11 +1,13 @@
-# Kútfő Plusz ERP V1 – prototípus
+# Kútfő Plusz ERP V1.7 – Word/PDF generálás javítva
 
-Ez az első UI-prototípus és az első adatbázis-séma a Kútfő Plusz saját vállalatirányítási rendszeréhez.
+Javítva az a hiba, amikor a Munkanapló generálása ablakból a Word gombra kattintva:
+„null is not an object (evaluating document.getElementById("wl_date").value)”
 
-## Kipróbálás
+Ok: a generáló előnézet megnyitásakor az eredeti munkanapló űrlap kikerül a DOM-ból, ezért a Word/PDF gomb újra próbálta a wlCollect() függvénnyel lekérni az űrlapot.
 
-Nyisd meg az `index.html` fájlt böngészőben. A navigáció és a fő képernyők működnek; a jelenlegi adatok mintaadatok.
+Megoldás:
+- a generáló ablak megnyitásakor pillanatképként eltároljuk a kitöltött munkanapló adatait;
+- PDF és Word generálás már ebből az eltárolt adatból dolgozik;
+- nem próbálja újra elérni a bezárt/lecserélt wlForm elemeket.
 
-## Következő fejlesztési lépés
-
-A `schema.sql` Supabase/PostgreSQL adatbázisba tölthető. Ezután a frontend beköthető valódi adatokhoz, autentikációhoz, PDF-ajánlathoz, fotófeltöltéshez és jogosultságokhoz.
+JavaScript syntax: OK.
