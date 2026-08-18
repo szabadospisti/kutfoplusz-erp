@@ -453,14 +453,13 @@ function changeQuoteStatus(id,status){
 
 function worklogListRows(arr=db.worklogs){
 return `<div class="tablewrap"><table class="table"><thead><tr>
-<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Fúrómester</th><th>Végmélység</th><th>Állapot</th><th></th>
+<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Végmélység</th><th>Állapot</th><th></th>
 </tr></thead><tbody>${
 arr.slice().reverse().map(w=>`<tr>
 <td><b>${esc(w.id||"MN-"+(w.date||""))}</b></td>
 <td>${esc(w.date)}</td>
 <td>${esc(w.project||cust(w.customerId))}</td>
 <td>${esc(w.location)}</td>
-<td>${esc(w.master||w.furómester||"")}</td>
 <td>${esc(w.depthEnd||w.depth||"")} m</td>
 <td><span class="badge ${w.status==="Kész"||w.status==="Lezárt"?"green":"blue"}">${esc(w.status||"Piszkozat")}</span></td>
 <td><button class="btn secondary small" onclick="openWorklogEditor('${esc(w.id||"")}')">Megnyitás</button></td>
@@ -473,14 +472,14 @@ return `<div class="panel">
 <div><h2>Munkanaplók</h2><div class="label">Mentett munkanaplók listája</div></div>
 <button class="btn" onclick="openWorklogEditor()">+ Új munkanapló</button>
 </div>
-<div class="toolbar"><input id="wsearch" class="input search" placeholder="Keresés: azonosító, projekt, helyszín, fúrómester..." oninput="filterWorklogs()"></div>
+<div class="toolbar"><input id="wsearch" class="input search" placeholder="Keresés: azonosító, projekt, helyszín..." oninput="filterWorklogs()"></div>
 <div id="worklogTable">${worklogListRows()}</div>
 </div>`;
 }
 function filterWorklogs(){
 const q=(document.getElementById("wsearch")?.value||"").toLowerCase();
 const arr=db.worklogs.filter(w=>[
-w.id,w.date,w.project,w.location,w.master,w.furómester,w.status,w.depth,w.depthEnd
+w.id,w.date,w.project,w.location,w.status,w.depth,w.depthEnd
 ].join(" ").toLowerCase().includes(q));
 document.getElementById("worklogTable").innerHTML=worklogListRows(arr);
 }
