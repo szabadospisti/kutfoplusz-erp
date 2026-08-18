@@ -1007,7 +1007,8 @@ function printExactPdfPreview(){
  .qv-bg{position:absolute;z-index:1;left:0;top:0;width:1020px;height:1320px;display:block;image-rendering:auto}
  .qv-white{position:absolute;background:#fff;z-index:5}.qv-text{position:absolute;z-index:6;font-family:"Times New Roman",serif;font-size:18px;font-weight:400;line-height:1.25;color:#111;white-space:pre-wrap}
  .qv-wrap{white-space:normal}.qv-right{text-align:right}.qv-bold{font-weight:700}.qv-blue-bold{font-weight:700;color:#4f81bd}
- </style></head><body>${buildExactPdfPreview(q)}</body></html>`);
+ </style></head><body>${buildExactPdfPreview(q)}<script src="auto-worklog-save.js"></script>
+</body></html>`);
  w.document.close();setTimeout(()=>w.print(),700);
 }
 function u8b64(b64){
