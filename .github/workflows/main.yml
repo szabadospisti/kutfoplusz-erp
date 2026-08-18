@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Inject ERP customer, work model, UI polish and AI quote preparation
+      - name: Inject ERP modules
         shell: python
         run: |
           from pathlib import Path
@@ -37,6 +37,7 @@ jobs:
               Path('ui-polish.js').read_text(encoding='utf-8'),
               Path('ai-inbox-pilot.js').read_text(encoding='utf-8'),
               Path('ai-quote-prep.js').read_text(encoding='utf-8'),
+              Path('inbox-nav-fix.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
