@@ -1,6 +1,4 @@
-/* Kútfő Plusz ERP — egyetlen Supabase Auth modul
- * Login + session + refresh + logout + password recovery.
- */
+/* Kútfő Plusz ERP — single Supabase Auth controller */
 (function () {
   'use strict';
 
@@ -10,19 +8,20 @@
   const SESSION_KEY = 'kutfoplusz_supabase_session_v2';
   const LEGACY_SESSION_KEY = 'kutfoplusz_supabase_session_v1';
 
-  if (!SB_URL || !SB_KEY) {
-    console.error('Supabase Auth: hiányzik a Supabase konfiguráció.');
-    return;
-  }
-
-  let authBusy = false;
-
   function status(message, isError) {
     const el = document.getElementById('authStatus');
     if (!el) return;
     el.textContent = message || '';
     el.style.color = isError ? '#c0392b' : '#18733a';
   }
+
+  if (!SB_URL || !SB_KEY) {
+    console.error('Supabase Auth: hiányzik a Supabase konfiguráció.', { hasUrl: !!SB_URL, hasKey: !!SB_KEY });
+    status('Hiányzik a Supabase konfiguráció.', true);
+    return;
+  }
+
+  let authBusy = false;
 
   function clearSession() {
     localStorage.removeItem(SESSION_KEY);
@@ -33,7 +32,7 @@
     try {
       const raw = localStorage.getItem(SESSION_KEY) || localStorage.getItem(LEGACY_SESSION_KEY);
       return raw ? JSON.parse(raw) : null;
-    } catch (e) {
+    } catch (_) {
       clearSession();
       return null;
     }
@@ -55,9 +54,9 @@
       const response = await fetch(SB_URL + path, Object.assign({}, opts, { headers, signal: controller.signal }));
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const err = new Error(data.error_description || data.msg || data.message || data.error || 'Supabase Auth hiba');
-        err.status = response.status;
-        throw err;
+        const error = new Error(data.error_description || data.msg || data.message || data.error || ('Supabase Auth hiba (' + response.status + ')'));
+        error.status = response.status;
+        throw error;
       }
       return data;
     } finally {
@@ -74,7 +73,8 @@
       });
       if (data.access_token) saveSession(data);
       return data;
-    } catch (e) {
+    } catch (error) {
+      console.warn('Supabase session refresh failed:', error);
       clearSession();
       return null;
     }
@@ -94,8 +94,8 @@
     }
     document.getElementById('authOverlay')?.classList.add('auth-hidden');
     document.getElementById('erpApp')?.classList.remove('auth-hidden');
-    const who = document.getElementById('cloudStatus');
-    if (who) who.textContent = '☁️ ' + (user?.email || 'Supabase');
+    const cloud = document.getElementById('cloudStatus');
+    if (cloud) cloud.textContent = '☁️ ' + (user?.email || 'Supabase');
     if (typeof window.render === 'function') window.render();
   }
 
@@ -104,23 +104,29 @@
     try {
       await window.supabaseCloudLoadOrMigrate();
       if (typeof window.render === 'function') window.render();
+      const cloud = document.getElementById('cloudStatus');
+      if (cloud) cloud.textContent = '☁️ Mentve';
     } catch (error) {
       console.error('Supabase adatbetöltési hiba belépés után:', error);
-      const cloudStatus = document.getElementById('cloudStatus');
-      if (cloudStatus) cloudStatus.textContent = '⚠️ Felhőadat betöltési hiba';
+      const cloud = document.getElementById('cloudStatus');
+      if (cloud) cloud.textContent = '⚠️ Felhőadat betöltési hiba';
     }
   }
 
   async function login() {
     if (authBusy) return false;
     authBusy = true;
-    const email = (document.getElementById('authEmail')?.value || '').trim();
-    const password = document.getElementById('authPassword')?.value || '';
+    const emailEl = document.getElementById('authEmail');
+    const passwordEl = document.getElementById('authPassword');
+    const email = (emailEl?.value || '').trim();
+    const password = passwordEl?.value || '';
+
     if (!email || !password) {
       status('Add meg az e-mail címet és a jelszót.', true);
       authBusy = false;
       return false;
     }
+
     status('Bejelentkezés...', false);
     try {
       const data = await authRequest('/auth/v1/token?grant_type=password', {
@@ -141,18 +147,38 @@
     return false;
   }
 
-  async function restoreSession() {
-    const session = await ensureFreshSession(readSession());
-    if (!session?.access_token || !session?.user) return false;
-    saveSession(session);
-    enterERP(session.user);
-    void loadCloudAfterLogin();
-    return true;
+  async function signup() {
+    const email = (document.getElementById('authEmail')?.value || '').trim();
+    const password = document.getElementById('authPassword')?.value || '';
+    if (!email || password.length < 8) {
+      status('Adj meg e-mail címet és legalább 8 karakteres jelszót.', true);
+      return false;
+    }
+    status('Felhasználó létrehozása...', false);
+    try {
+      const data = await authRequest('/auth/v1/signup', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+      if (data.access_token && data.user) {
+        saveSession(data);
+        enterERP(data.user);
+        void loadCloudAfterLogin();
+      } else {
+        status('A regisztráció sikerült. Ellenőrizd az e-mail címedet, majd jelentkezz be.', false);
+      }
+    } catch (error) {
+      status(error?.message || 'Regisztráció sikertelen.', true);
+    }
+    return false;
   }
 
   async function requestReset() {
     const email = (document.getElementById('authEmail')?.value || '').trim();
-    if (!email) return status('Először add meg az e-mail címedet.', true);
+    if (!email) {
+      status('Először add meg az e-mail címedet.', true);
+      return;
+    }
     status('Jelszó-visszaállító e-mail küldése...', false);
     try {
       const redirectTo = window.location.origin + window.location.pathname;
@@ -163,6 +189,70 @@
       status('Ha az e-mailhez tartozik ERP-fiók, elküldtük a visszaállító e-mailt.', false);
     } catch (error) {
       status(error?.message || 'Nem sikerült elküldeni a visszaállító e-mailt.', true);
+    }
+  }
+
+  function bind() {
+    const form = document.getElementById('authForm');
+    if (!form) {
+      console.error('Supabase Auth: #authForm nem található.');
+      return;
+    }
+
+    /* Explicitly replace the legacy inline onsubmit handler. */
+    form.removeAttribute('onsubmit');
+    form.onsubmit = function (event) {
+      event.preventDefault();
+      void login();
+      return false;
+    };
+
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit) {
+      submit.onclick = function (event) {
+        event.preventDefault();
+        void login();
+        return false;
+      };
+    }
+
+    const buttons = Array.from(form.querySelectorAll('button'));
+    const signupButton = buttons.find((button) => /Új felhasználó/i.test(button.textContent || ''));
+    if (signupButton) {
+      signupButton.removeAttribute('onclick');
+      signupButton.onclick = function (event) {
+        event.preventDefault();
+        void signup();
+        return false;
+      };
+    }
+
+    let forgot = document.getElementById('forgotPasswordBtn');
+    if (!forgot) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'text-align:center;margin-top:12px';
+      wrap.innerHTML = '<button id="forgotPasswordBtn" type="button" style="border:0;background:none;color:#1d4ed8;cursor:pointer;font-weight:700">Elfelejtettem a jelszavam</button>';
+      form.appendChild(wrap);
+      forgot = wrap.firstElementChild;
+    }
+    forgot.onclick = requestReset;
+
+    /* Do not use the old inline handler even if the browser cached it. */
+    window.supabaseLogin = function (event) {
+      if (event) event.preventDefault();
+      void login();
+      return false;
+    };
+    window.supabaseSignup = function () {
+      void signup();
+      return false;
+    };
+
+    const params = new URLSearchParams(location.hash.slice(1));
+    if (params.get('type') === 'recovery' && params.get('access_token')) {
+      showResetModal(params.get('access_token'));
+    } else {
+      void restoreSession();
     }
   }
 
@@ -177,23 +267,15 @@
       const p1 = document.getElementById('newPassword1').value;
       const p2 = document.getElementById('newPassword2').value;
       const st = document.getElementById('resetStatus');
-      if (p1.length < 8) return (st.textContent = 'A jelszó legalább 8 karakter legyen.');
-      if (p1 !== p2) return (st.textContent = 'A két jelszó nem egyezik.');
+      if (p1.length < 8) { st.textContent = 'A jelszó legalább 8 karakter legyen.'; return; }
+      if (p1 !== p2) { st.textContent = 'A két jelszó nem egyezik.'; return; }
       st.textContent = 'Jelszó mentése...';
       try {
-        await authRequest('/auth/v1/user', {
-          method: 'PUT',
-          headers: { Authorization: 'Bearer ' + accessToken },
-          body: JSON.stringify({ password: p1 })
-        });
+        await authRequest('/auth/v1/user', { method: 'PUT', headers: { Authorization: 'Bearer ' + accessToken }, body: JSON.stringify({ password: p1 }) });
         clearSession();
         st.style.color = '#18733a';
         st.textContent = 'Az új jelszó sikeresen létrejött. Most már be tudsz lépni az ERP-be.';
-        setTimeout(() => {
-          d.remove();
-          history.replaceState(null, '', location.pathname + location.search);
-          location.reload();
-        }, 1000);
+        setTimeout(() => { d.remove(); history.replaceState(null, '', location.pathname + location.search); location.reload(); }, 1000);
       } catch (error) {
         st.style.color = '#c0392b';
         st.textContent = error?.message || 'Nem sikerült a jelszó mentése.';
@@ -201,31 +283,15 @@
     };
   }
 
-  function bind() {
-    const form = document.getElementById('authForm');
-    if (form && form.dataset.erpAuthBound !== '1') {
-      form.dataset.erpAuthBound = '1';
-      form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        void login();
-      }, true);
-    }
-
-    if (form && !document.getElementById('forgotPasswordBtn')) {
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'text-align:center;margin-top:12px';
-      wrap.innerHTML = '<button id="forgotPasswordBtn" type="button" style="border:0;background:none;color:#1d4ed8;cursor:pointer;font-weight:700">Elfelejtettem a jelszavam</button>';
-      form.appendChild(wrap);
-      document.getElementById('forgotPasswordBtn').onclick = requestReset;
-    }
-
-    const params = new URLSearchParams(location.hash.slice(1));
-    if (params.get('type') === 'recovery' && params.get('access_token')) showResetModal(params.get('access_token'));
-    else void restoreSession();
+  async function restoreSession() {
+    const session = await ensureFreshSession(readSession());
+    if (!session?.access_token || !session?.user) return false;
+    saveSession(session);
+    enterERP(session.user);
+    void loadCloudAfterLogin();
+    return true;
   }
 
-  window.supabaseLogin = function (event) { if (event) event.preventDefault(); void login(); return false; };
   window.supabaseLogout = function () {
     const session = readSession();
     clearSession();
