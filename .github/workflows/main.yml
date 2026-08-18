@@ -24,17 +24,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Inject ERP modules
+
+      - name: Inject ERP modules and stable inbox navigation
         shell: python
         run: |
           from pathlib import Path
           page = Path('index.html').read_text(encoding='utf-8')
+
+          nav_marker = '<nav id="nav">'
+          inbox_button = '<button class="nav" data-page="inbox" onclick="openInbox()"><i>📥</i>Beérkező dokumentumok</button>'
+          if 'data-page="inbox"' not in page:
+              if nav_marker not in page:
+                  raise SystemExit('index.html: #nav marker not found')
+              page = page.replace(nav_marker, nav_marker + '\n    ' + inbox_button, 1)
+
           patches = [
               Path('customer-work-types.js').read_text(encoding='utf-8'),
               Path('ui-polish.js').read_text(encoding='utf-8'),
               Path('ai-inbox-pilot.js').read_text(encoding='utf-8'),
               Path('ai-quote-prep.js').read_text(encoding='utf-8'),
-              Path('inbox-nav-fix.js').read_text(encoding='utf-8'),
               Path('inbox-file-upload.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
@@ -43,7 +51,17 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected, including inbox file upload')
+          print('ERP modules injected; inbox navigation is part of the base sidebar')
+
+      - name: Verify generated page
+        shell: python
+        run: |
+          from pathlib import Path
+          page = Path('index.html').read_text(encoding='utf-8')
+          if 'data-page="inbox"' not in page or 'Beérkező dokumentumok' not in page:
+              raise SystemExit('BUILD ERROR: inbox navigation was not injected')
+          print('OK: Beérkező dokumentumok navigation present in generated index.html')
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload website
