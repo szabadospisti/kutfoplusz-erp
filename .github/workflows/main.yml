@@ -28,7 +28,7 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Prepare authentication and boot bridge
+      - name: Prepare authentication, boot and logout bridge
         shell: bash
         run: |
           python3 - <<'PY'
@@ -36,23 +36,25 @@ jobs:
           import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          for name in ('auth-stable-fix.js','auth-password.js','login-fix.js','auth-bind.js','boot-fix.js'):
+          for name in ('auth-stable-fix.js','auth-password.js','login-fix.js','auth-bind.js','boot-fix.js','logout-fix.js'):
               pattern=r'<script[^>]+src=["\'](?:\./)?'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*></script>\s*'
               s=re.sub(pattern,'',s,flags=re.I)
-          tag='''<script src="auth-bind.js?v=20260818-5"></script>\n<script src="boot-fix.js?v=20260818-1"></script>\n'''
+          tag='''<script src="auth-bind.js?v=20260818-6"></script>\n<script src="boot-fix.js?v=20260818-2"></script>\n<script src="logout-fix.js?v=20260818-1"></script>\n'''
           if '</body>' not in s: raise SystemExit('index.html: missing </body>')
           s=s.replace('</body>',tag+'</body>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Validate authentication and boot sources
+      - name: Validate authentication, boot and logout sources
         run: |
           test -s supabase_config.js
           grep -q "__kutfoplusAuth" supabase_config.js
           test -s auth-bind.js
           test -s boot-fix.js
-          grep -q "auth-bind.js?v=20260818-5" index.html
-          grep -q "boot-fix.js?v=20260818-1" index.html
+          test -s logout-fix.js
+          grep -q "auth-bind.js?v=20260818-6" index.html
+          grep -q "boot-fix.js?v=20260818-2" index.html
+          grep -q "logout-fix.js?v=20260818-1" index.html
           test ! -e auth-stable-fix.js
           test ! -e auth-password.js
           test ! -e login-fix.js
