@@ -19,11 +19,13 @@ setTimeout(function installMergedWellProfile(){
 
     const depthEl=document.getElementById("wl_finalDepth");
     const finalDepth=Number(depthEl?.value)||0;
-    const validLayers=(window.wlLayers||[]).filter(r=>{
+    const layers=(typeof wlLayers!=="undefined" && Array.isArray(wlLayers))?wlLayers:[];
+    const filters=(typeof wlFilters!=="undefined" && Array.isArray(wlFilters))?wlFilters:[];
+    const validLayers=layers.filter(r=>{
       const a=Number(r?.[0]), b=Number(r?.[1]);
       return Number.isFinite(a)&&Number.isFinite(b)&&b>a;
     });
-    const validFilters=(window.wlFilters||[]).filter(r=>{
+    const validFilters=filters.filter(r=>{
       const a=Number(r?.[0]), b=Number(r?.[1]);
       return Number.isFinite(a)&&Number.isFinite(b)&&b>a;
     });
@@ -54,7 +56,7 @@ setTimeout(function installMergedWellProfile(){
       if(prev && prev.normalized===normalized && Math.abs(Number(prev.b)-a)<0.000001){
         prev.b=b;
       }else{
-        merged.push({a,b,name,normalized,source:r});
+        merged.push({a,b,name,normalized});
       }
     }
 
