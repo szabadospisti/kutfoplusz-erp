@@ -1,4 +1,4 @@
-name: Deploy Kutfő Plusz ERP
+name: Deploy Kútfő Plusz ERP
 
 on:
   push:
@@ -29,6 +29,18 @@ jobs:
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Inject stable authentication fix
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          tag = '<script src="auth-stable-fix.js?v=1"></script>'
+          if tag not in s:
+              s = s.replace('</body>', tag + '\n</body>')
+          p.write_text(s, encoding='utf-8')
+          PY
 
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
