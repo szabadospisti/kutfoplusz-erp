@@ -54,7 +54,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; inbox, material delete and material edit are included')
+          print('ERP modules injected; inbox, warehouse and fleet controls are included')
 
       - name: Verify generated page
         shell: python
@@ -69,11 +69,14 @@ jobs:
               'Anyagok szerkesztése',
               'Változtatások mentése',
               'kpDeleteMaterial',
+              'Géppark szerkesztése',
+              'kpOpenMachineEditor',
+              'mfDelete',
           ]
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse, material edit and delete modules present')
+          print('OK: inbox, warehouse and machine fleet edit/delete modules present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
