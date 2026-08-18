@@ -39,7 +39,7 @@ jobs:
           for name in ('auth-stable-fix.js','auth-password.js','login-fix.js','auth-bind.js'):
               pattern=r'<script[^>]+src=["\'](?:\./)?'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*></script>\s*'
               s=re.sub(pattern,'',s,flags=re.I)
-          tag='<script src="auth-bind.js?v=20260818-3"></script>\n'
+          tag='<script src="auth-bind.js?v=20260818-4"></script>\n'
           if '</body>' not in s: raise SystemExit('index.html: missing </body>')
           s=s.replace('</body>',tag+'</body>')
           p.write_text(s,encoding='utf-8')
@@ -50,7 +50,7 @@ jobs:
           test -s supabase_config.js
           grep -q "__kutfoplusAuth" supabase_config.js
           test -s auth-bind.js
-          grep -q "auth-bind.js?v=20260818-3" index.html
+          grep -q "auth-bind.js?v=20260818-4" index.html
           test ! -e auth-stable-fix.js
           test ! -e auth-password.js
           test ! -e login-fix.js
