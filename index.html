@@ -222,6 +222,8 @@
 .auth-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.auth-actions button{flex:1;min-width:160px}
 .auth-status{min-height:22px;margin-top:15px;color:#c0392b;font-size:14px}
 .cloud-pill{font-size:12px;padding:7px 10px;border-radius:999px;background:#e8f5e9;color:#18733a;font-weight:700}
+
+@media(max-width:600px){#worklogTable{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}#worklogTable .table{min-width:650px}#worklogTable .tablewrap{width:100%;overflow-x:auto;overscroll-behavior-x:contain}.wl-shell{max-width:100%;overflow-x:hidden}}
 </style>
 <style id="worklog-template-css">
 .wl-shell{background:#f4f6f8;margin:-20px;padding:20px;min-height:calc(100vh - 84px)}
@@ -331,11 +333,8 @@
 <div id="toast" class="toast"></div>
 <input id="importFile" type="file" accept=".json,application/json" hidden>
 
-document.addEventListener("click",function(e){
- const a=e.target.closest("[data-quote-id]");
- if(a){e.preventDefault();editQuote(a.getAttribute("data-quote-id"))}
-});/* data-quote-edit-fallback */
-<script src="quote_template.js">
+<script src="quote_template.js"></script>
+<script>
 function pipe3mParts(length){
   const m=Math.max(0,Math.floor(Number(length)||0));
   const db=Math.floor(m/3);
