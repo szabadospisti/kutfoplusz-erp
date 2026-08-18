@@ -1,9 +1,21 @@
-/* Kútfő Plusz ERP – Beérkező dokumentum valódi fájlfeltöltés */
+/* Kútfő Plusz ERP – Beérkező dokumentum valódi fájlfeltöltés
+   Stabil változat: a fő ERP adatmodellje lehet globális let/const változó is,
+   ezért nem a window.db tulajdonságra támaszkodunk.
+*/
 (function(){
-  const SUPA='https://qoxxhsbcptyieyhtdhrw.supabase.co';
+  const SUPA='https://qoxxhsbcptyieyhtdhr.supabase.co';
   const KEY='sb_publishable_WYMcBkgdK-Ed5JY_ljJS0g_BB8dH10T';
   const BUCKET='erp-documents';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function getDb(){
+    try{
+      if(typeof db!=='undefined' && db) return db;
+    }catch(e){}
+    try{
+      if(window.db) return window.db;
+    }catch(e){}
+    return null;
+  }
   function sessionToken(){
     try{
       for(let i=0;i<localStorage.length;i++){
@@ -40,13 +52,22 @@
     const btn=form.querySelector('.modalfoot .btn:not(.secondary)');if(btn){btn.disabled=true;btn.textContent='Feltöltés…';}
     try{
       const o=Object.fromEntries(new FormData(form).entries());delete o.file;
-      if(!window.db)throw new Error('ERP adatmodell nem érhető el.');
-      if(!Array.isArray(db.inboxDocuments))db.inboxDocuments=[];
+      const model=getDb();
+      if(!model)throw new Error('Az ERP adatmodell még nem töltődött be. Frissítsd az oldalt, majd próbáld újra.');
+      if(!Array.isArray(model.inboxDocuments))model.inboxDocuments=[];
       const doc={id:(typeof uid==='function'?uid('DOC'):'DOC-'+Date.now()),...o,status:'Feldolgozásra vár',extracted:{},tasks:[]};
       await upload(file,doc);
-      db.inboxDocuments.push(doc);if(typeof save==='function')save();
-      if(typeof closeModal==='function')closeModal();if(typeof openInbox==='function')openInbox();if(typeof toast==='function')toast('Dokumentum és fájl feltöltve');
-    }catch(err){console.error(err);alert(err.message||'A fájl feltöltése nem sikerült.');if(btn){btn.disabled=false;btn.textContent='Feltöltés és mentés';}}
+      model.inboxDocuments.push(doc);
+      if(typeof save==='function')save();
+      else if(typeof localSaveOnly==='function')localSaveOnly();
+      if(typeof closeModal==='function')closeModal();
+      if(typeof openInbox==='function')openInbox();
+      if(typeof toast==='function')toast('Dokumentum és fájl feltöltve');
+    }catch(err){
+      console.error('Kútfő Plusz inbox upload:',err);
+      alert(err.message||'A fájl feltöltése nem sikerült.');
+      if(btn){btn.disabled=false;btn.textContent='Feltöltés és mentés';}
+    }
   }
   function boot(){
     addFileField();
