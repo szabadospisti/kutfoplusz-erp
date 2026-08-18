@@ -8,9 +8,24 @@
   const SESSION_KEY = 'kutfoplusz_supabase_session_v2';
   const LEGACY_SESSION_KEY = 'kutfoplusz_supabase_session_v1';
 
+  function getStatusEl() {
+    let el = document.getElementById('authStatus');
+    if (el) return el;
+    const form = document.getElementById('authForm');
+    if (!form) return null;
+    el = document.createElement('div');
+    el.id = 'authStatus';
+    el.style.cssText = 'margin-top:12px;font-weight:700;min-height:20px;text-align:center';
+    form.appendChild(el);
+    return el;
+  }
+
   function status(message, isError) {
-    const el = document.getElementById('authStatus');
-    if (!el) return;
+    const el = getStatusEl();
+    if (!el) {
+      console[isError ? 'error' : 'log']('ERP Auth:', message || '');
+      return;
+    }
     el.textContent = message || '';
     el.style.color = isError ? '#c0392b' : '#18733a';
   }
@@ -43,6 +58,22 @@
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     localStorage.removeItem(LEGACY_SESSION_KEY);
   }
+
+  /* Compatibility API for the existing ERP code. There is still only one
+     auth implementation; these aliases prevent older ERP modules from
+     throwing "sbSetSession is not defined" while they are being migrated. */
+  window.sbSetSession = function (session) {
+    if (session && session.access_token) saveSession(session);
+    else clearSession();
+  };
+  window.sbGetSession = function () { return readSession(); };
+  try {
+    Object.defineProperty(window, 'sbSession', {
+      configurable: true,
+      get: readSession,
+      set: function (value) { if (value) saveSession(value); else clearSession(); }
+    });
+  } catch (_) {}
 
   async function authRequest(path, options) {
     const opts = options || {};
@@ -135,6 +166,7 @@
       });
       if (!data.access_token || !data.user) throw new Error('A hitelesítés nem adott érvényes sessiont.');
       saveSession(data);
+      window.sbSetSession(data);
       enterERP(data.user);
       status('', false);
       void loadCloudAfterLogin();
@@ -162,6 +194,7 @@
       });
       if (data.access_token && data.user) {
         saveSession(data);
+        window.sbSetSession(data);
         enterERP(data.user);
         void loadCloudAfterLogin();
       } else {
@@ -199,7 +232,6 @@
       return;
     }
 
-    /* Explicitly replace the legacy inline onsubmit handler. */
     form.removeAttribute('onsubmit');
     form.onsubmit = function (event) {
       event.preventDefault();
@@ -209,6 +241,7 @@
 
     const submit = form.querySelector('button[type="submit"]');
     if (submit) {
+      submit.removeAttribute('onclick');
       submit.onclick = function (event) {
         event.preventDefault();
         void login();
@@ -237,7 +270,6 @@
     }
     forgot.onclick = requestReset;
 
-    /* Do not use the old inline handler even if the browser cached it. */
     window.supabaseLogin = function (event) {
       if (event) event.preventDefault();
       void login();
@@ -287,6 +319,7 @@
     const session = await ensureFreshSession(readSession());
     if (!session?.access_token || !session?.user) return false;
     saveSession(session);
+    window.sbSetSession(session);
     enterERP(session.user);
     void loadCloudAfterLogin();
     return true;
