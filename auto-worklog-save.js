@@ -60,17 +60,23 @@
     }
   }
 
-  function schedule(){
+  function schedule(delay=1200){
     clearTimeout(timer);
     status('✏️ Módosítás folyamatban...');
-    timer = setTimeout(collectAndSave, 1200);
+    timer = setTimeout(collectAndSave, delay);
   }
 
   document.addEventListener('input', function(e){
-    if (e.target.closest && e.target.closest('#wlForm')) schedule();
+    if (e.target.closest && e.target.closest('#wlForm')) schedule(1200);
   }, true);
   document.addEventListener('change', function(e){
-    if (e.target.closest && e.target.closest('#wlForm')) schedule();
+    if (e.target.closest && e.target.closest('#wlForm')) schedule(500);
+  }, true);
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest('#wlForm')) {
+      const b = e.target.closest('button');
+      if (b && !b.type || (b && b.type !== 'submit')) schedule(700);
+    }
   }, true);
 
   window.addEventListener('beforeunload', function(){
