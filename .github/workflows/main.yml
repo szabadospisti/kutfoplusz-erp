@@ -27,6 +27,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Inject ERP customer and work model
+        shell: python
+        run: |
+          from pathlib import Path
+          page = Path('index.html').read_text(encoding='utf-8')
+          patch = Path('customer-work-types.js').read_text(encoding='utf-8')
+          marker = '</script>'
+          pos = page.rfind(marker)
+          if pos < 0:
+              raise SystemExit('index.html: closing script tag not found')
+          page = page[:pos] + '\n' + patch + '\n' + page[pos:]
+          Path('index.html').write_text(page, encoding='utf-8')
+          print('Customer/work model injected into ERP')
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
