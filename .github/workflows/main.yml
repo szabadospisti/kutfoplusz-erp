@@ -38,6 +38,7 @@ jobs:
               Path('ai-inbox-pilot.js').read_text(encoding='utf-8'),
               Path('ai-quote-prep.js').read_text(encoding='utf-8'),
               Path('inbox-nav-fix.js').read_text(encoding='utf-8'),
+              Path('inbox-file-upload.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
