@@ -1,4 +1,4 @@
-/* Final auth form bridge. The implementation lives only in supabase_config.js. */
+/* Final auth form bridge + ERP render watchdog. */
 (function(){
   function bind(){
     const api=window.__kutfoplusAuth;
@@ -16,5 +16,29 @@
     window.supabaseLogin=function(e){if(e)e.preventDefault();void api.login();return false;};
     window.supabaseSignup=function(){void api.signup();return false;};
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+  function renderWatchdog(){
+    const app=document.getElementById('erpApp');
+    const overlay=document.getElementById('authOverlay');
+    const content=document.getElementById('content');
+    const session=typeof window.sbGetSession==='function' ? window.sbGetSession() : null;
+    if(!session || !session.access_token || !session.user) return;
+    if(overlay) overlay.classList.add('auth-hidden');
+    if(app) app.classList.remove('auth-hidden');
+    try{
+      if(typeof window.render==='function') window.render();
+    }catch(e){
+      console.error('ERP render watchdog:',e);
+      if(content && !content.innerHTML.trim()) content.innerHTML='<div class="panel"><h2>ERP betöltési hiba</h2><p>'+String(e.message||e)+'</p></div>';
+    }
+    setTimeout(function(){
+      if(content && !content.innerHTML.trim() && typeof window.render==='function'){
+        try{window.render();}catch(e){console.error('ERP render retry:',e);}
+      }
+    },800);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){bind();setTimeout(renderWatchdog,150);},{once:true});
+  }else{
+    bind();setTimeout(renderWatchdog,150);
+  }
 })();
