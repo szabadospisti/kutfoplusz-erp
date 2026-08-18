@@ -1,0 +1,41 @@
+name: Fix munkanapló lista
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove fúrómester column from worklog list
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Fúrómester</th><th>Végmélység</th><th>Állapot</th><th></th>'
+          new = '<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Végmélység</th><th>Állapot</th><th></th>'
+          s = s.replace(old, new)
+          s = s.replace('<td>${esc(w.master||w.furómester||"")}</td>\n', '')
+          s = s.replace('placeholder="Keresés: azonosító, projekt, helyszín, fúrómester..."', 'placeholder="Keresés: azonosító, projekt, helyszín..."')
+          s = s.replace('w.id,w.date,w.project,w.location,w.master,w.furómester,w.status,w.depth,w.depthEnd', 'w.id,w.date,w.project,w.location,w.status,w.depth,w.depthEnd')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/fix-worklog-columns.yml
+          git diff --cached --quiet || git commit -m "Munkanapló lista: fúrómester oszlop eltávolítása"
+          git push
