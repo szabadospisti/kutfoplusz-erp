@@ -45,6 +45,7 @@ jobs:
               Path('ai-quote-prep.js').read_text(encoding='utf-8'),
               Path('inbox-file-upload.js').read_text(encoding='utf-8'),
               Path('warehouse-materials.js').read_text(encoding='utf-8'),
+              Path('warehouse-material-delete.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -63,7 +64,9 @@ jobs:
               raise SystemExit('BUILD ERROR: inbox navigation was not injected')
           if 'kpRecordMaterialUse' not in page or 'Projekt anyagigény' not in page:
               raise SystemExit('BUILD ERROR: warehouse material module was not injected')
-          print('OK: inbox navigation and warehouse material module present')
+          if 'kpDeleteMaterial' not in page or 'Anyagcikk törölve' not in page:
+              raise SystemExit('BUILD ERROR: material delete module was not injected')
+          print('OK: inbox navigation, warehouse material module and material delete module present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
