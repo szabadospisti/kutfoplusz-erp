@@ -46,6 +46,7 @@ jobs:
               Path('inbox-file-upload.js').read_text(encoding='utf-8'),
               Path('warehouse-materials.js').read_text(encoding='utf-8'),
               Path('warehouse-material-delete.js').read_text(encoding='utf-8'),
+              Path('warehouse-material-edit.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -53,7 +54,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; inbox navigation is part of the base sidebar')
+          print('ERP modules injected; inbox, material delete and material edit are included')
 
       - name: Verify generated page
         shell: python
@@ -64,9 +65,9 @@ jobs:
               raise SystemExit('BUILD ERROR: inbox navigation was not injected')
           if 'kpRecordMaterialUse' not in page or 'Projekt anyagigény' not in page:
               raise SystemExit('BUILD ERROR: warehouse material module was not injected')
-          if 'kpDeleteMaterial' not in page or 'Anyagcikk törölve' not in page:
-              raise SystemExit('BUILD ERROR: material delete module was not injected')
-          print('OK: inbox navigation, warehouse material module and material delete module present')
+          if 'Anyagok szerkesztése' not in page or 'Változtatások mentése' not in page:
+              raise SystemExit('BUILD ERROR: material edit module was not injected')
+          print('OK: inbox, warehouse, material delete and material edit modules present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
