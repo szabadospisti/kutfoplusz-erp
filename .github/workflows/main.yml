@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Inject ERP customer, work model and UI polish
+      - name: Inject ERP customer, work model, UI polish and AI quote preparation
         shell: python
         run: |
           from pathlib import Path
@@ -35,6 +35,8 @@ jobs:
           patches = [
               Path('customer-work-types.js').read_text(encoding='utf-8'),
               Path('ui-polish.js').read_text(encoding='utf-8'),
+              Path('ai-inbox-pilot.js').read_text(encoding='utf-8'),
+              Path('ai-quote-prep.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -42,7 +44,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('Customer/work model and UI polish injected into ERP')
+          print('ERP modules injected')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
