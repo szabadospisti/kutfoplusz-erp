@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -61,13 +61,19 @@ jobs:
         run: |
           from pathlib import Path
           page = Path('index.html').read_text(encoding='utf-8')
-          if 'data-page="inbox"' not in page or 'Beérkező dokumentumok' not in page:
-              raise SystemExit('BUILD ERROR: inbox navigation was not injected')
-          if 'kpRecordMaterialUse' not in page or 'Projekt anyagigény' not in page:
-              raise SystemExit('BUILD ERROR: warehouse material module was not injected')
-          if 'Anyagok szerkesztése' not in page or 'Változtatások mentése' not in page:
-              raise SystemExit('BUILD ERROR: material edit module was not injected')
-          print('OK: inbox, warehouse, material delete and material edit modules present')
+          required = [
+              'data-page="inbox"',
+              'Beérkező dokumentumok',
+              'kpRecordMaterialUse',
+              'Projekt anyagigény',
+              'Anyagok szerkesztése',
+              'Változtatások mentése',
+              'kpDeleteMaterial',
+          ]
+          missing = [x for x in required if x not in page]
+          if missing:
+              raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
+          print('OK: inbox, warehouse, material edit and delete modules present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
