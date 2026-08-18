@@ -47,6 +47,7 @@ jobs:
               Path('warehouse-materials.js').read_text(encoding='utf-8'),
               Path('warehouse-material-delete.js').read_text(encoding='utf-8'),
               Path('warehouse-material-edit.js').read_text(encoding='utf-8'),
+              Path('machine-fleet-dom-fix.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -54,7 +55,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; inbox, warehouse and fleet controls are included')
+          print('ERP modules injected; robust machine fleet DOM controls included')
 
       - name: Verify generated page
         shell: python
@@ -71,12 +72,13 @@ jobs:
               'kpDeleteMaterial',
               'Géppark szerkesztése',
               'kpOpenMachineEditor',
-              'mfDelete',
+              'mfdfAction',
+              'mfdfDelete',
           ]
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse and machine fleet edit/delete modules present')
+          print('OK: inbox, warehouse and robust machine fleet edit/delete modules present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
