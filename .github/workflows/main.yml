@@ -30,17 +30,33 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Inject stable authentication fix
+      - name: Inject unified authentication
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="auth-stable-fix.js?v=1"></script>'
-          if tag not in s:
-              s = s.replace('</body>', tag + '\n</body>')
+          # Remove previously injected auth scripts so only one login handler exists.
+          for name in ('auth-stable-fix.js', 'auth-password.js', 'login-fix.js'):
+              import re
+              s = re.sub(r'<script[^>]+src=["\'](?:\./)?' + re.escape(name) + r'(?:\?[^"\']*)?["\'][^>]*></script>\s*', '', s, flags=re.I)
+          tags = (
+              '<script src="auth-stable-fix.js?v=20260818"></script>\n'
+              '<script src="auth-password.js?v=20260818"></script>\n'
+          )
+          if '</body>' not in s:
+              raise SystemExit('index.html: missing </body>')
+          s = s.replace('</body>', tags + '</body>')
           p.write_text(s, encoding='utf-8')
           PY
+
+      - name: Validate authentication files
+        run: |
+          test -s auth-stable-fix.js
+          test -s auth-password.js
+          grep -q "auth-stable-fix.js?v=20260818" index.html
+          grep -q "auth-password.js?v=20260818" index.html
+          ! grep -q "localhost:3000" index.html auth-stable-fix.js auth-password.js
 
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
