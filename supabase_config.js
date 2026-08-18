@@ -1,6 +1,6 @@
 window.SUPABASE_CONFIG = Object.freeze({
   url: "https://qoxxhsbcptyieyhtdhr.supabase.co",
-  publishableKey: "sb_publishable_WYMcBkgdK-Ed5JY_ljJS0g_BB8dH10T"
+  publishableKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveHhoc2JjcHR5aWV5aHRkaHJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTQ1NzAsImV4cCI6MjEwMjU5MDU3MH0.VpKZ0MKveKzKGZoSrup0uXTOPZ92T7XYO0xZnf4rJbc"
 });
 
 (function preserveSavedWorklogs(){
