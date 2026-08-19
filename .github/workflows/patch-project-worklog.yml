@@ -11,49 +11,60 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch only the original worklog functions
+      - name: Patch project-worklog linkage safely
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+          import re
 
-          old='''function newWorklogFor(pid){openWorklogEditor()}'''
-          new='''function newWorklogFor(pid){
-            detailedWorklogEditor(null,pid||"");
-          }'''
-          if old not in s:
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          original = s
+
+          # 1) Preserve the project id when starting a worklog from a project.
+          s, n = re.subn(
+              r'function\s+newWorklogFor\s*\(pid\)\s*\{\s*openWorklogEditor\(\)\s*\}',
+              'function newWorklogFor(pid){detailedWorklogEditor(null,pid||"")}',
+              s, count=1
+          )
+          if n != 1:
               raise SystemExit('newWorklogFor target not found')
-          s=s.replace(old,new,1)
 
-          old='''function detailedWorklogEditor(id){
- editingWorklogId=id||null;
- const w=id?db.worklogs.find(x=>x.id===id):null;'''
-          new='''function detailedWorklogEditor(id,projectId){
- editingWorklogId=id||null;
- const w=id?db.worklogs.find(x=>x.id===id):null;
- const selectedProjectId=projectId||w?.projectId||"";'''
-          if old not in s:
-              raise SystemExit('detailedWorklogEditor target not found')
-          s=s.replace(old,new,1)
+          # 2) Let the detailed editor receive an optional project id and resolve it.
+          s, n = re.subn(
+              r'function\s+detailedWorklogEditor\s*\(id\)\s*\{',
+              'function detailedWorklogEditor(id,projectId){',
+              s, count=1
+          )
+          if n != 1:
+              raise SystemExit('detailedWorklogEditor signature not found')
 
-          old=''' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
- <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>'''
-          new=''' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
- <div class="wl-field"><label>Projekt</label><select id="wl_project" onchange="wlProjectChanged()"><option value="">— Nincs kiválasztva —</option>${projOpts}</select></div>
- <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>'''
-          if old not in s:
-              raise SystemExit('worklog field target not found')
-          s=s.replace(old,new,1)
+          marker = 'editingWorklogId=id||null;'
+          if marker not in s:
+              raise SystemExit('editingWorklogId marker not found')
+          s = s.replace(marker, marker + '\n const selectedProjectId=projectId||w?.projectId||"";', 1)
 
-          old='''const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
-          new='''const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
-          if old not in s:
+          # 3) Add the actual Project selector to the form.
+          client_field = '<div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>'
+          if client_field not in s:
+              raise SystemExit('client field not found')
+          project_field = client_field + '\n <div class="wl-field"><label>Projekt</label><select id="wl_project" onchange="wlProjectChanged()"><option value="">— Nincs kiválasztva —</option>${projOpts}</select></div>'
+          s = s.replace(client_field, project_field, 1)
+
+          # 4) Use the project passed by the caller when building the options.
+          s, n = re.subn(
+              r'const\s+projOpts=db\.projects\.map\(p=>`<option value="\$\{p\.id\}"\s+\$\{p\.id===w\?\.projectId\?"selected":""\}>\$\{esc\(p\.id\)\}\s+–\s+\$\{esc\(p\.name\)\}</option>`\)\.join\(""\);',
+              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");',
+              s, count=1
+          )
+          if n != 1:
               raise SystemExit('project options target not found')
-          s=s.replace(old,new,1)
 
-          marker='''function wlAddLayer(v){'''
-          insert='''function wlProjectChanged(){
+          # 5) Selecting a project fills the linked customer/location where available.
+          marker = 'function wlAddLayer(v){'
+          if marker not in s:
+              raise SystemExit('wlAddLayer marker not found')
+          helper = '''function wlProjectChanged(){
  const id=document.getElementById("wl_project")?.value||"";
  const p=(db.projects||[]).find(x=>String(x.id)===String(id));
  if(!p)return;
@@ -63,23 +74,27 @@ jobs:
  if(loc&&p.location&&!loc.value)loc.value=p.location;
 }
 '''
-          if marker not in s:
-              raise SystemExit('insert marker not found')
-          s=s.replace(marker,insert+marker,1)
+          if 'function wlProjectChanged(){' not in s:
+              s = s.replace(marker, helper + marker, 1)
 
-          old='''function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",location:document.getElementById("wl_location").value,'''
-          new='''function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.getElementById("wl_project")?.value||"",location:document.getElementById("wl_location").value,'''
+          # 6) Save the explicit project field, never a generic select.
+          old = 'projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||""'
+          new = 'projectId:document.getElementById("wl_project")?.value||""'
           if old not in s:
-              raise SystemExit('wlCollect target not found')
-          s=s.replace(old,new,1)
+              raise SystemExit('wlCollect project selector target not found')
+          s = s.replace(old, new, 1)
 
-          p.write_text(s,encoding='utf-8')
+          if s == original:
+              raise SystemExit('No changes made')
+
+          p.write_text(s, encoding='utf-8')
+          print('Project-worklog patch applied successfully.')
           PY
-      - name: Commit
+      - name: Commit patched index.html
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Link projects to worklogs safely'
+          git commit -m 'Fix project selection in worklogs'
           git push
