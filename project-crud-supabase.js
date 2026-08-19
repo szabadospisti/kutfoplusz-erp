@@ -7,27 +7,26 @@
     if(!s || typeof s.from!=='function') throw new Error('Supabase kliens nincs betöltve.');
     return s;
   }
-  async function customerUuid(localCustomerId){
-    if(!localCustomerId) return null;
-    if(String(localCustomerId).match(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i)) return localCustomerId;
-    const local=(window.db&&Array.isArray(window.db.customers)) ? window.db.customers.find(c=>String(c.id)===String(localCustomerId)) : null;
-    if(!local) return null;
-    const {data,error}=await client().from('customers').select('id').eq('company_name',local.name).limit(1).maybeSingle();
+  async function customerUuid(p){
+    const raw=p.customer_id ?? p.customerId;
+    if(!raw) return null;
+    if(String(raw).match(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i)) return raw;
+    const customerName=p.customerName ?? p.customer_name ?? null;
+    if(!customerName) return null;
+    const {data,error}=await client().from('customers').select('id').eq('company_name',customerName).limit(1).maybeSingle();
     if(error) throw error;
     return data ? data.id : null;
   }
   async function clean(p){
     return {
       project_number:p.project_number ?? p.projectNumber ?? p.id ?? null,
-      customer_id:await customerUuid(p.customer_id ?? p.customerId),
+      customer_id:await customerUuid(p),
       name:p.name ?? p.projectName ?? '',
       location:p.location ?? null,
       status:p.status ?? 'Tervezés',
       contract_value:p.contract_value ?? p.contractValue ?? p.value ?? 0,
       planned_cost:p.planned_cost ?? p.plannedCost ?? p.planned ?? 0,
-      actual_cost:p.actual_cost ?? p.actualCost ?? p.cost ?? 0,
-      profit:(p.profit ?? ((+p.value||0)-(+p.cost||0))),
-      profit_margin:p.profit_margin ?? ((+p.value||0) ? (((+p.value||0)-(+p.cost||0))/(+p.value||0)*100) : 0)
+      actual_cost:p.actual_cost ?? p.actualCost ?? p.cost ?? 0
     };
   }
   async function list(){
