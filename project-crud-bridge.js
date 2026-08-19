@@ -1,18 +1,19 @@
-/* Safe bridge: loads the Supabase project CRUD adapter and exposes it to the existing ERP. */
+/* Safe bridge: loads Supabase project CRUD and then wires the existing ERP project actions. */
 (function(){
   'use strict';
-  function load(){
-    if(window.KPProjectSupabase) return Promise.resolve(window.KPProjectSupabase);
+  function loadScript(src){
     return new Promise(function(resolve,reject){
       var s=document.createElement('script');
-      s.src='project-crud-supabase.js';
-      s.onload=function(){
-        if(window.KPProjectSupabase) resolve(window.KPProjectSupabase);
-        else reject(new Error('Supabase projekt CRUD adapter nem töltődött be.'));
-      };
-      s.onerror=function(){reject(new Error('Supabase projekt CRUD adapter betöltése sikertelen.'));};
+      s.src=src;
+      s.onload=resolve;
+      s.onerror=function(){reject(new Error('Script betöltése sikertelen: '+src));};
       document.head.appendChild(s);
     });
+  }
+  async function load(){
+    if(!window.KPProjectSupabase) await loadScript('project-crud-supabase.js');
+    if(!window.KPProjectSupabase) throw new Error('Supabase projekt CRUD adapter nem töltődött be.');
+    return window.KPProjectSupabase;
   }
   window.KPProjectCRUD={
     ready:load,
@@ -21,4 +22,8 @@
     async update(id,p){return (await load()).update(id,p);},
     async remove(id){return (await load()).remove(id);}
   };
+  load().then(function(){
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){loadScript('project-crud-live.js').catch(console.error);},{once:true});
+    else loadScript('project-crud-live.js').catch(console.error);
+  }).catch(console.error);
 })();
