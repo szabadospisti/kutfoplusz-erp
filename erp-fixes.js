@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V6 */
+/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V7 */
 (function(){
   function localSave(){try{if(typeof localSaveOnly==='function')localSaveOnly();else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db||{}))}catch(e){console.error(e)}}
   async function saveViaRest(){
@@ -36,24 +36,15 @@
   let n=0;const t=setInterval(()=>{if(typeof window.wlCollect==='function'&&!window.__kpCollect){const o=window.wlCollect;window.__kpCollect=true;window.wlCollect=function(){const r=o.apply(this,arguments)||{},s=document.getElementById('wl_project');if(s?.value)r.projectId=s.value;return r}}if(++n>100||window.__kpCollect)clearInterval(t)},100);
   if(typeof window.newWorklogFor==='function'&&!window.__kpLink){const o=window.newWorklogFor;window.__kpLink=true;window.newWorklogFor=function(id){window.__pendingWorklogProjectId=id||'';return o.apply(this,arguments)}}
 
-  function loadMachineCrud(){
-    if(window.__machineFleetCrudLoaded)return;
+  function loadScriptOnce(name,src,flag){
+    if(window[flag])return;
     if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;
-    const s=document.createElement('script');
-    s.src='machine-fleet-final.js?v=9';
-    s.onload=()=>{window.__machineFleetCrudLoaded=true};
-    s.onerror=e=>console.error('Géppark CRUD betöltési hiba',e);
-    document.head.appendChild(s);
+    const s=document.createElement('script');s.src=src;s.onload=()=>{window[flag]=true};s.onerror=e=>console.error(name+' betöltési hiba',e);document.head.appendChild(s);
   }
-  function loadProjectCrud(){
-    if(window.__projectCrudLoaded)return;
-    if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;
-    const s=document.createElement('script');
-    s.src='project-crud-fix.js?v=1';
-    s.onload=()=>{window.__projectCrudLoaded=true};
-    s.onerror=e=>console.error('Projekt CRUD betöltési hiba',e);
-    document.head.appendChild(s);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{loadMachineCrud();loadProjectCrud()},{once:true});else {loadMachineCrud();loadProjectCrud();}
-  let mc=0;const mt=setInterval(()=>{loadMachineCrud();loadProjectCrud();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__projectCrudLoaded))clearInterval(mt)},250);
+  function loadMachineCrud(){loadScriptOnce('Géppark','machine-fleet-final.js?v=10','__machineFleetCrudLoaded')}
+  function loadProjectCrud(){loadScriptOnce('Projekt CRUD','project-crud-fix.js?v=2','__projectCrudLoaded')}
+  function loadProjectSync(){loadScriptOnce('Projekt Supabase sync','project-sync-fix.js?v=1','__projectSyncLoaded')}
+  function loadAll(){loadMachineCrud();loadProjectCrud();loadProjectSync()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAll,{once:true});else loadAll();
+  let mc=0;const mt=setInterval(()=>{loadAll();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__projectCrudLoaded&&window.__projectSyncLoaded))clearInterval(mt)},250);
 })();
