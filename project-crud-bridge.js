@@ -51,6 +51,7 @@
     await loadScript('erp-delete-manager.js');
     await loadScript('customer-details-dom-fix.js');
     await loadScript('project-worklog-auto-link.js');
+    await loadScript('worklog-project-lock.js');
     installProjectSaveHooks();
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
