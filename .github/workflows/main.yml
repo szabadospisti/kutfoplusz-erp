@@ -50,6 +50,7 @@ jobs:
               Path('erp-fixes.js').read_text(encoding='utf-8'),
               Path('machine-fleet-actions.js').read_text(encoding='utf-8'),
               Path('machine-fleet-final.js').read_text(encoding='utf-8'),
+              Path('erp-delete-manager.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -57,7 +58,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; final machine fleet view included')
+          print('ERP modules injected; final machine fleet view and unified delete manager included')
 
       - name: Verify generated page
         shell: python
@@ -78,11 +79,15 @@ jobs:
               'Műveletek',
               'FINAL Géppark fix',
               'finalMachineEdit',
+              'kpDeleteCustomer',
+              'kpDeleteProject',
+              'kpDeleteQuote',
+              'kpDeleteWorklog',
           ]
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse CRUD and final machine fleet CRUD present')
+          print('OK: inbox, warehouse CRUD, machine CRUD and unified delete manager present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
