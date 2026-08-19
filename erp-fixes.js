@@ -1,15 +1,15 @@
-/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V9 */
+/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V10 */
 (function(){
   function localSave(){try{if(typeof localSaveOnly==='function')localSaveOnly();else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db||{}))}catch(e){console.error(e)}}
   async function saveViaRest(){const cfg=window.SUPABASE_CONFIG;if(!cfg||!cfg.url||!cfg.publishableKey)throw new Error('Supabase konfiguráció nincs betöltve.');let session=null;try{session=JSON.parse(localStorage.getItem('kutfoplusz_supabase_session_v1')||'null')}catch(e){}const token=session?.access_token||cfg.publishableKey;const res=await fetch(cfg.url+'/rest/v1/erp_state?on_conflict=id',{method:'POST',headers:{apikey:cfg.publishableKey,Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:session?.user?.id||null})});if(!res.ok)throw new Error('Supabase '+res.status+': '+await res.text());return true}
   window.save=async function(){localSave();try{const c=window._supabaseClient;if(c&&window.db){try{const {data:{user},error:authError}=await c.auth.getUser();if(user&&!authError){const {error}=await c.from('erp_state').upsert({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id},{onConflict:'id'});if(!error)return true}}catch(e){console.warn('Supabase kliens mentés sikertelen, REST fallback:',e)}}if(!window.db)return false;return await saveViaRest()}catch(e){console.error('Supabase mentés:',e);return false}};
   function loadScriptOnce(name,src,flag){if(window[flag])return;if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;const s=document.createElement('script');s.src=src;s.onload=()=>{window[flag]=true};s.onerror=e=>console.error(name+' betöltési hiba',e);document.head.appendChild(s)}
   function loadMachineCrud(){loadScriptOnce('Géppark','machine-fleet-final.js?v=11','__machineFleetCrudLoaded')}
-  function loadNewMachine(){loadScriptOnce('Új eszköz adatlap','machine-new-form.js?v=1','__machineNewFormLoaded')}
+  function loadNewMachine(){loadScriptOnce('Új eszköz teljes adatlap','machine-new-form-v2.js?v=1','__machineNewFormV2Loaded')}
   function loadProjectCrud(){loadScriptOnce('Projekt CRUD','project-crud-fix.js?v=2','__projectCrudLoaded')}
   function loadProjectSync(){loadScriptOnce('Projekt Supabase sync','project-sync-fix.js?v=1','__projectSyncLoaded')}
   function loadProjectSaveFinal(){loadScriptOnce('Projekt végleges Supabase mentés','project-save-final.js?v=1','__projectSaveFinalLoaded')}
   function loadAll(){loadMachineCrud();loadNewMachine();loadProjectCrud();loadProjectSync();loadProjectSaveFinal()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAll,{once:true});else loadAll();
-  let mc=0;const mt=setInterval(()=>{loadAll();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__machineNewFormLoaded&&window.__projectCrudLoaded&&window.__projectSyncLoaded&&window.__projectSaveFinalLoaded))clearInterval(mt)},250);
+  let mc=0;const mt=setInterval(()=>{loadAll();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__machineNewFormV2Loaded&&window.__projectCrudLoaded&&window.__projectSyncLoaded&&window.__projectSaveFinalLoaded))clearInterval(mt)},250);
 })();
