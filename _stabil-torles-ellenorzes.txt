@@ -1,0 +1,1 @@
+Stabil törlés javítás: index.html visszaállítva az fcdebe5 működő állapotára; Supabase customer/project delete modulok hozzáadva. A végső bekötés és teszt a következő commitban történik.
