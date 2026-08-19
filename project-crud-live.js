@@ -4,9 +4,10 @@
   function waitReady(){return window.KPProjectCRUD.ready();}
   async function remoteFor(localProject){
     await waitReady();
-    if(localProject&&localProject.supabaseId)return{id:localProject.supabaseId};
     if(!localProject)return null;
+    /* Szerkesztésnél mindig a projekt száma legyen a biztos kapocs; a lokális UUID lehet régi. */
     try{const found=await window.KPProjectSupabase.findByProjectNumber(localProject.id);if(found)return found;}catch(err){console.warn('Projekt lookup hiba:',err);}
+    if(localProject.supabaseId)return{id:localProject.supabaseId,project_number:localProject.id};
     return null;
   }
   async function resolveEditProject(e,id){
@@ -30,16 +31,14 @@
     document.querySelectorAll('form[onsubmit*="saveProject"]').forEach(function(form){
       const isEdit=/saveProjectEdit/.test(form.getAttribute('onsubmit')||'');
       if(isEdit)return;
-      form.querySelectorAll('button').forEach(function(btn){
-        if((btn.textContent||'').trim()==='Mentés')btn.textContent='Létrehozás';
-      });
+      form.querySelectorAll('button').forEach(function(btn){if((btn.textContent||'').trim()==='Mentés')btn.textContent='Létrehozás';});
     });
   }
   async function patchProjectDirect(p,local,remote){
     const payload=Object.assign({},local,{customerId:local.customerId,customerName:customerName(local.customerId)});
-    const updated=await window.KPProjectSupabase.update(remote.id,payload);
+    /* A projekt száma a stabil üzleti azonosító. Ne használjunk esetleg elavult lokális UUID-t. */
+    const updated=await window.KPProjectSupabase.updateByProjectNumber(local.id,payload);
     if(!updated)throw new Error('A Supabase nem adott vissza frissített projektet. A módosítás nem tekinthető elmentettnek.');
-    /* Kötelező visszaolvasás: csak akkor mondjuk sikeresnek, ha a DB-ben tényleg az új adatok vannak. */
     const verify=await window.KPProjectSupabase.findByProjectNumber(local.id);
     if(!verify)throw new Error('A projekt frissítése után nem található a Supabase projects táblában.');
     const checks=[
