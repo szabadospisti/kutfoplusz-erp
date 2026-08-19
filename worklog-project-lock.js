@@ -3,48 +3,64 @@
   'use strict';
   var installed=false;
 
-  function projects(){return (typeof db!=='undefined'&&db&&Array.isArray(db.projects))?db.projects:[];}
-  function findProject(pid){return projects().find(function(p){return String(p.id)===String(pid)||String(p.supabaseId||'')===String(pid);})||null;}
-  function customerName(id){
-    var list=(typeof db!=='undefined'&&db&&Array.isArray(db.customers))?db.customers:[];
-    var c=list.find(function(x){return String(x.id)===String(id)||String(x.supabaseId||'')===String(id);});
-    return c?(c.name||c.company||c.customer_name||''):'';
+  function findProject(pid){
+    var list=(window.db&&Array.isArray(db.projects))?db.projects:[];
+    return list.find(function(p){return String(p.id)===String(pid)||String(p.supabaseId||'')===String(pid);})||null;
   }
-  function display(wrap,key,text){
-    if(!wrap)return;
-    var el=wrap.querySelector('.kp-worklog-locked-display[data-field="'+key+'"]');
-    if(!el){el=document.createElement('div');el.className='kp-worklog-locked-display';el.setAttribute('data-field',key);wrap.appendChild(el);}
-    el.textContent=text||'—';
-  }
+
   function lockFields(p){
-    var project=document.getElementById('wl_project'),client=document.getElementById('wl_client'),location=document.getElementById('wl_location');
-    if(!project||!client||!location)return;
-    var selected=p||findProject(project.value);
-    var projectId=selected?(selected.id||''):(project.value||'');
-    var customerId=selected?(selected.customerId||''):(client.value||'');
-    var loc=selected?(selected.location||''):(location.value||'');
-    var pname=selected?(selected.name||selected.id||''):(project.options&&project.selectedIndex>=0?project.options[project.selectedIndex].text:'');
-    var cname=customerName(customerId)||(client.options&&client.selectedIndex>=0?client.options[client.selectedIndex].text:'');
-    if(projectId)project.value=String(projectId);
-    if(customerId)client.value=String(customerId);
-    location.value=loc;
-    var pw=project.closest('.wl-field')||project.parentElement,cw=client.closest('.wl-field')||client.parentElement,lw=location.closest('.wl-field')||location.parentElement;
-    [pw,cw,lw].forEach(function(w){if(w)w.classList.add('kp-worklog-locked-field');});
-    display(pw,'project',pname||'—');
-    display(cw,'client',cname||'—');
-    display(lw,'location',loc||'—');
-    project.style.display='none';client.style.display='none';location.style.display='none';
-    project.disabled=true;client.disabled=true;location.readOnly=true;
+    if(!p) return;
+    var project=document.getElementById('wl_project');
+    var client=document.getElementById('wl_client');
+    var location=document.getElementById('wl_location');
+    if(!project||!client||!location) return;
+
+    project.value=String(p.id);
+    project.disabled=true;
+    project.setAttribute('aria-disabled','true');
+
+    client.value=String(p.customerId||'');
+    client.disabled=true;
+    client.setAttribute('aria-disabled','true');
+
+    location.value=p.location||'';
+    location.readOnly=true;
+    location.setAttribute('aria-readonly','true');
+
+    [project,client,location].forEach(function(el){
+      var wrap=el.closest('.wl-field')||el.parentElement;
+      if(wrap)wrap.classList.add('kp-worklog-locked-field');
+    });
   }
+
   function install(){
-    if(installed)return;installed=true;
+    if(installed) return;
+    installed=true;
+
     var css=document.createElement('style');
-    css.textContent='.kp-worklog-locked-display{min-height:42px;padding:10px 12px;border:1px solid #dbe2e9;border-radius:10px;background:#f4f7fa;color:#243447;font-weight:700;box-sizing:border-box;width:100%}.kp-worklog-locked-field .kp-worklog-locked-display{display:block!important}.kp-worklog-locked-field select,.kp-worklog-locked-field input[readonly]{display:none!important}';
+    css.textContent='.kp-worklog-locked-field select:disabled,.kp-worklog-locked-field input[readonly]{display:none!important}.kp-worklog-locked-display{min-height:42px;padding:10px 12px;border:1px solid #dbe2e9;border-radius:10px;background:#f4f7fa;color:#243447;font-weight:700;box-sizing:border-box}';
     document.head.appendChild(css);
-    var obs=new MutationObserver(function(){var pid=window.__kpPendingWorklogProjectId;lockFields(pid?findProject(pid):null);});
+
+    if(typeof window.newWorklogFor==='function' && typeof window.detailedWorklogEditor==='function'){
+      window.newWorklogFor=function(pid){
+        var p=findProject(pid);
+        if(!p){ if(typeof window.toast==='function')window.toast('A projekt nem található.'); return; }
+        window.__kpPendingWorklogProjectId=p.id;
+        window.detailedWorklogEditor(null,p.id);
+        [0,50,150,300,700].forEach(function(ms){setTimeout(function(){lockFields(p);},ms);});
+      };
+    }
+
+    var obs=new MutationObserver(function(){
+      var pid=window.__kpPendingWorklogProjectId;
+      if(pid)lockFields(findProject(pid));
+    });
     obs.observe(document.body,{childList:true,subtree:true});
-    [0,100,300,700,1200,2000].forEach(function(ms){setTimeout(function(){var pid=window.__kpPendingWorklogProjectId;lockFields(pid?findProject(pid):null);},ms);});
   }
-  function wait(){if(document.body)install();else setTimeout(wait,50);}
+
+  function wait(){
+    if(typeof window.newWorklogFor==='function' && typeof window.detailedWorklogEditor==='function')install();
+    else setTimeout(wait,100);
+  }
   wait();
 })();
