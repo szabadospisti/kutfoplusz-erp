@@ -15,27 +15,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fix project data access in worklog bridge
+      - name: Fix project data access and lock inherited worklog fields
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+
           old1="var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];"
           new1="var projects=(typeof db!=='undefined'&&db&&Array.isArray(db.projects))?db.projects:[];"
+          s=s.replace(old1,new1)
+
           old2="var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];"
-          changed=False
-          if old1 in s:
-              s=s.replace(old1,new1)
-              changed=True
-          elif old2 in s:
-              s=s.replace(old2,new1)
-              changed=True
-          if not changed:
-              print('No window.db project access found; nothing to change')
-          else:
-              p.write_text(s,encoding='utf-8')
-              print('Fixed project data access: use lexical db binding')
+          s=s.replace(old2,new1)
+
+          old3='function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor();setTimeout(function(){window.__KP_PRESELECT_WORKLOG__(pid)},0)}'
+          new3='function newWorklogFor(pid){const p=db.projects.find(x=>String(x.id)===String(pid));if(!p)return toast("A projekt nem található.");window.__kpPendingWorklogProjectId=p.id;detailedWorklogEditor(null,p.id);setTimeout(function(){const c=document.getElementById("wl_client"),pr=document.getElementById("wl_project"),l=document.getElementById("wl_location");if(pr){pr.value=p.id;pr.disabled=true}if(c){c.value=p.customerId||"";c.disabled=true}if(l){l.value=p.location||"";l.readOnly=true}},0)}'
+          if old3 not in s:
+              raise SystemExit('newWorklogFor exact block not found')
+          s=s.replace(old3,new3,1)
+
+          p.write_text(s,encoding='utf-8')
+          print('Project worklog binding fixed: project, customer and location are inherited and locked.')
           PY
 
       - name: Commit index.html
@@ -44,5 +45,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix project data access in worklog bridge'
+          git commit -m 'Lock project worklog inherited fields'
           git push
