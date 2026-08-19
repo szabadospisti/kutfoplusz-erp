@@ -1190,14 +1190,15 @@ function saveProject(e){e.preventDefault();let o=Object.fromEntries(new FormData
 function projectDetails(id){let p=db.projects.find(x=>x.id===id),pr=p.value-p.cost;openDrawer(p.id,`<h2>${esc(p.name)}</h2><p class="label">${esc(p.location)} · ${esc(cust(p.customerId))}</p><div class="cards" style="grid-template-columns:1fr 1fr"><div class="card"><div class="label">Érték</div><div class="value">${money(p.value)}</div></div><div class="card"><div class="label">Profit</div><div class="value ${pr>=0?'green':'red'}">${money(pr)}</div></div></div><p><b>Készültség:</b> ${p.progress||0}%</p><p><b>Státusz:</b> ${esc(p.status)}</p><p><b>Tervezett költség:</b> ${money(p.planned)}</p><p><b>Tényleges költség:</b> ${money(p.cost)}</p><hr><button class="btn secondary" onclick="newWorklogFor('${p.id}')">+ Munkanapló</button>`)}
 let editingWorklogId=null, wlLayers=[], wlFilters=[["0","3","Vak"]];
 function newWorklog(){openWorklogEditor()}
-function newWorklogFor(pid){openWorklogEditor()}
-function detailedWorklogEditor(id){
+function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor()}
+function detailedWorklogEditor(id,projectId){
  editingWorklogId=id||null;
  const w=id?db.worklogs.find(x=>x.id===id):null;
+ const selectedProjectId=projectId||w?.projectId||window.__kpPendingWorklogProjectId||"";
  wlLayers=JSON.parse(JSON.stringify(w?.layers||[["0","4","","","",""]]));
  wlFilters=JSON.parse(JSON.stringify(w?.filters || (id ? [] : [["0","3","Vak"]])));
  const custOpts=db.customers.map(c=>`<option value="${c.id}" ${c.id===w?.customerId?"selected":""}>${esc(c.name)}</option>`).join("");
- const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+ const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");
  openModal(w?`Munkanapló szerkesztése – ${esc(w.id)}`:"Új munkanapló",`
  <div class="wl-shell">
  <div class="wl-head"><h2>💧 Kútfő Plusz ERP – Munkanapló</h2><span>Kitölthető kútfúrási munkanapló · V1.4</span></div>
@@ -1220,6 +1221,7 @@ function detailedWorklogEditor(id){
  <div class="wl-field"><label>Dátum</label><input id="wl_date" type="date" value="${esc(w?.date||"")}"></div>
  <div class="wl-field"><label>Helyszín</label><input id="wl_location" placeholder="Pl. Porcsalma" value="${esc(w?.location||"")}"></div>
  <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
+ <div class="wl-field"><label>Projekt</label><select id="wl_project"><option value="">— Válassz —</option>${projOpts}</select></div>
  <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>
  
  
@@ -1412,7 +1414,7 @@ function wlLoadDraft(id){
 function wlClearDraft(id){
  try{localStorage.removeItem(WL_DRAFT_PREFIX+(id||"uj"))}catch(e){}
 }
-function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",location:document.getElementById("wl_location").value,wellNo:document.getElementById("wl_wellNo").value,finalDepth:+document.getElementById("wl_finalDepth").value||0,status:document.getElementById("wl_status").value,layers:wlLayers,filters:wlFilters,prodPipe:document.getElementById("wl_prodPipe").value,staticWL:document.getElementById("wl_staticWL").value,dynamicWL:document.getElementById("wl_dynamicWL").value,measureLiters:+document.getElementById("wl_measureLiters").value||0,measureSeconds:+document.getElementById("wl_measureSeconds").value||0,flow:+document.getElementById("wl_flow").value||0,dynamic2:document.getElementById("wl_dynamicWL").value,static2:document.getElementById("wl_staticWL").value,notes:document.getElementById("wl_notes").value}}
+function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.getElementById("wl_project")?.value||"",location:document.getElementById("wl_location").value,wellNo:document.getElementById("wl_wellNo").value,finalDepth:+document.getElementById("wl_finalDepth").value||0,status:document.getElementById("wl_status").value,layers:wlLayers,filters:wlFilters,prodPipe:document.getElementById("wl_prodPipe").value,staticWL:document.getElementById("wl_staticWL").value,dynamicWL:document.getElementById("wl_dynamicWL").value,measureLiters:+document.getElementById("wl_measureLiters").value||0,measureSeconds:+document.getElementById("wl_measureSeconds").value||0,flow:+document.getElementById("wl_flow").value||0,dynamic2:document.getElementById("wl_dynamicWL").value,static2:document.getElementById("wl_staticWL").value,notes:document.getElementById("wl_notes").value}}
 function wlSave(){
  document.querySelectorAll("#wl_layers .wl-layer-type").forEach((el,i)=>{if(wlLayers[i])wlLayers[i][2]=el.value});
  let o=wlCollect();
@@ -1729,6 +1731,19 @@ window.addEventListener("beforeunload",()=>{try{if(document.getElementById("wlFo
   var timer=setInterval(hook,250);
   setTimeout(function(){clearInterval(timer);},30000);
   hook();
+})();
+</script>
+<!-- KP_DIRECT_PROJECT_WORKLOG_V1 -->
+<script>
+(function(){
+  if(window.__KP_DIRECT_PROJECT_WORKLOG_V1__) return;
+  window.__KP_DIRECT_PROJECT_WORKLOG_V1__=true;
+  var original=window.newWorklogFor;
+  if(typeof original!=="function") return;
+  window.newWorklogFor=function(pid){
+    window.__kpPendingWorklogProjectId=pid||"";
+    return original.call(this,pid);
+  };
 })();
 </script>
 </body>
