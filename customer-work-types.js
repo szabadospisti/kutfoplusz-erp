@@ -1,1 +1,2 @@
-/* Kútfő Plusz ERP - Customer work types module placeholder. */
+/* Kútfő Plusz ERP - Customer work types module. */
+(function(){'use strict';})();
