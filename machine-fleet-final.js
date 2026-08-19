@@ -1,47 +1,166 @@
-/* Kútfő Plusz ERP – Géppark V2
- * Jármű- és eszköznyilvántartás, egységes CRUD mentéssel.
+/* Kútfő Plusz ERP – Géppark V3
+ * Az adatlap a Géppark tartalmi területén jelenik meg.
+ * Nincs modal / drawer az Adatlap gombhoz.
  */
 (function(){
-  'use strict';
-  function install(){
-    if(typeof views==='undefined'||typeof db==='undefined'||typeof render!=='function')return false;
-    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const arr=()=>Array.isArray(db.machines)?db.machines:[];
-    const val=(o,k,d='')=>o?.[k]??d;
-    function persist(){try{if(typeof window.save!=='function')throw new Error('A központi mentés nem érhető el.');const r=window.save();if(r&&typeof r.catch==='function')r.catch(e=>console.error('Géppark Supabase háttérszinkron:',e));return true}catch(e){alert('A gép mentése nem sikerült.\n\n'+(e?.message||e));return false}}
-    const typeLabels={auto:'Autó / jármű',furo:'Fúrógép',kompresszor:'Kompresszor',teherauto:'Teherautó',utanfuto:'Utánfutó',egyeb:'Egyéb'};
-    const statuses=['Üzemképes','Szervizre vár','Meghibásodott','Üzemen kívül'];
-    function field(label,id,value,type='text',cls=''){return `<div class="field ${cls}"><label>${label}</label><input class="input" id="${id}" type="${type}" value="${esc(value)}"></div>`}
-    function select(label,id,value,opts,cls=''){return `<div class="field ${cls}"><label>${label}</label><select class="select" id="${id}">${opts.map(x=>`<option value="${esc(x[0])}" ${String(value)===String(x[0])?'selected':''}>${esc(x[1])}</option>`).join('')}</select></div>`}
-    function tabsBody(m){
-      return `<div class="fleet-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"><button type="button" class="btn secondary fleet-tab" data-tab="base">Általános</button><button type="button" class="btn secondary fleet-tab" data-tab="tech">Műszaki</button><button type="button" class="btn secondary fleet-tab" data-tab="docs">Okmányok</button><button type="button" class="btn secondary fleet-tab" data-tab="service">Szerviz</button><button type="button" class="btn secondary fleet-tab" data-tab="cost">Költségek</button><button type="button" class="btn secondary fleet-tab" data-tab="notes">Megjegyzés</button></div>
-      <div class="fleet-pane" data-pane="base"><div class="formgrid">${field('Eszköz neve','fm_name',val(m,'name'))}${select('Eszköztípus','fm_type',val(m,'asset_type','egyeb'),Object.entries(typeLabels))}${field('Belső azonosító','fm_code',val(m,'asset_code'))}${field('Gyártó','fm_make',val(m,'make'))}${field('Típus / modell','fm_model',val(m,'model'))}${field('Évjárat','fm_year',val(m,'year'), 'number')}${field('Rendszám','fm_plate',val(m,'plate'))}${field('Alvázszám (VIN)','fm_vin',val(m,'vin'))}${field('Motorszám','fm_engine_no',val(m,'engine_no'))}${field('Beszerzés dátuma','fm_purchase_date',val(m,'purchase_date'),'date')}${field('Beszerzési érték','fm_purchase_value',val(m,'purchase_value',0),'number')}${field('Jelenlegi érték','fm_current_value',val(m,'current_value',0),'number')}${select('Állapot','fm_status',val(m,'status','Üzemképes'),statuses.map(x=>[x,x]))}</div></div>
-      <div class="fleet-pane" data-pane="tech" style="display:none"><div class="formgrid">${field('Üzemóra','fm_hours',val(m,'hours',0),'number')}${field('Kilométeróra','fm_odometer',val(m,'odometer',0),'number')}${field('Következő szerviz km','fm_service_km',val(m,'service_km',0),'number')}${field('Következő szerviz üzemóra','fm_service_hours',val(m,'service_hours',0),'number')}${field('Következő szerviz dátuma','fm_service_date',val(m,'service_date'),'date')}${select('Üzemanyag','fm_fuel',val(m,'fuel',''),[['','—'],['diesel','Dízel'],['petrol','Benzin'],['electric','Elektromos'],['hybrid','Hibrid'],['other','Egyéb']])}${field('Hengerűrtartalom (cm³)','fm_engine_cc',val(m,'engine_cc',0),'number')}${field('Teljesítmény (LE)','fm_power_hp',val(m,'power_hp',0),'number')}${field('Teljesítmény (kW)','fm_power_kw',val(m,'power_kw',0),'number')}${field('Sebességváltó','fm_transmission',val(m,'transmission'))}${field('Meghajtás','fm_drive',val(m,'drive'))}${field('Karosszéria / kivitel','fm_body',val(m,'body'))}${field('Szín','fm_color',val(m,'color'))}${field('Gumiabroncs méret','fm_tire_size',val(m,'tire_size'))}${field('Saját tömeg (kg)','fm_weight',val(m,'weight',0),'number')}${field('Megengedett össztömeg (kg)','fm_gvw',val(m,'gvw',0),'number')}</div></div>
-      <div class="fleet-pane" data-pane="docs" style="display:none"><div class="formgrid">${field('Műszaki vizsga lejárata','fm_mot_expiry',val(m,'mot_expiry'),'date')}${field('Kötelező biztosítás lejárata','fm_insurance_expiry',val(m,'insurance_expiry'),'date')}${field('Casco lejárata','fm_casco_expiry',val(m,'casco_expiry'),'date')}${field('Útdíj / matrica lejárata','fm_toll_expiry',val(m,'toll_expiry'),'date')}${field('Forgalmi dokumentum','fm_registration_doc',val(m,'registration_doc'))}${field('Biztosító','fm_insurer',val(m,'insurer'))}${field('Biztosítás kötvényszáma','fm_policy_no',val(m,'policy_no'))}</div><p class="label" style="margin-top:12px">A dokumentumfeltöltés külön modulban kapcsolható ehhez az eszközhöz.</p></div>
-      <div class="fleet-pane" data-pane="service" style="display:none"><div class="formgrid">${field('Utolsó szerviz dátuma','fm_last_service_date',val(m,'last_service_date'),'date')}${field('Utolsó szerviz km / üzemóra','fm_last_service_meter',val(m,'last_service_meter'))}${field('Szervizhely / szerelő','fm_service_provider',val(m,'service_provider'))}${field('Utolsó szerviz költsége','fm_last_service_cost',val(m,'last_service_cost',0),'number')}${field('Következő szerviz megjegyzés','fm_service_note',val(m,'service_note'),'text','full')}</div></div>
-      <div class="fleet-pane" data-pane="cost" style="display:none"><div class="formgrid">${field('Havi átlagos üzemanyagköltség','fm_fuel_cost_month',val(m,'fuel_cost_month',0),'number')}${field('Éves szervizköltség','fm_service_cost_year',val(m,'service_cost_year',0),'number')}${field('Éves biztosítási költség','fm_insurance_cost_year',val(m,'insurance_cost_year',0),'number')}${field('Egyéb éves költség','fm_other_cost_year',val(m,'other_cost_year',0),'number')}</div></div>
-      <div class="fleet-pane" data-pane="notes" style="display:none"><div class="field full"><label>Megjegyzés</label><textarea class="textarea" id="fm_notes">${esc(val(m,'notes'))}</textarea></div><div class="field full"><label>Felelős / használó</label><input class="input" id="fm_responsible" value="${esc(val(m,'responsible'))}"></div></div>`;
-    }
-    function modal(id,title,body,foot){document.getElementById(id)?.remove();const m=document.createElement('div');m.id=id;m.className='modal';m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>${title}</h2><button class="icon" data-x>×</button></div><div class="modalbody">${body}<div class="modalfoot">${foot}</div></div></div>`;document.body.appendChild(m);m.querySelector('[data-x]').onclick=()=>m.remove();return m}
-    function bindTabs(m){m.querySelectorAll('.fleet-tab').forEach(b=>b.onclick=()=>{m.querySelectorAll('.fleet-tab').forEach(x=>x.classList.remove('active'));m.querySelectorAll('.fleet-pane').forEach(x=>x.style.display='none');b.classList.add('active');m.querySelector(`[data-pane="${b.dataset.tab}"]`).style.display='block'});m.querySelector('.fleet-tab')?.click()}
-    function readForm(m,x){
-      const text=['name','code','make','model','plate','vin','engine_no','fuel','transmission','drive','body','color','tire_size','mot_expiry','insurance_expiry','casco_expiry','toll_expiry','registration_doc','insurer','policy_no','purchase_date','service_date','last_service_date','last_service_meter','service_provider','service_note','responsible','notes','service_km','service_hours'];
-      const map={name:'fm_name',asset_code:'fm_code',make:'fm_make',model:'fm_model',plate:'fm_plate',vin:'fm_vin',engine_no:'fm_engine_no',fuel:'fm_fuel',transmission:'fm_transmission',drive:'fm_drive',body:'fm_body',color:'fm_color',tire_size:'fm_tire_size',mot_expiry:'fm_mot_expiry',insurance_expiry:'fm_insurance_expiry',casco_expiry:'fm_casco_expiry',toll_expiry:'fm_toll_expiry',registration_doc:'fm_registration_doc',insurer:'fm_insurer',policy_no:'fm_policy_no',purchase_date:'fm_purchase_date',service_date:'fm_service_date',last_service_date:'fm_last_service_date',last_service_meter:'fm_last_service_meter',service_provider:'fm_service_provider',service_note:'fm_service_note',responsible:'fm_responsible',notes:'fm_notes',service_km:'fm_service_km',service_hours:'fm_service_hours'};
-      Object.entries(map).forEach(([k,id])=>{const el=x.querySelector('#'+id);if(el)m[k]=el.value.trim()});
-      const nums={year:'fm_year',purchase_value:'fm_purchase_value',current_value:'fm_current_value',hours:'fm_hours',odometer:'fm_odometer',engine_cc:'fm_engine_cc',power_hp:'fm_power_hp',power_kw:'fm_power_kw',weight:'fm_weight',gvw:'fm_gvw',last_service_cost:'fm_last_service_cost',fuel_cost_month:'fm_fuel_cost_month',service_cost_year:'fm_service_cost_year',insurance_cost_year:'fm_insurance_cost_year',other_cost_year:'fm_other_cost_year'};Object.entries(nums).forEach(([k,id])=>{const el=x.querySelector('#'+id);if(el)m[k]=Number(el.value)||0});m.asset_type=x.querySelector('#fm_type')?.value||'egyeb';m.status=x.querySelector('#fm_status')?.value||'Üzemképes';return m;
-    }
-    function editMachine(id){
-      const m=arr().find(x=>String(x.id)===String(id));if(!m)return;const before=JSON.parse(JSON.stringify(m));
-      const x=modal('finalMachineEdit','Gépjármű / eszköz szerkesztése',tabsBody(m),'<button class="btn danger" data-delete>🗑️ Törlés</button><button class="btn secondary" data-c>Mégse</button><button class="btn" data-save>💾 Mentés</button>');bindTabs(x);
-      x.querySelector('[data-c]').onclick=()=>x.remove();x.querySelector('[data-delete]').onclick=()=>deleteMachine(id);
-      x.querySelector('[data-save]').onclick=()=>{readForm(m,x);if(!persist()){Object.assign(m,before);return}x.remove();render();if(typeof toast==='function')toast('Gép módosítva és mentve')};
-    }
-    function deleteMachine(id){const m=arr().find(x=>String(x.id)===String(id));if(!m)return;if(!confirm('Biztosan törlöd a(z) „'+m.name+'” eszközt?'))return;const old=db.machines.slice();db.machines=db.machines.filter(q=>String(q.id)!==String(id));if(!persist()){db.machines=old;return}document.getElementById('finalMachineEdit')?.remove();render();if(typeof toast==='function')toast('Eszköz törölve és mentve')}
-    function profile(id){const m=arr().find(x=>String(x.id)===String(id));if(!m)return;const rows=[['Eszköz',m.name],['Típus',typeLabels[m.asset_type]||m.asset_type||'—'],['Rendszám',m.plate||'—'],['Belső azonosító',m.asset_code||'—'],['Gyártó / modell',(m.make?m.make+' ':'')+(m.model||'')||'—'],['Évjárat',m.year||'—'],['VIN',m.vin||'—'],['Kilométeróra',m.odometer?m.odometer+' km':'—'],['Üzemóra',m.hours?m.hours+' h':'—'],['Műszaki lejárata',m.mot_expiry||'—'],['Biztosítás lejárata',m.insurance_expiry||'—'],['Következő szerviz',m.service_km?m.service_km+' km':(m.service_hours?m.service_hours+' h':'—')],['Állapot',m.status||'—'],['Felelős',m.responsible||'—']];const body='<div class="fleet-profile-grid">'+rows.map(r=>`<div class="kpi"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')+'</div>'+(m.notes?`<div class="kpi"><span>Megjegyzés</span><b>${esc(m.notes)}</b></div>`:'');const x=modal('finalMachineProfile','Eszköz adatlap – '+esc(m.name),body,'<button class="btn secondary" data-edit>✏️ Szerkesztés</button>');x.querySelector('[data-edit]').onclick=()=>{x.remove();editMachine(id)};}
-    window.editMachine=editMachine;window.deleteMachine=deleteMachine;window.machineProfile=profile;
-    views.machines=()=>'<div class="panel"><div class="panelhead"><h2>Géppark</h2><div style="display:flex;gap:8px"><button class="btn" id="machineNew">+ Új eszköz</button></div></div><div class="tablewrap"><table class="table"><thead><tr><th>Eszköz</th><th>Típus</th><th>Rendszám / azonosító</th><th>Km / üzemóra</th><th>Állapot</th><th>Műveletek</th></tr></thead><tbody>'+(arr().map(m=>'<tr><td><b>'+esc(m.name||'Névtelen eszköz')+'</b><div class="label">'+esc(m.make||'')+' '+esc(m.model||'')+'</div></td><td>'+esc(typeLabels[m.asset_type]||m.asset_type||'Egyéb')+'</td><td>'+esc(m.plate||m.asset_code||'—')+'</td><td>'+((Number(m.odometer)||0)?(Number(m.odometer)+' km'):(Number(m.hours)||0)+' h')+'</td><td><span class="badge '+(m.status==='Üzemképes'?'green':m.status==='Szervizre vár'?'amber':'red')+'">'+esc(m.status||'Üzemképes')+'</span></td><td><button class="btn secondary small" data-action="profile" data-id="'+esc(m.id)+'">Adatlap</button> <button class="btn secondary small" data-action="edit" data-id="'+esc(m.id)+'">✏️ Szerkesztés</button> <button class="btn danger small" data-action="delete" data-id="'+esc(m.id)+'">🗑️ Törlés</button></td></tr>').join('')||'<tr><td colspan="6" class="empty">Nincs eszköz a gépparkban.</td></tr>')+'</tbody></table></div></div>';
-    const oldRender=render;render=function(){oldRender();if(typeof current!=='undefined'&&current==='machines'){const root=document.querySelector('.content');if(root){root.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(b.dataset.action==='edit')editMachine(id);else if(b.dataset.action==='delete')deleteMachine(id);else profile(id)});const n=root.querySelector('#machineNew');if(n)n.onclick=()=>{if(typeof newMachine==='function')newMachine();};}}};
-    if(typeof current!=='undefined'&&current==='machines')render();return true;
+'use strict';
+
+function install(){
+  if(typeof views==='undefined'||typeof db==='undefined'||typeof render!=='function') return false;
+
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const arr=()=>Array.isArray(db.machines)?db.machines:[];
+  const val=(o,k,d='—')=>o?.[k]===undefined||o?.[k]===null||o?.[k]===''?d:o[k];
+  const typeLabels={auto:'Autó / jármű',furo:'Fúrógép',kompresszor:'Kompresszor',teherauto:'Teherautó',utanfuto:'Utánfutó',egyeb:'Egyéb'};
+  const fuelLabels={diesel:'Dízel',petrol:'Benzin',electric:'Elektromos',hybrid:'Hibrid',other:'Egyéb'};
+
+  function money(x){return x===undefined||x===null||x===''?'—':Number(x||0).toLocaleString('hu-HU')+' Ft'}
+  function num(x,u){return x===undefined||x===null||x===''?'—':Number(x||0).toLocaleString('hu-HU')+(u?' '+u:'')}
+  function item(label,value,full){return `<div class="mp-item${full?' mp-full':''}"><div class="mp-label">${esc(label)}</div><div class="mp-value">${esc(value)}</div></div>`}
+  function section(title,items){return `<section class="mp-section"><h3>${esc(title)}</h3><div class="mp-grid">${items.join('')}</div></section>`}
+  function root(){return document.getElementById('content')||document.querySelector('.content')}
+
+  function profile(id){
+    const m=arr().find(x=>String(x.id)===String(id));
+    if(!m) return;
+    const r=root();
+    if(!r) return;
+
+    const tabs=[
+      ['base','Általános'],['tech','Műszaki'],['docs','Okmányok'],
+      ['service','Szerviz'],['cost','Költségek'],['notes','Megjegyzés']
+    ];
+
+    const pane=t=>{
+      if(t==='tech') return section('Műszaki adatok',[
+        item('Üzemóra',num(m.hours,'h')),item('Kilométeróra',num(m.odometer,'km')),
+        item('Következő szerviz km',num(m.service_km,'km')),
+        item('Következő szerviz üzemóra',num(m.service_hours,'h')),
+        item('Következő szerviz dátuma',val(m,'service_date')),
+        item('Üzemanyag',fuelLabels[m.fuel]||val(m,'fuel')),
+        item('Hengerűrtartalom',num(m.engine_cc,'cm³')),
+        item('Teljesítmény',num(m.power_hp,'LE')),
+        item('Teljesítmény',num(m.power_kw,'kW')),
+        item('Sebességváltó',val(m,'transmission')),item('Meghajtás',val(m,'drive')),
+        item('Karosszéria / kivitel',val(m,'body')),item('Szín',val(m,'color')),
+        item('Gumiabroncs méret',val(m,'tire_size')),item('Saját tömeg',num(m.weight,'kg')),
+        item('Megengedett össztömeg',num(m.gvw,'kg'))
+      ]);
+      if(t==='docs') return section('Okmányok és biztosítás',[
+        item('Műszaki vizsga lejárata',val(m,'mot_expiry')),
+        item('Kötelező biztosítás lejárata',val(m,'insurance_expiry')),
+        item('Casco lejárata',val(m,'casco_expiry')),
+        item('Útdíj / matrica lejárata',val(m,'toll_expiry')),
+        item('Forgalmi dokumentum',val(m,'registration_doc')),
+        item('Biztosító',val(m,'insurer')),item('Biztosítás kötvényszáma',val(m,'policy_no'))
+      ]);
+      if(t==='service') return section('Szerviz',[
+        item('Utolsó szerviz dátuma',val(m,'last_service_date')),
+        item('Utolsó szerviz km / üzemóra',val(m,'last_service_meter')),
+        item('Szervizhely / szerelő',val(m,'service_provider')),
+        item('Utolsó szerviz költsége',money(m.last_service_cost)),
+        item('Következő szerviz megjegyzés',val(m,'service_note'),true)
+      ]);
+      if(t==='cost') return section('Költségek',[
+        item('Havi átlagos üzemanyagköltség',money(m.fuel_cost_month)),
+        item('Éves szervizköltség',money(m.service_cost_year)),
+        item('Éves biztosítási költség',money(m.insurance_cost_year)),
+        item('Egyéb éves költség',money(m.other_cost_year))
+      ]);
+      if(t==='notes') return section('Megjegyzés és felelős',[
+        item('Megjegyzés',val(m,'notes'),true),item('Felelős / használó',val(m,'responsible'),true)
+      ]);
+      return section('Alapadatok',[
+        item('Eszköz neve',val(m,'name')),item('Eszköztípus',typeLabels[m.asset_type]||val(m,'asset_type')),
+        item('Belső azonosító',val(m,'asset_code')),item('Gyártó',val(m,'make')),
+        item('Típus / modell',val(m,'model')),item('Évjárat',val(m,'year')),
+        item('Rendszám',val(m,'plate')),item('Alvázszám (VIN)',val(m,'vin')),
+        item('Motorszám',val(m,'engine_no')),item('Beszerzés dátuma',val(m,'purchase_date')),
+        item('Beszerzési érték',money(m.purchase_value)),item('Jelenlegi érték',money(m.current_value)),
+        item('Állapot',val(m,'status','Üzemképes'))
+      ]);
+    };
+
+    r.innerHTML=`<div class="machine-page-profile">
+      <div class="machine-page-head">
+        <div>
+          <div class="eyebrow">GÉPPARK / ESZKÖZ ADATLAP</div>
+          <h1>${esc(val(m,'name','Névtelen eszköz'))}</h1>
+          <div class="machine-page-sub">${esc(typeLabels[m.asset_type]||val(m,'asset_type'))} · ${esc(val(m,'make',''))} ${esc(val(m,'model',''))}</div>
+        </div>
+        <div class="machine-page-actions">
+          <button type="button" class="btn secondary" id="mpBack">← Vissza a gépparkhoz</button>
+          <button type="button" class="btn" id="mpEdit">✏️ Szerkesztés</button>
+        </div>
+      </div>
+      <div class="machine-page-tabs">${tabs.map((x,i)=>`<button type="button" class="btn secondary mp-tab${i===0?' active':''}" data-tab="${x[0]}">${x[1]}</button>`).join('')}</div>
+      <div id="mpPane">${pane('base')}</div>
+    </div>`;
+
+    const title=document.getElementById('title');
+    if(title) title.textContent='Géppark';
+
+    r.querySelectorAll('.mp-tab').forEach(b=>b.onclick=()=>{
+      r.querySelectorAll('.mp-tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      r.querySelector('#mpPane').innerHTML=pane(b.dataset.tab);
+    });
+
+    r.querySelector('#mpBack').onclick=()=>{
+      if(typeof window.nav==='function') window.nav('machines');
+      else { window.current='machines'; render(); }
+    };
+    r.querySelector('#mpEdit').onclick=()=>{
+      if(typeof window.editMachine==='function') window.editMachine(id);
+    };
+
+    window.scrollTo({top:0,behavior:'smooth'});
   }
-  let tries=0;const boot=()=>{if(install()||tries++>30)return;setTimeout(boot,250)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+
+  /* Fontos: az Adatlap gomb NEM kap data-action="profile" attribútumot.
+     Így a régi modalos modulok nem tudják elfogni. */
+  views.machines=()=>'<div class="panel"><div class="panelhead"><h2>Géppark</h2><div style="display:flex;gap:8px"><button class="btn" id="machineNew">+ Új eszköz</button></div></div><div class="tablewrap"><table class="table"><thead><tr><th>Eszköz</th><th>Típus</th><th>Rendszám / azonosító</th><th>Km / üzemóra</th><th>Állapot</th><th>Műveletek</th></tr></thead><tbody>'+
+    arr().map(m=>'<tr><td><b>'+esc(m.name||'Névtelen eszköz')+'</b><div class="label">'+esc((m.make||'')+' '+(m.model||''))+'</div></td><td>'+esc(typeLabels[m.asset_type]||m.asset_type||'Egyéb')+'</td><td>'+esc(m.plate||m.asset_code||'—')+'</td><td>'+((Number(m.odometer)||0)?(Number(m.odometer)+' km'):(Number(m.hours)||0)+' h')+'</td><td><span class="badge '+(m.status==='Üzemképes'?'green':m.status==='Szervizre vár'?'amber':'red')+'">'+esc(m.status||'Üzemképes')+'</span></td><td><button type="button" class="btn secondary small" data-machine-profile="'+esc(m.id)+'">Adatlap</button> <button type="button" class="btn secondary small" data-machine-edit="'+esc(m.id)+'">Szerkesztés</button></td></tr>').join('')+
+    '</tbody></table></div></div>';
+
+  /* Saját eseménykezelés: csak a V3 attribútumokat figyeli. */
+  if(!window.__kpMachineV3Bound){
+    window.__kpMachineV3Bound=true;
+    document.addEventListener('click',function(e){
+      const p=e.target.closest('[data-machine-profile]');
+      if(p){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();profile(p.getAttribute('data-machine-profile'));return;}
+      const ed=e.target.closest('[data-machine-edit]');
+      if(ed){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();if(typeof window.editMachine==='function')window.editMachine(ed.getAttribute('data-machine-edit'));}
+    },true);
+  }
+
+  window.machineProfile=profile;
+  window.machineProfilePage=profile;
+  window.__kpMachineProfile=profile;
+
+  const styleId='kp-machine-v3-style';
+  if(!document.getElementById(styleId)){
+    const s=document.createElement('style');s.id=styleId;s.textContent=`
+      .machine-page-profile{display:block;width:100%}
+      .machine-page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}
+      .machine-page-head h1{margin:4px 0;font-size:28px}
+      .machine-page-sub{color:var(--muted);font-size:13px}
+      .machine-page-actions{display:flex;gap:8px;flex-wrap:wrap}
+      .machine-page-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+      .machine-page-tabs .active{background:#dbeafe;color:#1d4ed8}
+      .mp-section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+      .mp-section h3{margin:0 0 14px;font-size:16px}
+      .mp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .mp-item{border:1px solid #e1e7ed;border-radius:9px;padding:12px;background:#fbfcfd;min-height:58px}
+      .mp-full{grid-column:1/-1}
+      .mp-label{font-size:11px;color:var(--muted);margin-bottom:5px}
+      .mp-value{font-size:14px;font-weight:650;word-break:break-word;white-space:pre-wrap}
+      @media(max-width:700px){.machine-page-head{flex-direction:column}.mp-grid{grid-template-columns:1fr}.mp-full{grid-column:auto}}
+    `;document.head.appendChild(s);
+  }
+  return true;
+}
+
+let tries=0;
+(function boot(){if(install()||tries++>120)return;setTimeout(boot,250)})();
 })();
