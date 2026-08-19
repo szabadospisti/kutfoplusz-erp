@@ -4,9 +4,27 @@
   function waitReady(){return window.KPProjectCRUD.ready();}
   async function remoteFor(localProject){
     await waitReady();
-    // A stale local supabaseId must not prevent lookup by the stable project number.
-    // This also repairs projects created before the Supabase CRUD bridge was installed.
-    return await window.KPProjectSupabase.findByProjectNumber(localProject.id);
+    // First use the shared Supabase project lookup.
+    try{
+      const found=await window.KPProjectSupabase.findByProjectNumber(localProject.id);
+      if(found) return found;
+    }catch(err){console.warn('Projekt lookup hiba:',err);}
+
+    // Fallback: query Supabase directly by the stable KP project number.
+    // This also works for legacy records that do not have supabaseId locally.
+    try{
+      const c=window.SUPABASE_CONFIG;
+      if(c&&c.url&&c.publishableKey){
+        const headers={apikey:c.publishableKey,Authorization:'Bearer '+c.publishableKey,Accept:'application/json'};
+        const url=c.url+'/rest/v1/projects?project_number=eq.'+encodeURIComponent(String(localProject.id))+'&select=id&limit=1';
+        const res=await fetch(url,{headers});
+        if(res.ok){
+          const rows=await res.json();
+          if(Array.isArray(rows)&&rows[0]&&rows[0].id)return {id:rows[0].id};
+        }
+      }
+    }catch(err){console.warn('Közvetlen projekt lookup hiba:',err);}
+    return null;
   }
   function customerName(customerId){
     const list=(typeof db!=='undefined' && db && Array.isArray(db.customers)) ? db.customers : [];
@@ -50,15 +68,14 @@
       if(!confirm(msg))return;
       try{
         const remote=await remoteFor(p);
-        if(!remote){
-          // Legacy/local-only project: remove it locally instead of reporting a false Supabase error.
-          db.projects=db.projects.filter(x=>String(x.id)!==String(id));
-          save(); closeDrawer(); nav('projects'); toast('Projekt törölve (helyi régi rekord)');
-          return;
+        if(remote){
+          await window.KPProjectSupabase.remove(remote.id);
+          toast('Projekt törölve az ERP-ből és Supabase-ből');
+        }else{
+          toast('Projekt törölve (helyi régi rekord)');
         }
-        await window.KPProjectSupabase.remove(remote.id);
         db.projects=db.projects.filter(x=>String(x.id)!==String(id));
-        save(); closeDrawer(); nav('projects'); toast('Projekt törölve az ERP-ből és Supabase-ből');
+        save(); closeDrawer(); nav('projects');
       }catch(err){console.error(err);toast('Törlés sikertelen: '+(err.message||err));}
     };
     window.KPProjectCRUDLive=true;
