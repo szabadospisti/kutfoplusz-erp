@@ -38,9 +38,11 @@ jobs:
           marker='</script>'; pos=page.rfind(marker)
           if pos<0: raise SystemExit('index.html: closing script tag not found')
           page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
-          machine_script='<script src="machine-fleet-final.js?v=1"></script>\n'
+          machine_script='<script src="machine-fleet-final.js?v=1"></script>\n<script src="machine-profile-native.js?v=1"></script>\n'
           if 'machine-fleet-final.js' not in page:
               page=page.replace('</body>',machine_script+'</body>',1)
+          elif 'machine-profile-native.js' not in page:
+              page=page.replace('</body>','<script src="machine-profile-native.js?v=1"></script>\n</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
       - name: Verify generated page
@@ -48,10 +50,10 @@ jobs:
         run: |
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['machine-fleet-final.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
+          required=['machine-fleet-final.js','machine-profile-native.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
-          print('OK: stable ERP modules present; machine fleet final module loaded separately')
+          print('OK: stable ERP modules present; native machine profile loaded last')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
