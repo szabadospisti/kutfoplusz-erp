@@ -21,5 +21,7 @@
     await loadScript('material-crud-fix.js');
     /* Géppark CRUD: ugyanaz a stabil soronkénti Szerkesztés/Törlés működés. */
     await loadScript('machine-fleet-final.js');
+    /* Új eszköz: ugyanaz a teljes, füles adatlap, mint a Szerkesztés. */
+    await loadScript('machine-new-unified.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
