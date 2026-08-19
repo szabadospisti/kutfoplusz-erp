@@ -15,137 +15,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Embed safe project-worklog bridge
+      - name: Patch original worklog editor safely
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          marker = '<!-- KP_PROJECT_WORKLOG_BRIDGE_V1 -->'
 
-          # Idempotent: if already embedded, do nothing.
-          if marker in s:
-              print('Project-worklog bridge already embedded.')
+          if '<!-- KP_DIRECT_PROJECT_WORKLOG_V1 -->' in s:
+              print('Direct project-worklog patch already embedded.')
               raise SystemExit(0)
 
-          bridge = r'''<!-- KP_PROJECT_WORKLOG_BRIDGE_V1 -->
-          <script>
-          (function(){
-            if(window.__KP_PROJECT_WORKLOG_BRIDGE__) return;
-            window.__KP_PROJECT_WORKLOG_BRIDGE__=true;
-            var pending='';
+          replacements = [
+            (
+              'function newWorklogFor(pid){openWorklogEditor()}',
+              'function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor()}'
+            ),
+            (
+              'function detailedWorklogEditor(id){',
+              'function detailedWorklogEditor(id,projectId){'
+            ),
+            (
+              ' const w=id?db.worklogs.find(x=>x.id===id):null;',
+              ' const w=id?db.worklogs.find(x=>x.id===id):null;\n const selectedProjectId=projectId||w?.projectId||window.__kpPendingWorklogProjectId||"";'
+            ),
+            (
+              ' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>\n <div class="wl-field"><label>Kút sorszáma</label>',
+              ' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>\n <div class="wl-field"><label>Projekt</label><select id="wl_project"><option value="">— Válassz —</option>${projOpts}</select></div>\n <div class="wl-field"><label>Kút sorszáma</label>'
+            ),
+            (
+              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");',
+              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'
+            ),
+            (
+              'projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",',
+              'projectId:document.getElementById("wl_project")?.value||"",'
+            )
+          ]
 
-            function projects(){ return (window.db && Array.isArray(window.db.projects)) ? window.db.projects : []; }
+          for old,new in replacements:
+              if old not in s:
+                  raise SystemExit('SAFE PATCH FAILED: target not found; index.html was NOT changed: '+old[:120])
+              s=s.replace(old,new,1)
 
-            function findWorklogRoot(){
-              var el=document.querySelector('#wlForm');
-              if(el) return el;
-              var client=document.querySelector('#wl_client');
-              if(client) return client.closest('.wl-form,.modal,.drawer,.card,form') || client.parentElement;
-              return null;
-            }
-
-            function ensureProjectField(){
-              var root=findWorklogRoot();
-              if(!root) return null;
-              var client=document.querySelector('#wl_client');
-              var select=document.querySelector('#wl_project');
-              if(!select){
-                var wrap=document.createElement('div');
-                wrap.className='wl-field';
-                wrap.innerHTML='<label>Projekt</label><select id="wl_project"><option value="">— Nincs kiválasztva —</option></select>';
-                var clientWrap=client && (client.closest('.wl-field') || client.closest('.field'));
-                if(clientWrap && clientWrap.parentNode) clientWrap.parentNode.insertBefore(wrap,clientWrap.nextSibling);
-                else root.insertBefore(wrap,root.firstChild);
-                select=wrap.querySelector('#wl_project');
-                select.addEventListener('change',function(){
-                  pending=select.value||'';
-                  syncProject();
-                });
-              }
-
-              var list=projects();
-              var sig=list.map(function(p){return String(p.id)+'|'+String(p.name||'')}).join(';;');
-              if(select.dataset.kpSig!==sig){
-                select.innerHTML='<option value="">— Nincs kiválasztva —</option>';
-                list.forEach(function(p){
-                  var o=document.createElement('option');
-                  o.value=String(p.id);
-                  o.textContent=(p.project_number||p.projectNumber||p.id)+' – '+(p.name||'');
-                  select.appendChild(o);
-                });
-                select.dataset.kpSig=sig;
-              }
-              if(pending) select.value=String(pending);
-              syncProject();
-              return select;
-            }
-
-            function syncProject(){
-              var select=document.querySelector('#wl_project');
-              if(!select || !select.value) return;
-              var p=projects().find(function(x){return String(x.id)===String(select.value)});
-              if(!p) return;
-              var client=document.querySelector('#wl_client');
-              if(client && p.customerId){ client.value=String(p.customerId); client.dispatchEvent(new Event('change',{bubbles:true})); }
-              var loc=document.querySelector('#wl_location');
-              if(loc && p.location && !loc.value) loc.value=p.location;
-            }
-
-            function afterOpen(){
-              var i=0;
-              var t=setInterval(function(){
-                ensureProjectField();
-                if(document.querySelector('#wl_project') || ++i>30) clearInterval(t);
-              },100);
-            }
-
-            function hook(){
-              if(typeof window.newWorklogFor==='function' && !window.__KP_NWF_HOOKED__){
-                var original=window.newWorklogFor;
-                window.__KP_NWF_HOOKED__=true;
-                window.newWorklogFor=function(pid){
-                  pending=pid||'';
-                  var result=original.apply(this,arguments);
-                  afterOpen();
-                  return result;
-                };
-              }
-              if(typeof window.detailedWorklogEditor==='function' && !window.__KP_DWE_HOOKED__){
-                var originalEditor=window.detailedWorklogEditor;
-                window.__KP_DWE_HOOKED__=true;
-                window.detailedWorklogEditor=function(id){
-                  var result=originalEditor.apply(this,arguments);
-                  afterOpen();
-                  return result;
-                };
-              }
-              ensureProjectField();
-            }
-
-            var observer=new MutationObserver(function(){hook();});
-            observer.observe(document.documentElement,{childList:true,subtree:true});
-            var timer=setInterval(hook,250);
-            setTimeout(function(){clearInterval(timer);},30000);
-            hook();
-          })();
-          </script>'''
-
+          marker='''<!-- KP_DIRECT_PROJECT_WORKLOG_V1 -->\n<script>\n(function(){\n  if(window.__KP_DIRECT_PROJECT_WORKLOG_V1__) return;\n  window.__KP_DIRECT_PROJECT_WORKLOG_V1__=true;\n  var original=window.newWorklogFor;\n  if(typeof original!=="function") return;\n  window.newWorklogFor=function(pid){\n    window.__kpPendingWorklogProjectId=pid||"";\n    return original.call(this,pid);\n  };\n})();\n</script>\n'''
           pos=s.rfind('</body>')
-          if pos < 0:
-              raise SystemExit('index.html: </body> not found; no change made')
-          s=s[:pos]+bridge+'\n'+s[pos:]
+          if pos<0:
+              raise SystemExit('SAFE PATCH FAILED: </body> not found; index.html was NOT changed')
+          s=s[:pos]+marker+s[pos:]
           p.write_text(s,encoding='utf-8')
-          print('Embedded project-worklog bridge successfully.')
+          print('Direct worklog project patch embedded successfully.')
           PY
 
-      - name: Commit embedded index.html
+      - name: Commit patched index.html
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Embed stable project selection in worklogs'
+          git commit -m 'Fix project selection directly in worklog editor'
           git push
