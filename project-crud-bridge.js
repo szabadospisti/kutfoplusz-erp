@@ -2,6 +2,8 @@
 (function(){
   'use strict';
   function loadScript(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src+'?v='+Date.now();s.onload=resolve;s.onerror=function(){reject(new Error('Script betöltése sikertelen: '+src));};document.head.appendChild(s);});}
+  /* A Géppark új-eszköz felülete azonnal töltődjön be, ne várjon a Supabase bootstrapre. */
+  loadScript('machine-new-unified.js').catch(function(err){console.error('Géppark új eszköz modul:',err);});
   async function waitForConfig(){if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;for(var i=0;i<100;i++){await new Promise(function(r){setTimeout(r,50)});if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;}throw new Error('Supabase konfiguráció nem töltődött be.');}
   async function waitForProjectCrud(){for(var i=0;i<120;i++){if(window.KPProjectCRUDLive)return true;await new Promise(function(r){setTimeout(r,50)});}throw new Error('Az egységes projekt CRUD nem töltődött be.');}
   async function bootstrap(){await waitForConfig();if(!window.KPProjectSupabase)await loadScript('project-crud-supabase.js');if(!window.KPProjectSupabase)throw new Error('Supabase projekt CRUD adapter nem töltődött be.');return window.KPProjectSupabase;}
@@ -21,7 +23,5 @@
     await loadScript('material-crud-fix.js');
     /* Géppark CRUD: ugyanaz a stabil soronkénti Szerkesztés/Törlés működés. */
     await loadScript('machine-fleet-final.js');
-    /* Új eszköz: ugyanaz a teljes, füles adatlap, mint a Szerkesztés. */
-    await loadScript('machine-new-unified.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
