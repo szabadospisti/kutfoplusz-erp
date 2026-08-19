@@ -1187,7 +1187,36 @@ function openProjectForCustomer(id){closeDrawer();openProject(id)}
 function openProject(customerId){openModal("Új projekt",`<form onsubmit="saveProject(event)"><div class="formgrid"><div class="field"><label>Ügyfél</label><select required class="select" name="customerId">${opts()}</select></div><div class="field"><label>Státusz</label><select class="select" name="status"><option>Tervezés</option><option>Folyamatban</option><option>Lezárva</option></select></div><div class="field full"><label>Projekt neve</label><input required class="input" name="name"></div><div class="field"><label>Helyszín</label><input class="input" name="location"></div><div class="field"><label>Szerződéses érték</label><input class="input" type="number" name="value" value="0"></div><div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes"></textarea></div></div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`)
  if(customerId)setTimeout(()=>{const e=document.querySelector('#modal select[name="customerId"]');if(e)e.value=customerId},0);}
 function saveProject(e){e.preventDefault();let o=Object.fromEntries(new FormData(e.target).entries());db.projects.push({id:uid("KP"),...o,value:+o.value||0,planned:0,cost:0,progress:0});save();closeModal();nav("projects");toast("Projekt létrehozva")}
-function projectDetails(id){let p=db.projects.find(x=>x.id===id),pr=p.value-p.cost;openDrawer(p.id,`<h2>${esc(p.name)}</h2><p class="label">${esc(p.location)} · ${esc(cust(p.customerId))}</p><div class="cards" style="grid-template-columns:1fr 1fr"><div class="card"><div class="label">Érték</div><div class="value">${money(p.value)}</div></div><div class="card"><div class="label">Profit</div><div class="value ${pr>=0?'green':'red'}">${money(pr)}</div></div></div><p><b>Készültség:</b> ${p.progress||0}%</p><p><b>Státusz:</b> ${esc(p.status)}</p><p><b>Tervezett költség:</b> ${money(p.planned)}</p><p><b>Tényleges költség:</b> ${money(p.cost)}</p><hr><button class="btn secondary" onclick="newWorklogFor('${p.id}')">+ Munkanapló</button>`)}
+function projectDetails(id){
+ let p=db.projects.find(x=>x.id===id); if(!p)return;
+ let pr=(+p.value||0)-(+p.cost||0);
+ openDrawer(p.id,`<h2>${esc(p.name)}</h2><p class="label">${esc(p.location||'')} · ${esc(cust(p.customerId))}</p><div class="cards" style="grid-template-columns:1fr 1fr"><div class="card"><div class="label">Érték</div><div class="value">${money(p.value||0)}</div></div><div class="card"><div class="label">Profit</div><div class="value ${pr>=0?'green':'red'}">${money(pr)}</div></div></div><p><b>Készültség:</b> ${p.progress||0}%</p><p><b>Státusz:</b> ${esc(p.status||'')}</p><p><b>Tervezett költség:</b> ${money(p.planned||0)}</p><p><b>Tényleges költség:</b> ${money(p.cost||0)}</p><hr><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" onclick="newWorklogFor('${p.id}')">+ Munkanapló</button><button class="btn" onclick="editProject('${p.id}')">✏️ Szerkesztés</button><button class="btn danger" onclick="deleteProject('${p.id}')">🗑️ Törlés</button></div>`)
+}
+
+function editProject(id){
+ let p=db.projects.find(x=>x.id===id); if(!p)return;
+ openModal('Projekt szerkesztése',`<form onsubmit="saveProjectEdit(event,'${p.id}')"><div class="formgrid"><div class="field"><label>Ügyfél</label><select required class="select" name="customerId">${opts()}</select></div><div class="field"><label>Státusz</label><select class="select" name="status"><option ${p.status==='Tervezés'?'selected':''}>Tervezés</option><option ${p.status==='Folyamatban'?'selected':''}>Folyamatban</option><option ${p.status==='Lezárva'?'selected':''}>Lezárva</option></select></div><div class="field full"><label>Projekt neve</label><input required class="input" name="name" value="${esc(p.name||'')}"></div><div class="field"><label>Helyszín</label><input class="input" name="location" value="${esc(p.location||'')}"></div><div class="field"><label>Szerződéses érték</label><input class="input" type="number" name="value" value="${+p.value||0}"></div><div class="field"><label>Készültség (%)</label><input class="input" type="number" min="0" max="100" name="progress" value="${+p.progress||0}"></div><div class="field"><label>Tervezett költség</label><input class="input" type="number" name="planned" value="${+p.planned||0}"></div><div class="field"><label>Tényleges költség</label><input class="input" type="number" name="cost" value="${+p.cost||0}"></div><div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes">${esc(p.notes||'')}</textarea></div></div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`);
+ setTimeout(()=>{let e=document.querySelector('#modal select[name="customerId"]');if(e)e.value=p.customerId||''},0);
+}
+
+function saveProjectEdit(e,id){
+ e.preventDefault();
+ let p=db.projects.find(x=>x.id===id); if(!p)return;
+ let o=Object.fromEntries(new FormData(e.target).entries());
+ Object.assign(p,{customerId:o.customerId,name:o.name,status:o.status,location:o.location,value:+o.value||0,progress:Math.max(0,Math.min(100,+o.progress||0)),planned:+o.planned||0,cost:+o.cost||0,notes:o.notes||''});
+ save(); closeModal(); closeDrawer(); nav('projects'); toast('Projekt módosítva');
+}
+
+function deleteProject(id){
+ let p=db.projects.find(x=>x.id===id); if(!p)return;
+ let linked=(db.worklogs||[]).filter(w=>w.projectId===id).length;
+ let msg=`Biztosan törlöd ezt a projektet?\n\n${p.name}\n${linked?`Kapcsolódó munkanaplók: ${linked} db. Ezek megmaradnak, csak leválasztjuk őket a projektről.`:''}`;
+ if(!confirm(msg))return;
+ (db.worklogs||[]).forEach(w=>{if(w.projectId===id)w.projectId=''});
+ db.projects=db.projects.filter(x=>x.id!==id);
+ save(); closeDrawer(); nav('projects'); toast('Projekt törölve');
+}
+
 let editingWorklogId=null, wlLayers=[], wlFilters=[["0","3","Vak"]];
 function newWorklog(){openWorklogEditor()}
 function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor();setTimeout(function(){window.__KP_PRESELECT_WORKLOG__(pid)},0)}
