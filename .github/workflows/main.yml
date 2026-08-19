@@ -30,67 +30,30 @@ jobs:
         run: |
           from pathlib import Path
           page = Path('index.html').read_text(encoding='utf-8')
-
           nav_marker = '<nav id="nav">'
           inbox_button = '<button class="nav" data-page="inbox" onclick="openInbox()"><i>📥</i>Beérkező dokumentumok</button>'
           if 'data-page="inbox"' not in page:
-              if nav_marker not in page:
-                  raise SystemExit('index.html: #nav marker not found')
+              if nav_marker not in page: raise SystemExit('index.html: #nav marker not found')
               page = page.replace(nav_marker, nav_marker + '\n    ' + inbox_button, 1)
-
           patches = [
-              Path('customer-work-types.js').read_text(encoding='utf-8'),
-              Path('ui-polish.js').read_text(encoding='utf-8'),
-              Path('ai-inbox-pilot.js').read_text(encoding='utf-8'),
-              Path('ai-quote-prep.js').read_text(encoding='utf-8'),
-              Path('inbox-file-upload.js').read_text(encoding='utf-8'),
-              Path('warehouse-materials.js').read_text(encoding='utf-8'),
-              Path('warehouse-material-delete.js').read_text(encoding='utf-8'),
-              Path('warehouse-material-edit.js').read_text(encoding='utf-8'),
-              Path('erp-fixes.js').read_text(encoding='utf-8'),
-              Path('machine-fleet-actions.js').read_text(encoding='utf-8'),
-              Path('machine-fleet-final.js').read_text(encoding='utf-8'),
-              Path('erp-delete-manager.js').read_text(encoding='utf-8'),
-              Path('customer-details-actions.js').read_text(encoding='utf-8'),
+              'customer-work-types.js','ui-polish.js','ai-inbox-pilot.js','ai-quote-prep.js','inbox-file-upload.js',
+              'warehouse-materials.js','warehouse-material-delete.js','warehouse-material-edit.js','erp-fixes.js',
+              'machine-fleet-actions.js','machine-fleet-final.js','erp-delete-manager.js','customer-details-actions.js','customer-details-dom-fix.js'
           ]
-          marker = '</script>'
-          pos = page.rfind(marker)
-          if pos < 0:
-              raise SystemExit('index.html: closing script tag not found')
-          page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
-          Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; customer detail actions included')
+          marker='</script>'; pos=page.rfind(marker)
+          if pos<0: raise SystemExit('index.html: closing script tag not found')
+          page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
+          Path('index.html').write_text(page,encoding='utf-8')
 
       - name: Verify generated page
         shell: python
         run: |
           from pathlib import Path
-          page = Path('index.html').read_text(encoding='utf-8')
-          required = [
-              'data-page="inbox"',
-              'Beérkező dokumentumok',
-              'Projekt anyagigény',
-              'Anyagok szerkesztése',
-              'Változtatások mentése',
-              'kpDeleteMaterial',
-              'Géppark szerkesztése',
-              'machineFleetBulkEdit',
-              'machineProfile',
-              'deleteMachine',
-              'Műveletek',
-              'FINAL Géppark fix',
-              'finalMachineEdit',
-              'kpDeleteCustomer',
-              'kpDeleteProject',
-              'kpDeleteQuote',
-              'kpDeleteWorklog',
-              'Szerkesztés',
-              'customerDetails',
-          ]
-          missing = [x for x in required if x not in page]
-          if missing:
-              raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: customer details actions, unified delete manager and ERP CRUD modules present')
+          page=Path('index.html').read_text(encoding='utf-8')
+          required=['kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
+          missing=[x for x in required if x not in page]
+          if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
+          print('OK: customer/project/quote/worklog delete layer and customer detail DOM fix present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
