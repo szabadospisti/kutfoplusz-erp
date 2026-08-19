@@ -16,14 +16,6 @@
     }catch(e){console.error('Helyi mentési hiba:',e);}
   }
 
-  /*
-   * A Supabase public.erp_state tényleges sémája:
-   * id TEXT PRIMARY KEY (alapértelmezés: main)
-   * data JSONB
-   * updated_at TIMESTAMPTZ
-   * updated_by UUID -> auth.users
-   * A régi kód user_id/state mezőket próbált írni, ezért a felhőmentés hibára futott.
-   */
   window.save=async function(){
     localSave();
     try{
@@ -35,12 +27,7 @@
         console.warn('Supabase mentés kihagyva: nincs bejelentkezett felhasználó.');
         return;
       }
-      const payload={
-        id:'main',
-        data:window.db,
-        updated_at:new Date().toISOString(),
-        updated_by:user.id
-      };
+      const payload={id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id};
       const {error}=await client.from('erp_state').upsert(payload,{onConflict:'id'});
       if(error)throw error;
       const pill=document.querySelector('[data-save-status],#saveStatus,.save-status');
@@ -51,8 +38,6 @@
     }
   };
 
-  /* Rétegnapló javítás: a jelenlegi UI mélységei spanok, a mentő viszont inputokat keresett.
-     A modal létrejöttekor rejtett, szabványos mezőket adunk a sorokhoz. */
   function patchLayerRows(){
     const table=document.getElementById('wl_layers');
     if(!table)return;
@@ -62,30 +47,22 @@
       if(cells.length<4)return;
       const vals=[];
       cells[0].querySelectorAll('.wl-depth-value').forEach(x=>vals.push((x.textContent||'').replace(/\s*m\s*$/i,'').trim()));
-      const from=vals[0]||'';
-      const to=vals[1]||'';
+      const from=vals[0]||'';const to=vals[1]||'';
       const a=document.createElement('input');a.type='hidden';a.name='layer_from[]';a.value=from;
       const b=document.createElement('input');b.type='hidden';b.name='layer_to[]';b.value=to;
       tr.append(a,b);
     });
   }
-
   function installLayerPatch(){
     const observer=new MutationObserver(()=>patchLayerRows());
     if(document.body)observer.observe(document.body,{childList:true,subtree:true});
-    setTimeout(patchLayerRows,300);
-    setTimeout(patchLayerRows,1000);
+    setTimeout(patchLayerRows,300);setTimeout(patchLayerRows,1000);
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installLayerPatch,{once:true});
-  else installLayerPatch();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installLayerPatch,{once:true});else installLayerPatch();
 
-  /* Új réteg hozzáadásakor az eredeti függvény után is biztosítjuk a hidden depth mezőket. */
   const originalAddLayer=window.addWorklogLayerRow;
   if(typeof originalAddLayer==='function'){
-    window.addWorklogLayerRow=function(){
-      originalAddLayer.apply(this,arguments);
-      patchLayerRows();
-    };
+    window.addWorklogLayerRow=function(){originalAddLayer.apply(this,arguments);patchLayerRows();};
   }
 
   window.deleteCustomer=function(id){
@@ -117,8 +94,7 @@
 
   window.newMachine=function(){
     if(document.getElementById('kpNewMachineModal'))return;
-    let state={items:[]};
-    try{state=JSON.parse(localStorage.getItem(MACHINE_KEY)||'null')||state;}catch{}
+    let state={items:[]};try{state=JSON.parse(localStorage.getItem(MACHINE_KEY)||'null')||state;}catch{}
     const m=document.createElement('div');m.id='kpNewMachineModal';m.className='modal';
     m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>Új gép</h2><button class="icon" type="button" data-close>×</button></div><div class="modalbody"><div class="formgrid">
       <div class="field"><label>Gép neve</label><input id="knmName" class="input" required></div>
@@ -134,19 +110,98 @@
     document.body.appendChild(m);
     const close=()=>m.remove();m.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
     m.querySelector('#knmSave').onclick=()=>{
-      const name=m.querySelector('#knmName').value.trim();
-      if(!name){alert('A gép neve kötelező.');return;}
+      const name=m.querySelector('#knmName').value.trim();if(!name){alert('A gép neve kötelező.');return;}
       const item={id:uid('machine'),name,model:m.querySelector('#knmModel').value.trim(),registration_number:m.querySelector('#knmId').value.trim(),year:m.querySelector('#knmYear').value.trim(),hours:Number(m.querySelector('#knmHours').value)||0,service:Number(m.querySelector('#knmService').value)||0,location:m.querySelector('#knmLocation').value.trim(),status:m.querySelector('#knmStatus').value,notes:m.querySelector('#knmNote').value.trim()};
-      state.items=Array.isArray(state.items)?state.items:[];state.items.push(item);
-      localStorage.setItem(MACHINE_KEY,JSON.stringify(state));
+      state.items=Array.isArray(state.items)?state.items:[];state.items.push(item);localStorage.setItem(MACHINE_KEY,JSON.stringify(state));
       if(window.db){window.db.machines=Array.isArray(window.db.machines)?window.db.machines:[];window.db.machines.push(item);Promise.resolve(window.save()).catch(()=>{});}
-      close();
-      const nav=[...document.querySelectorAll('#nav .nav')].find(x=>/gép/i.test(x.textContent||''));
-      if(nav)nav.click();else if(typeof render==='function')render();
-      if(typeof toast==='function')toast('Gép létrehozva');
+      close();const nav=[...document.querySelectorAll('#nav .nav')].find(x=>/gép/i.test(x.textContent||''));if(nav)nav.click();else if(typeof render==='function')render();if(typeof toast==='function')toast('Gép létrehozva');
     };
   };
 
-  window.addMaterial=window.newMaterial;
-  window.addMachine=window.newMachine;
+  window.addMaterial=window.newMaterial;window.addMachine=window.newMachine;
+
+  /*
+   * A központi db marad a UI kompatibilitási réteg, de az üzleti törzsadatok
+   * közvetlenül is bekerülnek a normalizált Supabase táblákba.
+   * Első kör: customers + projects. A helyi id megmarad, a Supabase UUID
+   * supabase_id mezőben kerül eltárolásra, így a régi UI nem törik el.
+   */
+  async function syncCustomerToSupabase(c){
+    const client=window._supabaseClient;if(!client||!c)return null;
+    const row={
+      company_name:String(c.name||'').trim()||'Névtelen ügyfél',
+      customer_type:c.customerType||null,
+      tax_number:c.tax||null,
+      address:c.address||null,
+      billing_address:c.billingAddress||c.billingNotes||null,
+      phone:c.phone||null,
+      email:c.email||null,
+      contact_person:c.contact||null,
+      notes:c.notes||null
+    };
+    let result;
+    if(c.supabase_id){
+      result=await client.from('customers').update(row).eq('id',c.supabase_id).select().single();
+    }else{
+      result=await client.from('customers').insert(row).select().single();
+    }
+    if(result.error)throw result.error;
+    c.supabase_id=result.data.id;
+    c.supabase_synced_at=new Date().toISOString();
+    return result.data;
+  }
+
+  async function syncProjectToSupabase(p){
+    const client=window._supabaseClient;if(!client||!p)return null;
+    const c=(window.db?.customers||[]).find(x=>String(x.id)===String(p.customerId));
+    if(c&&!c.supabase_id)await syncCustomerToSupabase(c);
+    const row={
+      project_number:p.project_number||String(p.id||uid('KP')).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40),
+      customer_id:c?.supabase_id||null,
+      quote_id:p.quoteSupabaseId||null,
+      name:String(p.name||'').trim()||'Új munka',
+      location:p.location||null,
+      start_date:p.startDate||null,
+      planned_end_date:p.plannedEndDate||null,
+      actual_end_date:p.actualEndDate||null,
+      status:p.status||'Tervezés',
+      contract_value:Number(p.value??p.contractValue)||0,
+      planned_cost:Number(p.planned??p.plannedCost)||0,
+      actual_cost:Number(p.cost??p.actualCost)||0
+    };
+    let result;
+    if(p.supabase_id)result=await client.from('projects').update(row).eq('id',p.supabase_id).select().single();
+    else result=await client.from('projects').insert(row).select().single();
+    if(result.error)throw result.error;
+    p.supabase_id=result.data.id;p.project_number=result.data.project_number;p.supabase_synced_at=new Date().toISOString();
+    return result.data;
+  }
+
+  function installDirectCrudSync(){
+    if(typeof window.saveCustomer==='function'&&!window.__customerCrudSync){
+      const original=window.saveCustomer;window.__customerCrudSync=true;
+      window.saveCustomer=async function(e,id){
+        original.apply(this,arguments);
+        try{
+          const c=(window.db?.customers||[]).find(x=>String(x.id)===String(id)||!id&&x===window.db.customers[window.db.customers.length-1]);
+          if(c)await syncCustomerToSupabase(c);
+          await window.save();
+          if(typeof toast==='function')toast('Ügyfél mentve a Supabase-be');
+        }catch(err){console.error('Customer Supabase sync:',err);if(typeof toast==='function')toast('Ügyfél helyben mentve – Supabase hiba');}
+      };
+    }
+    if(typeof window.saveProject==='function'&&!window.__projectCrudSync){
+      const original=window.saveProject;window.__projectCrudSync=true;
+      window.saveProject=async function(e){
+        original.apply(this,arguments);
+        try{
+          const p=window.db?.projects?.[window.db.projects.length-1];
+          if(p)await syncProjectToSupabase(p);
+          await window.save();
+          if(typeof toast==='function')toast('Munka mentve a Supabase-be');
+        }catch(err){console.error('Project Supabase sync:',err);if(typeof toast==='function')toast('Munka helyben mentve – Supabase hiba');}
+      };
+    }
+  }
+  let syncTries=0;const syncTimer=setInterval(()=>{installDirectCrudSync();if(window.__customerCrudSync&&window.__projectCrudSync||++syncTries>100)clearInterval(syncTimer);},100);
 })();
