@@ -17,5 +17,7 @@
     await loadScript('customer-details-dom-fix.js');
     await loadScript('project-worklog-auto-link.js');
     await loadScript('worklog-project-lock.js');
+    /* Anyag/Raktár CRUD: ugyanaz a szerkesztés/mentés/törlés UX, mint az Ügyfeleknél. */
+    await loadScript('material-crud-fix.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
