@@ -1,6 +1,9 @@
 name: Add project to worklog
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-project-worklog.yml'
 permissions:
   contents: write
 jobs:
