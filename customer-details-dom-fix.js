@@ -1,0 +1,10 @@
+/* Kútfő Plusz ERP – ügyfél adatlap DOM javítás. */
+(function(){
+'use strict';
+function visible(e){if(!e)return false;const s=getComputedStyle(e),r=e.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0}
+function findCustomer(){const db=window.db||{},cs=db.customers||[];const hs=[...document.querySelectorAll('h1,h2,h3')].filter(visible);for(const h of hs){const n=(h.textContent||'').trim();if(!n||/ügyfél|ajánlatok|projektek/i.test(n))continue;const c=cs.find(x=>String(x.name||'').trim()===n);if(c)return c}return null}
+function findHost(){const els=[...document.querySelectorAll('body *')].filter(visible).filter(e=>/Ajánlatok\s*\(/.test(e.textContent||'')&&/Projektek\s*\(/.test(e.textContent||''));return els.sort((a,b)=>a.children.length-b.children.length)[0]||null}
+function add(){const c=findCustomer(),h=findHost();if(!c||!h||document.getElementById('kpCustomerDetailActions'))return;const box=document.createElement('div');box.id='kpCustomerDetailActions';box.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin:22px 0;padding-top:16px;border-top:1px solid #e3e8ee;position:relative;z-index:999';const e=document.createElement('button');e.type='button';e.className='btn secondary';e.textContent='✏️ Szerkesztés';e.onclick=()=>{if(typeof window.editCustomer==='function')window.editCustomer(c.id);else alert('Szerkesztő funkció nem érhető el.')};const d=document.createElement('button');d.type='button';d.className='btn danger';d.textContent='🗑️ Törlés';d.onclick=async()=>{try{if(typeof window.deleteCustomer==='function')await window.deleteCustomer(c.id);else alert('Törlési modul nem töltődött be.')}catch(x){console.error(x);if(typeof window.toast==='function')window.toast(x.message||'A törlés nem sikerült');else alert(x.message||'A törlés nem sikerült')}};box.append(e,d);h.appendChild(box)}
+function boot(){add();new MutationObserver(add).observe(document.body,{childList:true,subtree:true});setInterval(add,500)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
