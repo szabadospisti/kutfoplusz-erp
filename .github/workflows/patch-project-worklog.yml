@@ -15,64 +15,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply safe project preselection patch
+      - name: Fix project data access in worklog bridge
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          marker='<!-- KP_PROJECT_PRESELECT_V2 -->'
-          if marker in s:
-              print('Patch already embedded')
-              raise SystemExit(0)
-
-          # Keep the existing field if the earlier bridge created it.
-          # Also patch the real project-launch function so the project id is retained.
-          old_variants = [
-              'function newWorklogFor(pid){openWorklogEditor()}',
-              'function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor()}'
-          ]
-          new='function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor();setTimeout(function(){window.__KP_PRESELECT_WORKLOG__(pid)},0)}'
-          found=False
-          for old in old_variants:
-              if old in s:
-                  s=s.replace(old,new,1)
-                  found=True
-                  break
-          if not found:
-              raise SystemExit('SAFE PATCH FAILED: newWorklogFor target not found; index.html unchanged')
-
-          script='''<!-- KP_PROJECT_PRESELECT_V2 -->
-          <script>
-          (function(){
-            function preselect(pid){
-              var projectId=pid||window.__kpPendingWorklogProjectId||'';
-              if(!projectId) return;
-              var select=document.getElementById('wl_project');
-              if(!select) return;
-              select.value=String(projectId);
-              select.dispatchEvent(new Event('change',{bubbles:true}));
-              var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];
-              var p=projects.find(function(x){return String(x.id)===String(projectId)});
-              if(!p) return;
-              var client=document.getElementById('wl_client');
-              if(client && p.customerId){
-                client.value=String(p.customerId);
-                client.dispatchEvent(new Event('change',{bubbles:true}));
-              }
-              var loc=document.getElementById('wl_location');
-              if(loc && p.location && !loc.value) loc.value=p.location;
-            }
-            window.__KP_PRESELECT_WORKLOG__=preselect;
-          })();
-          </script>
-          '''
-          pos=s.rfind('</body>')
-          if pos<0:
-              raise SystemExit('SAFE PATCH FAILED: </body> not found; index.html unchanged')
-          s=s[:pos]+script+'\n'+s[pos:]
-          p.write_text(s,encoding='utf-8')
-          print('Project/customer preselection patch applied')
+          old1="var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];"
+          new1="var projects=(typeof db!=='undefined'&&db&&Array.isArray(db.projects))?db.projects:[];"
+          old2="var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];"
+          changed=False
+          if old1 in s:
+              s=s.replace(old1,new1)
+              changed=True
+          elif old2 in s:
+              s=s.replace(old2,new1)
+              changed=True
+          if not changed:
+              print('No window.db project access found; nothing to change')
+          else:
+              p.write_text(s,encoding='utf-8')
+              print('Fixed project data access: use lexical db binding')
           PY
 
       - name: Commit index.html
@@ -81,5 +44,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Preselect project and customer in worklog'
+          git commit -m 'Fix project data access in worklog bridge'
           git push
