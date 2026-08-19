@@ -1629,5 +1629,107 @@ document.addEventListener("change",function(e){
 });
 window.addEventListener("beforeunload",()=>{try{if(document.getElementById("wlForm"))wlSaveDraft()}catch(e){}});
 </script>
+<!-- KP_PROJECT_WORKLOG_BRIDGE_V1 -->
+<script>
+(function(){
+  if(window.__KP_PROJECT_WORKLOG_BRIDGE__) return;
+  window.__KP_PROJECT_WORKLOG_BRIDGE__=true;
+  var pending='';
+
+  function projects(){ return (window.db && Array.isArray(window.db.projects)) ? window.db.projects : []; }
+
+  function findWorklogRoot(){
+    var el=document.querySelector('#wlForm');
+    if(el) return el;
+    var client=document.querySelector('#wl_client');
+    if(client) return client.closest('.wl-form,.modal,.drawer,.card,form') || client.parentElement;
+    return null;
+  }
+
+  function ensureProjectField(){
+    var root=findWorklogRoot();
+    if(!root) return null;
+    var client=document.querySelector('#wl_client');
+    var select=document.querySelector('#wl_project');
+    if(!select){
+      var wrap=document.createElement('div');
+      wrap.className='wl-field';
+      wrap.innerHTML='<label>Projekt</label><select id="wl_project"><option value="">— Nincs kiválasztva —</option></select>';
+      var clientWrap=client && (client.closest('.wl-field') || client.closest('.field'));
+      if(clientWrap && clientWrap.parentNode) clientWrap.parentNode.insertBefore(wrap,clientWrap.nextSibling);
+      else root.insertBefore(wrap,root.firstChild);
+      select=wrap.querySelector('#wl_project');
+      select.addEventListener('change',function(){
+        pending=select.value||'';
+        syncProject();
+      });
+    }
+
+    var list=projects();
+    var sig=list.map(function(p){return String(p.id)+'|'+String(p.name||'')}).join(';;');
+    if(select.dataset.kpSig!==sig){
+      select.innerHTML='<option value="">— Nincs kiválasztva —</option>';
+      list.forEach(function(p){
+        var o=document.createElement('option');
+        o.value=String(p.id);
+        o.textContent=(p.project_number||p.projectNumber||p.id)+' – '+(p.name||'');
+        select.appendChild(o);
+      });
+      select.dataset.kpSig=sig;
+    }
+    if(pending) select.value=String(pending);
+    syncProject();
+    return select;
+  }
+
+  function syncProject(){
+    var select=document.querySelector('#wl_project');
+    if(!select || !select.value) return;
+    var p=projects().find(function(x){return String(x.id)===String(select.value)});
+    if(!p) return;
+    var client=document.querySelector('#wl_client');
+    if(client && p.customerId){ client.value=String(p.customerId); client.dispatchEvent(new Event('change',{bubbles:true})); }
+    var loc=document.querySelector('#wl_location');
+    if(loc && p.location && !loc.value) loc.value=p.location;
+  }
+
+  function afterOpen(){
+    var i=0;
+    var t=setInterval(function(){
+      ensureProjectField();
+      if(document.querySelector('#wl_project') || ++i>30) clearInterval(t);
+    },100);
+  }
+
+  function hook(){
+    if(typeof window.newWorklogFor==='function' && !window.__KP_NWF_HOOKED__){
+      var original=window.newWorklogFor;
+      window.__KP_NWF_HOOKED__=true;
+      window.newWorklogFor=function(pid){
+        pending=pid||'';
+        var result=original.apply(this,arguments);
+        afterOpen();
+        return result;
+      };
+    }
+    if(typeof window.detailedWorklogEditor==='function' && !window.__KP_DWE_HOOKED__){
+      var originalEditor=window.detailedWorklogEditor;
+      window.__KP_DWE_HOOKED__=true;
+      window.detailedWorklogEditor=function(id){
+        var result=originalEditor.apply(this,arguments);
+        afterOpen();
+        return result;
+      };
+    }
+    ensureProjectField();
+  }
+
+  var observer=new MutationObserver(function(){hook();});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  var timer=setInterval(hook,250);
+  setTimeout(function(){clearInterval(timer);},30000);
+  hook();
+})();
+</script>
 </body>
 </html>
