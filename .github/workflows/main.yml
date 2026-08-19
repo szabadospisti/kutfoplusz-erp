@@ -1,4 +1,4 @@
-name: Deploy Kutfő Plusz ERP
+name: Deploy Kútfő Plusz ERP
 
 on:
   push:
@@ -48,6 +48,7 @@ jobs:
               Path('warehouse-material-delete.js').read_text(encoding='utf-8'),
               Path('warehouse-material-edit.js').read_text(encoding='utf-8'),
               Path('erp-fixes.js').read_text(encoding='utf-8'),
+              Path('machine-fleet-actions.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -55,7 +56,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; central CRUD/save fixes included')
+          print('ERP modules injected; machine fleet CRUD actions included')
 
       - name: Verify generated page
         shell: python
@@ -76,11 +77,15 @@ jobs:
               'window.deleteCustomer=function',
               'window.newMaterial=function',
               'window.newMachine=function',
+              'machineFleetBulkEdit',
+              'machineProfile',
+              'deleteMachine',
+              'Műveletek',
           ]
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse CRUD, machine fleet controls and central ERP fixes present')
+          print('OK: inbox, warehouse CRUD, machine fleet CRUD and central ERP fixes present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
