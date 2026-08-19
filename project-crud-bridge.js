@@ -8,9 +8,10 @@
   window.KPProjectCRUD={ready:bootstrap,async list(){return(await bootstrap()).list();},async create(p){return(await bootstrap()).create(p);},async update(id,p){return(await bootstrap()).update(id,p);},async remove(id){return(await bootstrap()).remove(id);}};
 
   bootstrap().then(async function(){
-    /* A projekt CRUD töltődik be elsőként, és ezután nincs más projekt mentési/szerkesztési réteg. */
     await loadScript('project-crud-live.js');
     await waitForProjectCrud();
+    /* Szerkesztés megnyitásakor mindig a Supabase aktuális értékeit tölti vissza. */
+    await loadScript('project-edit-live.js');
     await loadScript('erp-supabase-sync.js');
     await loadScript('erp-delete-manager.js');
     await loadScript('customer-details-dom-fix.js');
