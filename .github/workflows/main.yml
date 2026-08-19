@@ -49,6 +49,7 @@ jobs:
               Path('warehouse-material-edit.js').read_text(encoding='utf-8'),
               Path('erp-fixes.js').read_text(encoding='utf-8'),
               Path('machine-fleet-actions.js').read_text(encoding='utf-8'),
+              Path('machine-fleet-final.js').read_text(encoding='utf-8'),
           ]
           marker = '</script>'
           pos = page.rfind(marker)
@@ -56,7 +57,7 @@ jobs:
               raise SystemExit('index.html: closing script tag not found')
           page = page[:pos] + '\n' + '\n'.join(patches) + '\n' + page[pos:]
           Path('index.html').write_text(page, encoding='utf-8')
-          print('ERP modules injected; machine fleet CRUD actions included')
+          print('ERP modules injected; final machine fleet view included')
 
       - name: Verify generated page
         shell: python
@@ -71,21 +72,17 @@ jobs:
               'Változtatások mentése',
               'kpDeleteMaterial',
               'Géppark szerkesztése',
-              'kpOpenMachineEditor',
-              'function installErpFixes',
-              'window.save=async function',
-              'window.deleteCustomer=function',
-              'window.newMaterial=function',
-              'window.newMachine=function',
               'machineFleetBulkEdit',
               'machineProfile',
               'deleteMachine',
               'Műveletek',
+              'FINAL Géppark fix',
+              'finalMachineEdit',
           ]
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse CRUD, machine fleet CRUD and central ERP fixes present')
+          print('OK: inbox, warehouse CRUD and final machine fleet CRUD present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
