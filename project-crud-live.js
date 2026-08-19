@@ -4,7 +4,8 @@
   function waitReady(){return window.KPProjectCRUD.ready();}
   async function remoteFor(localProject){
     await waitReady();
-    if(localProject.supabaseId) return {id:localProject.supabaseId};
+    // A stale local supabaseId must not prevent lookup by the stable project number.
+    // This also repairs projects created before the Supabase CRUD bridge was installed.
     return await window.KPProjectSupabase.findByProjectNumber(localProject.id);
   }
   function customerName(customerId){
@@ -49,8 +50,13 @@
       if(!confirm(msg))return;
       try{
         const remote=await remoteFor(p);
-        if(!remote) throw new Error('A projekt nem található a Supabase projects táblában.');
-        await window.KPProjectCRUD.remove(remote.id);
+        if(!remote){
+          // Legacy/local-only project: remove it locally instead of reporting a false Supabase error.
+          db.projects=db.projects.filter(x=>String(x.id)!==String(id));
+          save(); closeDrawer(); nav('projects'); toast('Projekt törölve (helyi régi rekord)');
+          return;
+        }
+        await window.KPProjectSupabase.remove(remote.id);
         db.projects=db.projects.filter(x=>String(x.id)!==String(id));
         save(); closeDrawer(); nav('projects'); toast('Projekt törölve az ERP-ből és Supabase-ből');
       }catch(err){console.error(err);toast('Törlés sikertelen: '+(err.message||err));}
