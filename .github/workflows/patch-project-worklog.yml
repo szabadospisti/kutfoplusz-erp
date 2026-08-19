@@ -1,4 +1,4 @@
-name: Add project to worklog
+name: Fix project and customer preselection
 
 on:
   push:
@@ -15,63 +15,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Patch original worklog editor safely
+      - name: Apply safe project preselection patch
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          if '<!-- KP_DIRECT_PROJECT_WORKLOG_V1 -->' in s:
-              print('Direct project-worklog patch already embedded.')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='<!-- KP_PROJECT_PRESELECT_V2 -->'
+          if marker in s:
+              print('Patch already embedded')
               raise SystemExit(0)
 
-          replacements = [
-            (
+          # Keep the existing field if the earlier bridge created it.
+          # Also patch the real project-launch function so the project id is retained.
+          old_variants = [
               'function newWorklogFor(pid){openWorklogEditor()}',
               'function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor()}'
-            ),
-            (
-              'function detailedWorklogEditor(id){',
-              'function detailedWorklogEditor(id,projectId){'
-            ),
-            (
-              ' const w=id?db.worklogs.find(x=>x.id===id):null;',
-              ' const w=id?db.worklogs.find(x=>x.id===id):null;\n const selectedProjectId=projectId||w?.projectId||window.__kpPendingWorklogProjectId||"";'
-            ),
-            (
-              ' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>\n <div class="wl-field"><label>Kút sorszáma</label>',
-              ' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>\n <div class="wl-field"><label>Projekt</label><select id="wl_project"><option value="">— Válassz —</option>${projOpts}</select></div>\n <div class="wl-field"><label>Kút sorszáma</label>'
-            ),
-            (
-              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");',
-              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'
-            ),
-            (
-              'projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",',
-              'projectId:document.getElementById("wl_project")?.value||"",'
-            )
           ]
+          new='function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor();setTimeout(function(){window.__KP_PRESELECT_WORKLOG__(pid)},0)}'
+          found=False
+          for old in old_variants:
+              if old in s:
+                  s=s.replace(old,new,1)
+                  found=True
+                  break
+          if not found:
+              raise SystemExit('SAFE PATCH FAILED: newWorklogFor target not found; index.html unchanged')
 
-          for old,new in replacements:
-              if old not in s:
-                  raise SystemExit('SAFE PATCH FAILED: target not found; index.html was NOT changed: '+old[:120])
-              s=s.replace(old,new,1)
-
-          marker='''<!-- KP_DIRECT_PROJECT_WORKLOG_V1 -->\n<script>\n(function(){\n  if(window.__KP_DIRECT_PROJECT_WORKLOG_V1__) return;\n  window.__KP_DIRECT_PROJECT_WORKLOG_V1__=true;\n  var original=window.newWorklogFor;\n  if(typeof original!=="function") return;\n  window.newWorklogFor=function(pid){\n    window.__kpPendingWorklogProjectId=pid||"";\n    return original.call(this,pid);\n  };\n})();\n</script>\n'''
+          script='''<!-- KP_PROJECT_PRESELECT_V2 -->
+          <script>
+          (function(){
+            function preselect(pid){
+              var projectId=pid||window.__kpPendingWorklogProjectId||'';
+              if(!projectId) return;
+              var select=document.getElementById('wl_project');
+              if(!select) return;
+              select.value=String(projectId);
+              select.dispatchEvent(new Event('change',{bubbles:true}));
+              var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];
+              var p=projects.find(function(x){return String(x.id)===String(projectId)});
+              if(!p) return;
+              var client=document.getElementById('wl_client');
+              if(client && p.customerId){
+                client.value=String(p.customerId);
+                client.dispatchEvent(new Event('change',{bubbles:true}));
+              }
+              var loc=document.getElementById('wl_location');
+              if(loc && p.location && !loc.value) loc.value=p.location;
+            }
+            window.__KP_PRESELECT_WORKLOG__=preselect;
+          })();
+          </script>
+          '''
           pos=s.rfind('</body>')
           if pos<0:
-              raise SystemExit('SAFE PATCH FAILED: </body> not found; index.html was NOT changed')
-          s=s[:pos]+marker+s[pos:]
+              raise SystemExit('SAFE PATCH FAILED: </body> not found; index.html unchanged')
+          s=s[:pos]+script+'\n'+s[pos:]
           p.write_text(s,encoding='utf-8')
-          print('Direct worklog project patch embedded successfully.')
+          print('Project/customer preselection patch applied')
           PY
 
-      - name: Commit patched index.html
+      - name: Commit index.html
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix project selection directly in worklog editor'
+          git commit -m 'Preselect project and customer in worklog'
           git push
