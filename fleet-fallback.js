@@ -1,56 +1,65 @@
-/* Kútfő Plusz ERP – Géppark fallback
- * Közvetlenül a ténylegesen megjelenő géptáblára helyezi a műveleteket.
+/* Kútfő Plusz ERP – Géppark tartós műveletek
+ * A géptáblát közvetlenül a renderelő views.machines függvényben bővíti,
+ * ezért a műveletek nem tűnnek el egy újrarenderelés után.
  */
-(function installFleetFallback(){
-  function fleetFallback(){
-    const tables=[...document.querySelectorAll('table')];
-    const table=tables.find(t=>/GÉP/i.test(t.innerText||'')&&/TÍPUS/i.test(t.innerText||'')&&/ÜZEMÓRA/i.test(t.innerText||''));
-    if(!table)return;
-    const rows=[...table.querySelectorAll('tbody tr')].filter(r=>r.querySelectorAll('td').length>=5);
-    if(!rows.length)return;
-    const head=table.querySelector('thead tr');
-    if(head&&!head.querySelector('[data-fleet-fallback-head]')){
-      const th=document.createElement('th');
-      th.dataset.fleetFallbackHead='1';
-      th.textContent='MŰVELET';
-      head.appendChild(th);
-    }
-    rows.forEach(row=>{
-      if(row.querySelector('[data-fleet-fallback]'))return;
-      const td=document.createElement('td');
-      td.dataset.fleetFallback='1';
-      td.innerHTML='<button type="button" class="btn secondary small" data-fleet-open>Adatlap</button> <button type="button" class="btn small" data-fleet-edit>✏️ Szerkesztés</button> <button type="button" class="btn danger small" data-fleet-delete>🗑️ Törlés</button>';
-      row.appendChild(td);
-      const cells=[...row.querySelectorAll('td')];
-      const name=()=>cells[0]?.innerText.trim()||'';
-      const type=()=>cells[1]?.innerText.trim()||'';
-      const open=()=>{
-        if(document.querySelector('[data-fleet-fallback-modal]'))return;
-        const m=document.createElement('div');
-        m.className='modal';
-        m.dataset.fleetFallbackModal='1';
-        m.innerHTML='<div class="modalbox"><div class="modalhead"><h2>Gép szerkesztése</h2><button class="icon" data-x>×</button></div><div class="modalbody"><div class="formgrid"><div class="field"><label>Gép neve</label><input class="input" id="ffn"></div><div class="field"><label>Típus / modell</label><input class="input" id="fft"></div><div class="field"><label>Üzemóra</label><input class="input" id="ffh" type="number"></div><div class="field"><label>Következő szerviz</label><input class="input" id="ffs" type="number"></div><div class="field full"><label>Megjegyzés</label><textarea class="textarea" id="ffm"></textarea></div></div><div class="modalfoot"><button class="btn secondary" data-x>Mégse</button><button class="btn" data-save>💾 Mentés</button></div></div></div>';
-        document.body.appendChild(m);
-        m.querySelector('#ffn').value=name();
-        m.querySelector('#fft').value=type();
-        m.querySelector('#ffh').value=cells[2]?.innerText.trim()||'';
-        m.querySelector('#ffs').value=cells[3]?.innerText.trim()||'';
-        m.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>m.remove());
-        m.querySelector('[data-save]').onclick=()=>{
-          cells[0].textContent=m.querySelector('#ffn').value.trim();
-          cells[1].textContent=m.querySelector('#fft').value.trim();
-          cells[2].textContent=m.querySelector('#ffh').value;
-          cells[3].textContent=m.querySelector('#ffs').value;
-          m.remove();
-        };
-      };
-      td.querySelector('[data-fleet-edit]').onclick=open;
-      td.querySelector('[data-fleet-open]').onclick=open;
-      td.querySelector('[data-fleet-delete]').onclick=()=>{if(confirm('Biztosan törlöd ezt a gépet?'))row.remove();};
-    });
+(function installFleetPersistent(){
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const moneySafe=v=>typeof money==='function'?money(v):String(v??0);
+
+  function editMachine(id){
+    const m=db.machines.find(x=>x.id===id); if(!m)return;
+    openModal('Gép szerkesztése',`<form onsubmit="kpSaveMachineEdit(event,'${esc(id)}')">
+      <div class="formgrid">
+        <div class="field"><label>Gép neve</label><input required class="input" name="name" value="${esc(m.name)}"></div>
+        <div class="field"><label>Típus / modell</label><input class="input" name="model" value="${esc(m.model)}"></div>
+        <div class="field"><label>Üzemóra</label><input class="input" type="number" step="0.1" name="hours" value="${Number(m.hours)||0}"></div>
+        <div class="field"><label>Következő szerviz</label><input class="input" type="number" step="0.1" name="service" value="${Number(m.service)||0}"></div>
+        <div class="field"><label>Állapot</label><select class="select" name="status"><option ${m.status==='Üzemképes'?'selected':''}>Üzemképes</option><option ${m.status==='Szervizre vár'?'selected':''}>Szervizre vár</option><option ${m.status==='Meghibásodott'?'selected':''}>Meghibásodott</option><option ${m.status==='Üzemen kívül'?'selected':''}>Üzemen kívül</option></select></div>
+        <div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes">${esc(m.notes||'')}</textarea></div>
+      </div>
+      <div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">💾 Változtatások mentése</button></div>
+    </form>`);
   }
-  const run=()=>{try{fleetFallback();}catch(e){console.error('Fleet fallback',e);}};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});
-  setInterval(run,1000);
+
+  window.kpSaveMachineEdit=function(e,id){
+    e.preventDefault();
+    const m=db.machines.find(x=>x.id===id); if(!m)return;
+    const o=Object.fromEntries(new FormData(e.target).entries());
+    Object.assign(m,{name:o.name.trim(),model:o.model.trim(),hours:Number(o.hours)||0,service:Number(o.service)||0,status:o.status,notes:o.notes||''});
+    save();closeModal();render();toast('Gép adatai elmentve');
+  };
+
+  window.kpDeleteMachine=function(id){
+    const m=db.machines.find(x=>x.id===id); if(!m)return;
+    if(!confirm(`Biztosan törlöd a(z) „${m.name}” gépet?`))return;
+    db.machines=db.machines.filter(x=>x.id!==id);
+    save();render();toast('Gép törölve');
+  };
+
+  window.kpMachineProfile=function(id){
+    const m=db.machines.find(x=>x.id===id); if(!m)return;
+    openModal('Gép adatlap',`<div>
+      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card"><div class="label">Gép</div><div class="value" style="font-size:18px">${esc(m.name)}</div></div>
+        <div class="card"><div class="label">Típus / modell</div><div class="value" style="font-size:18px">${esc(m.model||'—')}</div></div>
+        <div class="card"><div class="label">Állapot</div><div class="value" style="font-size:18px">${esc(m.status||'Üzemképes')}</div></div>
+      </div>
+      <div class="kpi"><span>Aktuális üzemóra</span><b>${Number(m.hours)||0} h</b></div>
+      <div class="kpi"><span>Következő szerviz</span><b>${Number(m.service)||0} h</b></div>
+      <div class="notice" style="margin-top:12px">${esc(m.notes||'Nincs megjegyzés.')}</div>
+      <div class="modalfoot"><button class="btn secondary" onclick="closeModal()">Bezárás</button><button class="btn" onclick="closeModal();kpEditMachine('${esc(id)}')">✏️ Szerkesztés</button></div>
+    </div>`);
+  };
+  window.kpEditMachine=editMachine;
+
+  const original=views.machines;
+  views.machines=function(){
+    const list=Array.isArray(db.machines)?db.machines:[];
+    return `<div class="panel"><div class="panelhead"><div><h2>Géppark</h2><div class="label">Gépek, üzemórák és szervizadatok</div></div><div style="display:flex;gap:8px"><button class="btn secondary" onclick="newMachine()">+ Új gép</button><button class="btn secondary" onclick="kpFleetEditFirst()">✏️ Géppark szerkesztése</button></div></div>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Szerviz</th><th>Állapot</th><th>Művelet</th></tr></thead><tbody>
+      ${list.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.model||'')}</td><td>${Number(m.hours)||0}</td><td>${Number(m.service)||0}</td><td><span class="badge ${m.status==='Üzemképes'?'green':m.status==='Meghibásodott'?'red':'amber'}">${esc(m.status||'Üzemképes')}</span></td><td><button class="btn secondary small" onclick="kpMachineProfile('${esc(m.id)}')">Adatlap</button> <button class="btn small" onclick="kpEditMachine('${esc(m.id)}')">✏️ Szerkesztés</button> <button class="btn danger small" onclick="kpDeleteMachine('${esc(m.id)}')">🗑️ Törlés</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nincs gép rögzítve.</td></tr>'}
+      </tbody></table></div></div>`;
+  };
+  window.kpFleetEditFirst=function(){const m=db.machines?.[0];if(m)editMachine(m.id);else newMachine();};
+  void original;
 })();
