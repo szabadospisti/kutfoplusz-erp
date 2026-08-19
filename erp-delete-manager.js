@@ -77,7 +77,8 @@
 
   function installGlobals(){
     window.deleteCustomer=deleteCustomer;window.kpDeleteCustomer=deleteCustomer;
-    window.deleteProject=deleteProject;window.kpDeleteProject=deleteProject;
+    /* A projekt törlését a projekt CRUD egyetlen, autoritatív rétege kezeli. */
+    if(!window.KPProjectCRUDLive){window.deleteProject=deleteProject;window.kpDeleteProject=deleteProject;}
     window.deleteQuote=deleteQuote;window.kpDeleteQuote=deleteQuote;
     window.deleteWorklog=deleteWorklog;window.kpDeleteWorklog=deleteWorklog;
     window.deleteMachine=deleteMachine;window.kpDeleteMachine=deleteMachine;
