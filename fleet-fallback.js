@@ -4,7 +4,6 @@
  */
 (function installFleetPersistent(){
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const moneySafe=v=>typeof money==='function'?money(v):String(v??0);
 
   function editMachine(id){
     const m=db.machines.find(x=>x.id===id); if(!m)return;
@@ -52,14 +51,12 @@
   };
   window.kpEditMachine=editMachine;
 
-  const original=views.machines;
   views.machines=function(){
     const list=Array.isArray(db.machines)?db.machines:[];
-    return `<div class="panel"><div class="panelhead"><div><h2>Géppark</h2><div class="label">Gépek, üzemórák és szervizadatok</div></div><div style="display:flex;gap:8px"><button class="btn secondary" onclick="newMachine()">+ Új gép</button><button class="btn secondary" onclick="kpFleetEditFirst()">✏️ Géppark szerkesztése</button></div></div>
+    return `<div class="panel"><div class="panelhead"><div><h2>Géppark</h2><div class="label">Gépek, üzemórák és szervizadatok</div></div><div style="display:flex;gap:8px"><button class="btn secondary" onclick="newMachine()">+ Új gép</button><button id="kpFleetEditAll" class="btn secondary" onclick="kpFleetEditFirst()">✏️ Géppark szerkesztése</button></div></div>
       <div class="tablewrap"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Szerviz</th><th>Állapot</th><th>Művelet</th></tr></thead><tbody>
-      ${list.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.model||'')}</td><td>${Number(m.hours)||0}</td><td>${Number(m.service)||0}</td><td><span class="badge ${m.status==='Üzemképes'?'green':m.status==='Meghibásodott'?'red':'amber'}">${esc(m.status||'Üzemképes')}</span></td><td><button class="btn secondary small" onclick="kpMachineProfile('${esc(m.id)}')">Adatlap</button> <button class="btn small" onclick="kpEditMachine('${esc(m.id)}')">✏️ Szerkesztés</button> <button class="btn danger small" onclick="kpDeleteMachine('${esc(m.id)}')">🗑️ Törlés</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nincs gép rögzítve.</td></tr>'}
+      ${list.map(m=>`<tr data-kp-fleet-bound="1"><td><b>${esc(m.name)}</b></td><td>${esc(m.model||'')}</td><td>${Number(m.hours)||0}</td><td>${Number(m.service)||0}</td><td><span class="badge ${m.status==='Üzemképes'?'green':m.status==='Meghibásodott'?'red':'amber'}">${esc(m.status||'Üzemképes')}</span></td><td class="fleet-actions mfdfAction" data-fleet-fallback="1"><button class="btn secondary small" onclick="kpMachineProfile('${esc(m.id)}')">Adatlap</button> <button class="btn small" onclick="kpEditMachine('${esc(m.id)}')">✏️ Szerkesztés</button> <button class="btn danger small" onclick="kpDeleteMachine('${esc(m.id)}')">🗑️ Törlés</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nincs gép rögzítve.</td></tr>'}
       </tbody></table></div></div>`;
   };
   window.kpFleetEditFirst=function(){const m=db.machines?.[0];if(m)editMachine(m.id);else newMachine();};
-  void original;
 })();
