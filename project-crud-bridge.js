@@ -19,5 +19,7 @@
     await loadScript('worklog-project-lock.js');
     /* Anyag/Raktár CRUD: ugyanaz a szerkesztés/mentés/törlés UX, mint az Ügyfeleknél. */
     await loadScript('material-crud-fix.js');
+    /* Géppark CRUD: ugyanaz a stabil soronkénti Szerkesztés/Törlés működés. */
+    await loadScript('machine-fleet-final.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
