@@ -36,18 +36,31 @@
     });
   }
   async function patchProjectDirect(p,local,remote){
-    const customerId=local.customerId;
-    const customerNameValue=customerName(customerId);
-    const payload=Object.assign({},local,{customerId:customerId,customerName:customerNameValue});
+    const payload=Object.assign({},local,{customerId:local.customerId,customerName:customerName(local.customerId)});
     const updated=await window.KPProjectSupabase.update(remote.id,payload);
-    if(!updated)throw new Error('A projekt mentése nem adott vissza Supabase rekordot.');
-    return updated;
+    if(!updated)throw new Error('A Supabase nem adott vissza frissített projektet. A módosítás nem tekinthető elmentettnek.');
+    /* Kötelező visszaolvasás: csak akkor mondjuk sikeresnek, ha a DB-ben tényleg az új adatok vannak. */
+    const verify=await window.KPProjectSupabase.findByProjectNumber(local.id);
+    if(!verify)throw new Error('A projekt frissítése után nem található a Supabase projects táblában.');
+    const checks=[
+      ['name',String(local.name||''),String(verify.name||'')],
+      ['location',String(local.location||''),String(verify.location||'')],
+      ['status',String(local.status||'Tervezés'),String(verify.status||'Tervezés')],
+      ['contract_value',String(+local.value||0),String(+verify.contract_value||0)],
+      ['planned_cost',String(+local.planned||0),String(+verify.planned_cost||0)],
+      ['actual_cost',String(+local.cost||0),String(+verify.actual_cost||0)],
+      ['progress_pct',String(+local.progress||0),String(+verify.progress_pct||0)],
+      ['notes',String(local.notes||''),String(verify.notes||'')]
+    ];
+    const mismatch=checks.find(x=>x[1]!==x[2]);
+    if(mismatch)throw new Error('A Supabase mentés ellenőrzése sikertelen ('+mismatch[0]+'). A módosítás nem lett biztosan elmentve.');
+    return verify;
   }
   function install(){
     if(typeof window.saveProject!=='function'||typeof window.saveProjectEdit!=='function'||typeof window.deleteProject!=='function')return setTimeout(install,100);
     window.__KP_PROJECT_CRUD_HOOKED__=true;
     window.saveProject=async function(e){e.preventDefault();try{const o=Object.fromEntries(new FormData(e.target).entries());const projectNumber=(typeof uid==='function')?uid('KP'):('KP-'+Date.now());const local=localFromForm(o,projectNumber);const remote=await window.KPProjectCRUD.create(local);local.supabaseId=remote.id;db.projects.push(local);save();closeModal();nav('projects');toast('Projekt létrehozva és Supabase-ben mentve');}catch(err){console.error(err);toast('Hiba: '+(err.message||err));}return false;};
-    window.saveProjectEdit=async function(e,id){e.preventDefault();try{const p=await resolveEditProject(e,id);if(!p)throw new Error('A projekt nem található.');const o=Object.fromEntries(new FormData(e.target).entries());const local=localFromForm(o,p.id);const remote=await remoteFor(p);if(!remote)throw new Error('A projekt nincs összekötve a Supabase rekorddal.');const updated=await patchProjectDirect(p,local,remote);if(window.db&&Array.isArray(db.projects)){const idx=db.projects.findIndex(x=>String(x.id)===String(p.id)||String(x.supabaseId)===String(remote.id));if(idx>=0)Object.assign(db.projects[idx],local,{supabaseId:updated.id});else db.projects.push(Object.assign({},local,{supabaseId:updated.id}));}save();closeModal();closeDrawer();nav('projects');toast('Projekt módosítva és Supabase-ben mentve');}catch(err){console.error('Projekt módosítás:',err);toast('Hiba: '+(err.message||err));}return false;};
+    window.saveProjectEdit=async function(e,id){e.preventDefault();try{const p=await resolveEditProject(e,id);if(!p)throw new Error('A projekt nem található.');const o=Object.fromEntries(new FormData(e.target).entries());const local=localFromForm(o,p.id);const remote=await remoteFor(p);if(!remote)throw new Error('A projekt nincs összekötve a Supabase rekorddal.');const updated=await patchProjectDirect(p,local,remote);if(window.db&&Array.isArray(db.projects)){const idx=db.projects.findIndex(x=>String(x.id)===String(p.id)||String(x.supabaseId)===String(remote.id));if(idx>=0)Object.assign(db.projects[idx],local,{supabaseId:updated.id});else db.projects.push(Object.assign({},local,{supabaseId:updated.id}));}save();closeModal();closeDrawer();nav('projects');toast('Projekt módosítva és Supabase-ben ellenőrzötten mentve');}catch(err){console.error('Projekt módosítás:',err);toast('Hiba: '+(err.message||err));}return false;};
     window.deleteProject=async function(id){const p=db.projects.find(x=>String(x.id)===String(id));if(!p)return;const linked=(db.worklogs||[]).filter(w=>String(w.projectId)===String(id)).length;const msg=`Biztosan törlöd ezt a projektet?\n\n${p.name}\n${linked?'Kapcsolódó munkanaplók: '+linked+' db.':''}`;if(!confirm(msg))return;try{const remote=await remoteFor(p);if(!remote)throw new Error('A projekt nem található a Supabase projects táblában.');await window.KPProjectSupabase.remove(remote.id);db.projects=db.projects.filter(x=>String(x.id)!==String(id));save();closeDrawer();nav('projects');toast('Projekt törölve az ERP-ből és Supabase-ből');}catch(err){console.error(err);toast('Törlés sikertelen: '+(err.message||err));}};
     window.kpDeleteProject=window.deleteProject;
     window.KPProjectCRUDLive=true;
