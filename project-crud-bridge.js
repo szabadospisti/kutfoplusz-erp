@@ -10,5 +10,6 @@
     await loadScript('erp-supabase-sync.js');
     await loadScript('delete-customer-supabase.js');
     await loadScript('stable-delete-hooks.js');
+    await loadScript('stable-project-delete.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
