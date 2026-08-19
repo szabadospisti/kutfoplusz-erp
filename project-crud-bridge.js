@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – Supabase bootstrap + project CRUD bridge. */
+/* Kútfő Plusz ERP – Supabase config + project CRUD bridge. */
 (function(){
   'use strict';
 
@@ -22,39 +22,21 @@
   }
 
   async function bootstrap(){
-    var cfg=await waitForConfig();
-    if(!window.supabase || typeof window.supabase.createClient!=='function'){
-      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
-    }
-    if(!window.supabase || typeof window.supabase.createClient!=='function'){
-      throw new Error('Supabase kliens nincs betöltve.');
-    }
-    if(!window._supabaseClient){
-      window._supabaseClient=window.supabase.createClient(cfg.url,cfg.publishableKey);
-    }
-    /* The existing CRUD adapter expects window.supabase to be the client. */
-    window.supabase=window._supabaseClient;
-
+    await waitForConfig();
     if(!window.KPProjectSupabase) await loadScript('project-crud-supabase.js');
     if(!window.KPProjectSupabase) throw new Error('Supabase projekt CRUD adapter nem töltődött be.');
     return window.KPProjectSupabase;
   }
 
-  async function load(){ return bootstrap(); }
-
   window.KPProjectCRUD={
-    ready:load,
-    async list(){return (await load()).list();},
-    async create(p){return (await load()).create(p);},
-    async update(id,p){return (await load()).update(id,p);},
-    async remove(id){return (await load()).remove(id);}
+    ready:bootstrap,
+    async list(){return (await bootstrap()).list();},
+    async create(p){return (await bootstrap()).create(p);},
+    async update(id,p){return (await bootstrap()).update(id,p);},
+    async remove(id){return (await bootstrap()).remove(id);}
   };
 
   bootstrap().then(function(){
-    if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded',function(){loadScript('project-crud-live.js').catch(console.error);},{once:true});
-    }else{
-      loadScript('project-crud-live.js').catch(console.error);
-    }
-  }).catch(function(err){console.error('Supabase bootstrap:',err);});
+    loadScript('project-crud-live.js').catch(function(err){console.error('Projekt CRUD live bridge:',err);});
+  }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
