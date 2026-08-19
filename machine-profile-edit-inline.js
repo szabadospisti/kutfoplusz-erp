@@ -37,5 +37,5 @@ function edit(id){
  renderEdit();
 }
 window.machineProfileInlineEdit=edit;
-document.addEventListener('click',function(e){const b=e.target.closest('#mpnEdit');if(!b)return;const id=window.__machineProfileId;if(!id)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();edit(id)},true);
+document.addEventListener('click',function(e){const b=e.target.closest('#mpEdit, #mpnEdit');if(!b)return;const id=window.__machineProfileId;if(!id)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();edit(id)},true);
 })();
