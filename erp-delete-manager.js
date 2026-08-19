@@ -46,7 +46,6 @@
     if(!confirm('Biztosan törlöd ezt a projektet?\n\n'+(p.name||id)))return false;
     const remoteId=await findRemoteProject(p);
     if(remoteId){
-      // Biztonsági sorrend: kapcsolódó rekordok törlése, majd maga a projekt.
       await rest('work_logs?project_id=eq.'+encodeURIComponent(remoteId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
       await rest('projects?id=eq.'+encodeURIComponent(remoteId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
     }
@@ -88,7 +87,6 @@
   function decorate(){
     const d=data();if(!d)return;
     document.querySelectorAll('#ct tbody tr').forEach(tr=>{const link=tr.querySelector('.link[onclick^="customerDetails"]');const m=link?.getAttribute('onclick')?.match(/'([^']+)'/);if(!m)return;const edit=tr.querySelector('button[onclick^="editCustomer"]');const cell=edit?.parentElement;if(cell)addButton(cell,'kpDeleteCustomerBtn','Törlés',()=>deleteCustomer(m[1]))});
-    const drawer=document.getElementById('drawer');if(drawer){const edit=drawer.querySelector('button[onclick^="editProject"]');const m=edit?.getAttribute('onclick')?.match(/'([^']+)'/);if(m)addButton(edit.parentElement,'kpDeleteProjectBtn','Törlés',()=>deleteProject(m[1]))}
     document.querySelectorAll('#qt tbody tr').forEach(tr=>{const link=tr.querySelector('[data-quote-id]');const id=link?.getAttribute('data-quote-id');const cell=tr.lastElementChild;if(id&&cell)addButton(cell,'kpDeleteQuoteBtn','Törlés',()=>deleteQuote(id))});
     document.querySelectorAll('.table tbody tr').forEach(tr=>{const b=tr.querySelector('button[onclick^="editWorklog"]');const m=b?.getAttribute('onclick')?.match(/'([^']+)'/);if(m)addButton(b.parentElement,'kpDeleteWorklogBtn','Törlés',()=>deleteWorklog(m[1]))});
     document.querySelectorAll('button[onclick^="deleteMachine"]').forEach(b=>{const m=b.getAttribute('onclick')?.match(/'([^']+)'/);if(m)b.onclick=()=>deleteMachine(m[1])});
