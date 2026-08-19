@@ -7,8 +7,13 @@
     if(localProject.supabaseId) return {id:localProject.supabaseId};
     return await window.KPProjectSupabase.findByProjectNumber(localProject.id);
   }
+  function customerName(customerId){
+    const list=(typeof db!=='undefined' && db && Array.isArray(db.customers)) ? db.customers : [];
+    const c=list.find(x=>String(x.id)===String(customerId));
+    return c ? c.name : '';
+  }
   function localFromForm(o,id){
-    return {id:id,customerId:o.customerId,name:o.name,status:o.status,location:o.location,value:+o.value||0,progress:Math.max(0,Math.min(100,+o.progress||0)),planned:+o.planned||0,cost:+o.cost||0,notes:o.notes||''};
+    return {id:id,customerId:o.customerId,customerName:customerName(o.customerId),name:o.name,status:o.status,location:o.location,value:+o.value||0,progress:Math.max(0,Math.min(100,+o.progress||0)),planned:+o.planned||0,cost:+o.cost||0,notes:o.notes||''};
   }
   function install(){
     if(typeof window.saveProject!=='function' || typeof window.saveProjectEdit!=='function' || typeof window.deleteProject!=='function') return setTimeout(install,100);
