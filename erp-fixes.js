@@ -1,15 +1,30 @@
-/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V5 */
+/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V6 */
 (function(){
   function localSave(){try{if(typeof localSaveOnly==='function')localSaveOnly();else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db||{}))}catch(e){console.error(e)}}
+  async function saveViaRest(){
+    const cfg=window.SUPABASE_CONFIG;
+    if(!cfg||!cfg.url||!cfg.publishableKey)throw new Error('Supabase konfiguráció nincs betöltve.');
+    let session=null;try{session=JSON.parse(localStorage.getItem('kutfoplusz_supabase_session_v1')||'null')}catch(e){}
+    const token=session?.access_token||cfg.publishableKey;
+    const res=await fetch(cfg.url+'/rest/v1/erp_state?on_conflict=id',{method:'POST',headers:{apikey:cfg.publishableKey,Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:session?.user?.id||null})});
+    if(!res.ok){const t=await res.text();throw new Error('Supabase '+res.status+': '+t)}
+    return true;
+  }
   window.save=async function(){
     localSave();
     try{
-      const c=window._supabaseClient;if(!c||!window.db)return false;
-      const {data:{user},error:authError}=await c.auth.getUser();
-      if(authError||!user)return false;
-      const {error}=await c.from('erp_state').upsert({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id},{onConflict:'id'});
-      if(error)throw error;
-      return true;
+      const c=window._supabaseClient;
+      if(c&&window.db){
+        try{
+          const {data:{user},error:authError}=await c.auth.getUser();
+          if(user&&!authError){
+            const {error}=await c.from('erp_state').upsert({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id},{onConflict:'id'});
+            if(!error)return true;
+          }
+        }catch(e){console.warn('Supabase kliens mentés sikertelen, REST fallback:',e)}
+      }
+      if(!window.db)return false;
+      return await saveViaRest();
     }catch(e){console.error('Supabase mentés:',e);return false}
   };
   function layers(){const t=document.getElementById('wl_layers');if(!t)return;[...t.querySelectorAll('tbody tr')].forEach(r=>{if(r.querySelector('[name="layer_from[]"]'))return;const v=[...r.querySelectorAll('.wl-depth-value')].map(x=>(x.textContent||'').replace(/\s*m\s*$/i,'').trim());const a=document.createElement('input'),b=document.createElement('input');a.type=b.type='hidden';a.name='layer_from[]';b.name='layer_to[]';a.value=v[0]||'';b.value=v[1]||'';r.append(a,b)})}
@@ -21,12 +36,11 @@
   let n=0;const t=setInterval(()=>{if(typeof window.wlCollect==='function'&&!window.__kpCollect){const o=window.wlCollect;window.__kpCollect=true;window.wlCollect=function(){const r=o.apply(this,arguments)||{},s=document.getElementById('wl_project');if(s?.value)r.projectId=s.value;return r}}if(++n>100||window.__kpCollect)clearInterval(t)},100);
   if(typeof window.newWorklogFor==='function'&&!window.__kpLink){const o=window.newWorklogFor;window.__kpLink=true;window.newWorklogFor=function(id){window.__pendingWorklogProjectId=id||'';return o.apply(this,arguments)}}
 
-  // Géppark: ugyanaz a stabil CRUD-minta, mint az Anyag/Raktár oldalon.
   function loadMachineCrud(){
     if(window.__machineFleetCrudLoaded)return;
     if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;
     const s=document.createElement('script');
-    s.src='machine-fleet-final.js?v=8';
+    s.src='machine-fleet-final.js?v=9';
     s.onload=()=>{window.__machineFleetCrudLoaded=true};
     s.onerror=e=>console.error('Géppark CRUD betöltési hiba',e);
     document.head.appendChild(s);
