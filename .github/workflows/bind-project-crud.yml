@@ -1,0 +1,45 @@
+name: Bind project CRUD safely
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'project-crud-bridge.js'
+      - 'project-crud-supabase.js'
+      - '.github/workflows/bind-project-crud.yml'
+permissions:
+  contents: write
+jobs:
+  bind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Bind bridge to index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='<script src="project-crud-bridge.js"></script>'
+          if marker in s:
+              print('Already bound')
+              raise SystemExit(0)
+          if '</head>' not in s:
+              raise SystemExit('FAIL-CLOSED: index.html has no </head> marker; no changes made.')
+          s=s.replace('</head>', marker+'\n</head>', 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Verify only loader was injected
+        shell: bash
+        run: |
+          git diff --check
+          git diff -- index.html
+      - name: Commit binding
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Bind project CRUD bridge to ERP'
+          git push

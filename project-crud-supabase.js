@@ -1,27 +1,33 @@
-/* Kútfő Plusz ERP - Supabase project CRUD adapter
-   This module is intentionally standalone so it can be tested before wiring into index.html.
-*/
+/* Kútfő Plusz ERP - Supabase project CRUD adapter */
 (function(){
   'use strict';
   const TABLE='projects';
   function client(){
     const s=window.supabase;
-    if(!s) throw new Error('Supabase kliens nincs betöltve.');
-    if(typeof s.from!=='function') throw new Error('Érvénytelen Supabase kliens.');
+    if(!s || typeof s.from!=='function') throw new Error('Supabase kliens nincs betöltve.');
     return s;
   }
-  function clean(p){
+  async function customerUuid(localCustomerId){
+    if(!localCustomerId) return null;
+    if(String(localCustomerId).match(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i)) return localCustomerId;
+    const local=(window.db&&Array.isArray(window.db.customers)) ? window.db.customers.find(c=>String(c.id)===String(localCustomerId)) : null;
+    if(!local) return null;
+    const {data,error}=await client().from('customers').select('id').eq('company_name',local.name).limit(1).maybeSingle();
+    if(error) throw error;
+    return data ? data.id : null;
+  }
+  async function clean(p){
     return {
-      project_number:p.project_number ?? p.projectNumber ?? null,
+      project_number:p.project_number ?? p.projectNumber ?? p.id ?? null,
+      customer_id:await customerUuid(p.customer_id ?? p.customerId),
       name:p.name ?? p.projectName ?? '',
-      customer_id:p.customer_id ?? p.customerId ?? null,
       location:p.location ?? null,
       status:p.status ?? 'Tervezés',
-      contract_value:p.contract_value ?? p.contractValue ?? null,
-      planned_cost:p.planned_cost ?? p.plannedCost ?? null,
-      actual_cost:p.actual_cost ?? p.actualCost ?? null,
-      progress_pct:p.progress_pct ?? p.progress ?? 0,
-      notes:p.notes ?? null
+      contract_value:p.contract_value ?? p.contractValue ?? p.value ?? 0,
+      planned_cost:p.planned_cost ?? p.plannedCost ?? p.planned ?? 0,
+      actual_cost:p.actual_cost ?? p.actualCost ?? p.cost ?? 0,
+      profit:(p.profit ?? ((+p.value||0)-(+p.cost||0))),
+      profit_margin:p.profit_margin ?? ((+p.value||0) ? (((+p.value||0)-(+p.cost||0))/(+p.value||0)*100) : 0)
     };
   }
   async function list(){
@@ -30,15 +36,24 @@
     return data||[];
   }
   async function create(project){
-    const {data,error}=await client().from(TABLE).insert(clean(project)).select().single();
+    const payload=await clean(project);
+    if(!payload.customer_id) throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');
+    const {data,error}=await client().from(TABLE).insert(payload).select().single();
     if(error) throw error;
     return data;
   }
   async function update(id,project){
     if(!id) throw new Error('Hiányzó projektazonosító.');
-    const {data,error}=await client().from(TABLE).update(clean(project)).eq('id',id).select().single();
+    const payload=await clean(project);
+    if(!payload.customer_id) throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');
+    const {data,error}=await client().from(TABLE).update(payload).eq('id',id).select().single();
     if(error) throw error;
     return data;
+  }
+  async function findByProjectNumber(projectNumber){
+    const {data,error}=await client().from(TABLE).select('*').eq('project_number',projectNumber).maybeSingle();
+    if(error) throw error;
+    return data||null;
   }
   async function remove(id){
     if(!id) throw new Error('Hiányzó projektazonosító.');
@@ -49,5 +64,5 @@
     if(error) throw error;
     return true;
   }
-  window.KPProjectSupabase={list,create,update,remove};
+  window.KPProjectSupabase={list,create,update,remove,findByProjectNumber};
 })();
