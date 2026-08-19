@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V7 */
+/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V8 */
 (function(){
   function localSave(){try{if(typeof localSaveOnly==='function')localSaveOnly();else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db||{}))}catch(e){console.error(e)}}
   async function saveViaRest(){
@@ -44,7 +44,8 @@
   function loadMachineCrud(){loadScriptOnce('Géppark','machine-fleet-final.js?v=10','__machineFleetCrudLoaded')}
   function loadProjectCrud(){loadScriptOnce('Projekt CRUD','project-crud-fix.js?v=2','__projectCrudLoaded')}
   function loadProjectSync(){loadScriptOnce('Projekt Supabase sync','project-sync-fix.js?v=1','__projectSyncLoaded')}
-  function loadAll(){loadMachineCrud();loadProjectCrud();loadProjectSync()}
+  function loadProjectSaveFinal(){loadScriptOnce('Projekt végleges Supabase mentés','project-save-final.js?v=1','__projectSaveFinalLoaded')}
+  function loadAll(){loadMachineCrud();loadProjectCrud();loadProjectSync();loadProjectSaveFinal()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAll,{once:true});else loadAll();
-  let mc=0;const mt=setInterval(()=>{loadAll();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__projectCrudLoaded&&window.__projectSyncLoaded))clearInterval(mt)},250);
+  let mc=0;const mt=setInterval(()=>{loadAll();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__projectCrudLoaded&&window.__projectSyncLoaded&&window.__projectSaveFinalLoaded))clearInterval(mt)},250);
 })();
