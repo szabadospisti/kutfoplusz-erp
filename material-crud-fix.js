@@ -5,7 +5,8 @@
   function escM(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
   function install(){
-    if(typeof pages==='undefined' || !window.db || !Array.isArray(window.db.materials) || typeof window.render!=='function'){
+    /* A fő ERP-ben a db/pages globális let/const lehet, ezért nem window.db/window.pages alapján ellenőrzünk. */
+    if(typeof pages==='undefined' || typeof db==='undefined' || !db || !Array.isArray(db.materials) || typeof render!=='function'){
       return setTimeout(install,100);
     }
     if(window.__KP_MATERIAL_CRUD_FIX__) return;
@@ -66,7 +67,7 @@
       render();
     };
 
-    pages.materials=()=>`<div class="panel"><div class="panelhead"><h2>Anyag / Raktár</h2><button class="btn" onclick="newMaterial()">+ Új anyag</button></div><div class="tablewrap"><table class="table"><thead><tr><th>Cikkszám</th><th>Megnevezés</th><th>Készlet</th><th>Minimum</th><th>Beszerzési ár</th><th>Állapot</th><th></th></tr></thead><tbody>${db.materials.map(m=>`<tr><td><a class="link" onclick="editMaterial('${escM(m.id)}')"><b>${escM(m.id)}</b></a></td><td><a class="link" onclick="editMaterial('${escM(m.id)}')">${escM(m.name)}</a></td><td>${m.stock} ${escM(m.unit)}</td><td>${m.min} ${escM(m.unit)}</td><td>${money(m.price)}</td><td><span class="badge ${m.stock<m.min?'amber':'green'}">${m.stock<m.min?'Beszerzés szükséges':'Rendben'}</span></td><td><button class="btn secondary small" onclick="editMaterial('${escM(m.id)}')">Szerkesztés</button></td></tr>`).join('')||'<tr><td colspan="7" class="label">Nincs anyag.</td></tr>'}</tbody></table></div></div>`;
+    pages.materials=()=>`<div class="panel"><div class="panelhead"><h2>Anyag / Raktár</h2><button class="btn" onclick="newMaterial()">+ Új anyag</button></div><div class="tablewrap"><table class="table"><thead><tr><th>Cikkszám</th><th>Megnevezés</th><th>Készlet</th><th>Minimum</th><th>Beszerzési ár</th><th>Állapot</th><th>Műveletek</th></tr></thead><tbody>${db.materials.map(m=>`<tr><td><a class="link" onclick="editMaterial('${escM(m.id)}')"><b>${escM(m.id)}</b></a></td><td><a class="link" onclick="editMaterial('${escM(m.id)}')">${escM(m.name)}</a></td><td>${m.stock} ${escM(m.unit)}</td><td>${m.min} ${escM(m.unit)}</td><td>${money(m.price)}</td><td><span class="badge ${m.stock<m.min?'amber':'green'}">${m.stock<m.min?'Beszerzés szükséges':'Rendben'}</span></td><td><button class="btn secondary small" onclick="editMaterial('${escM(m.id)}')">Szerkesztés</button></td></tr>`).join('')||'<tr><td colspan="7" class="label">Nincs anyag.</td></tr>'}</tbody></table></div></div>`;
 
     window.__KP_MATERIAL_CRUD_FIX__=true;
     if(location.hash.replace('#/','')==='materials')render();
