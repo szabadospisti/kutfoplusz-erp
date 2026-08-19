@@ -43,7 +43,18 @@ function install(){
  },false);
  document.addEventListener('click',function(e){
   if(e.target.closest('#mpnBack')){e.preventDefault();back();return;}
-  if(e.target.closest('#mpnEdit')){e.preventDefault();const id=window.__machineProfileId;if(id&&typeof window.editMachine==='function')window.editMachine(id);}
+  if(e.target.closest('#mpnEdit')){
+   e.preventDefault();
+   e.stopPropagation();
+   e.stopImmediatePropagation();
+   const id=window.__machineProfileId;
+   if(id&&typeof window.machineProfileInlineEdit==='function'){
+    window.machineProfileInlineEdit(id);
+   }else if(id&&typeof window.editMachine==='function'){
+    window.editMachine(id);
+   }
+   return;
+  }
   const tab=e.target.closest('.mpn-tab');
   if(tab){
    const m=(db.machines||[]).find(x=>String(x.id)===String(window.__machineProfileId));
