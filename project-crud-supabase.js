@@ -1,22 +1,44 @@
-/* Kútfő Plusz ERP - Supabase project CRUD adapter */
+/* Kútfő Plusz ERP - Supabase project CRUD adapter
+   Uses the Supabase REST API directly. This avoids a browser CDN/SDK dependency.
+*/
 (function(){
   'use strict';
   const TABLE='projects';
-  function client(){
-    const s=window.supabase;
-    if(!s || typeof s.from!=='function') throw new Error('Supabase kliens nincs betöltve.');
-    return s;
+
+  function config(){
+    const c=window.SUPABASE_CONFIG;
+    if(!c || !c.url || !c.publishableKey) throw new Error('Supabase konfiguráció nincs betöltve.');
+    return c;
   }
+
+  async function request(path, options){
+    const c=config();
+    const headers=Object.assign({
+      'apikey':c.publishableKey,
+      'Authorization':'Bearer '+c.publishableKey,
+      'Accept':'application/json'
+    }, (options && options.headers) || {});
+    const res=await fetch(c.url+'/rest/v1/'+path,Object.assign({},options,{headers}));
+    const text=await res.text();
+    let body=null;
+    try{ body=text?JSON.parse(text):null; }catch(e){ body=text; }
+    if(!res.ok){
+      const msg=body && (body.message || body.error || body.hint || body.details) ? [body.message,body.details,body.hint].filter(Boolean).join(' | ') : String(body||res.statusText);
+      throw new Error('Supabase '+res.status+': '+msg);
+    }
+    return body;
+  }
+
   async function customerUuid(p){
     const raw=p.customer_id ?? p.customerId;
     if(!raw) return null;
-    if(String(raw).match(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i)) return raw;
+    if(String(raw).match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) return raw;
     const customerName=p.customerName ?? p.customer_name ?? null;
     if(!customerName) return null;
-    const {data,error}=await client().from('customers').select('id').eq('company_name',customerName).limit(1).maybeSingle();
-    if(error) throw error;
-    return data ? data.id : null;
+    const rows=await request('customers?select=id&company_name=eq.'+encodeURIComponent(customerName)+'&limit=1');
+    return Array.isArray(rows)&&rows[0] ? rows[0].id : null;
   }
+
   async function clean(p){
     return {
       project_number:p.project_number ?? p.projectNumber ?? p.id ?? null,
@@ -29,39 +51,39 @@
       actual_cost:p.actual_cost ?? p.actualCost ?? p.cost ?? 0
     };
   }
+
   async function list(){
-    const {data,error}=await client().from(TABLE).select('*').order('created_at',{ascending:false});
-    if(error) throw error;
-    return data||[];
+    const rows=await request(TABLE+'?select=*&order=created_at.desc');
+    return Array.isArray(rows)?rows:[];
   }
+
   async function create(project){
     const payload=await clean(project);
     if(!payload.customer_id) throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');
-    const {data,error}=await client().from(TABLE).insert(payload).select().single();
-    if(error) throw error;
-    return data;
+    const rows=await request(TABLE,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)});
+    return Array.isArray(rows)?rows[0]:rows;
   }
+
   async function update(id,project){
     if(!id) throw new Error('Hiányzó projektazonosító.');
     const payload=await clean(project);
     if(!payload.customer_id) throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');
-    const {data,error}=await client().from(TABLE).update(payload).eq('id',id).select().single();
-    if(error) throw error;
-    return data;
+    const rows=await request(TABLE+'?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)});
+    return Array.isArray(rows)?rows[0]:rows;
   }
+
   async function findByProjectNumber(projectNumber){
-    const {data,error}=await client().from(TABLE).select('*').eq('project_number',projectNumber).maybeSingle();
-    if(error) throw error;
-    return data||null;
+    const rows=await request(TABLE+'?select=*&project_number=eq.'+encodeURIComponent(projectNumber)+'&limit=1');
+    return Array.isArray(rows)&&rows[0] ? rows[0] : null;
   }
+
   async function remove(id){
     if(!id) throw new Error('Hiányzó projektazonosító.');
-    const {count,error:checkError}=await client().from('work_logs').select('id',{count:'exact',head:true}).eq('project_id',id);
-    if(checkError) throw checkError;
-    if((count||0)>0) throw new Error('A projekt nem törölhető, mert munkanapló tartozik hozzá.');
-    const {error}=await client().from(TABLE).delete().eq('id',id);
-    if(error) throw error;
+    const logs=await request('work_logs?select=id&project_id=eq.'+encodeURIComponent(id));
+    if(Array.isArray(logs)&&logs.length) throw new Error('A projekt nem törölhető, mert munkanapló tartozik hozzá.');
+    await request(TABLE+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
     return true;
   }
+
   window.KPProjectSupabase={list,create,update,remove,findByProjectNumber};
 })();
