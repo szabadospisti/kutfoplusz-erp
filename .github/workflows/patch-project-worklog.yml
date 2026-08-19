@@ -1,0 +1,81 @@
+name: Add project to worklog
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch only the original worklog functions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old='''function newWorklogFor(pid){openWorklogEditor()}'''
+          new='''function newWorklogFor(pid){
+            detailedWorklogEditor(null,pid||"");
+          }'''
+          if old not in s:
+              raise SystemExit('newWorklogFor target not found')
+          s=s.replace(old,new,1)
+
+          old='''function detailedWorklogEditor(id){
+ editingWorklogId=id||null;
+ const w=id?db.worklogs.find(x=>x.id===id):null;'''
+          new='''function detailedWorklogEditor(id,projectId){
+ editingWorklogId=id||null;
+ const w=id?db.worklogs.find(x=>x.id===id):null;
+ const selectedProjectId=projectId||w?.projectId||"";'''
+          if old not in s:
+              raise SystemExit('detailedWorklogEditor target not found')
+          s=s.replace(old,new,1)
+
+          old=''' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
+ <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>'''
+          new=''' <div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>
+ <div class="wl-field"><label>Projekt</label><select id="wl_project" onchange="wlProjectChanged()"><option value="">— Nincs kiválasztva —</option>${projOpts}</select></div>
+ <div class="wl-field"><label>Kút sorszáma</label><input id="wl_wellNo" value="${esc(w?.wellNo||"")}"></div>'''
+          if old not in s:
+              raise SystemExit('worklog field target not found')
+          s=s.replace(old,new,1)
+
+          old='''const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===w?.projectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
+          new='''const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
+          if old not in s:
+              raise SystemExit('project options target not found')
+          s=s.replace(old,new,1)
+
+          marker='''function wlAddLayer(v){'''
+          insert='''function wlProjectChanged(){
+ const id=document.getElementById("wl_project")?.value||"";
+ const p=(db.projects||[]).find(x=>String(x.id)===String(id));
+ if(!p)return;
+ const c=document.getElementById("wl_client");
+ const loc=document.getElementById("wl_location");
+ if(c&&p.customerId)c.value=p.customerId;
+ if(loc&&p.location&&!loc.value)loc.value=p.location;
+}
+'''
+          if marker not in s:
+              raise SystemExit('insert marker not found')
+          s=s.replace(marker,insert+marker,1)
+
+          old='''function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||"",location:document.getElementById("wl_location").value,'''
+          new='''function wlCollect(){return{id:editingWorklogId||uid("MN"),date:document.getElementById("wl_date").value,customerId:document.getElementById("wl_client").value,projectId:document.getElementById("wl_project")?.value||"",location:document.getElementById("wl_location").value,'''
+          if old not in s:
+              raise SystemExit('wlCollect target not found')
+          s=s.replace(old,new,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Link projects to worklogs safely' || exit 0
+          git push
