@@ -2,25 +2,11 @@
 (function(){
   'use strict';
   function waitReady(){return window.KPProjectCRUD.ready();}
-  function supaHeaders(){
-    const c=window.SUPABASE_CONFIG||{};
-    let s=null;try{s=JSON.parse(localStorage.getItem('kutfoplusz_supabase_session_v1')||'null')}catch(e){}
-    const token=s&&s.access_token?s.access_token:c.publishableKey;
-    return {apikey:c.publishableKey,Authorization:'Bearer '+token,Accept:'application/json','Content-Type':'application/json'};
-  }
   async function remoteFor(localProject){
     await waitReady();
     if(localProject&&localProject.supabaseId)return{id:localProject.supabaseId};
     if(!localProject)return null;
     try{const found=await window.KPProjectSupabase.findByProjectNumber(localProject.id);if(found)return found;}catch(err){console.warn('Projekt lookup hiba:',err);}
-    try{
-      const c=window.SUPABASE_CONFIG;
-      if(c&&c.url&&c.publishableKey){
-        const url=c.url.replace(/\/$/,'')+'/rest/v1/projects?project_number=eq.'+encodeURIComponent(String(localProject.id))+'&select=*&limit=1';
-        const res=await fetch(url,{headers:supaHeaders()});
-        if(res.ok){const rows=await res.json();if(Array.isArray(rows)&&rows[0])return rows[0];}
-      }
-    }catch(err){console.warn('Közvetlen projekt lookup hiba:',err);}
     return null;
   }
   async function resolveEditProject(e,id){
@@ -36,7 +22,7 @@
   function customerName(customerId){
     const list=(typeof db!=='undefined'&&db&&Array.isArray(db.customers))?db.customers:[];
     const c=list.find(x=>String(x.id)===String(customerId)||String(x.supabaseId)===String(customerId));
-    return c?c.name:'';
+    return c?(c.name||c.company_name||c.companyName||''):'';
   }
   function localFromForm(o,id){return{id:id,customerId:o.customerId,customerName:customerName(o.customerId),name:o.name,status:o.status,location:o.location,value:+o.value||0,progress:Math.max(0,Math.min(100,+o.progress||0)),planned:+o.planned||0,cost:+o.cost||0,notes:o.notes||''};}
   function cleanupDuplicateProjectDeleteButtons(){document.querySelectorAll('#drawer .kpDeleteProjectBtn').forEach(function(btn){btn.remove();});}
@@ -50,15 +36,12 @@
     });
   }
   async function patchProjectDirect(p,local,remote){
-    const c=window.SUPABASE_CONFIG||{};if(!c.url||!c.publishableKey)throw new Error('Supabase konfiguráció nincs betöltve.');
-    const customer=(db.customers||[]).find(x=>String(x.id)===String(local.customerId)||String(x.supabaseId)===String(local.customerId));
-    const customerId=customer&&customer.supabaseId?customer.supabaseId:(/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(local.customerId||''))?local.customerId:null);
-    if(!customerId)throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');
-    const payload={project_number:p.id,customer_id:customerId,name:local.name||'',location:local.location||'',status:local.status||'Tervezés',contract_value:+local.value||0,planned_cost:+local.planned||0,actual_cost:+local.cost||0,progress_pct:+local.progress||0,notes:local.notes||''};
-    const filter=remote&&remote.id?'id=eq.'+encodeURIComponent(remote.id):'project_number=eq.'+encodeURIComponent(String(p.id));
-    const res=await fetch(c.url.replace(/\/$/,'')+'/rest/v1/projects?'+filter,{method:'PATCH',headers:Object.assign({},supaHeaders(),{Prefer:'return=representation'}),body:JSON.stringify(payload)});
-    const text=await res.text();if(!res.ok)throw new Error('Supabase '+res.status+': '+text);
-    let rows=[];try{rows=text?JSON.parse(text):[]}catch(e){}if(!Array.isArray(rows)||!rows[0])throw new Error('A projekt mentése nem adott vissza Supabase rekordot.');return rows[0];
+    const customerId=local.customerId;
+    const customerNameValue=customerName(customerId);
+    const payload=Object.assign({},local,{customerId:customerId,customerName:customerNameValue});
+    const updated=await window.KPProjectSupabase.update(remote.id,payload);
+    if(!updated)throw new Error('A projekt mentése nem adott vissza Supabase rekordot.');
+    return updated;
   }
   function install(){
     if(typeof window.saveProject!=='function'||typeof window.saveProjectEdit!=='function'||typeof window.deleteProject!=='function')return setTimeout(install,100);
