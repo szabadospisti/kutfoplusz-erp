@@ -38,6 +38,12 @@
       const m=document.createElement('div');m.id='unifiedMachineProfile';m.className='modal';m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>Eszköz adatlap – ${esc(item.name||'')}</h2><button class="icon" data-x>×</button></div><div class="modalbody">${body(item)}<div class="modalfoot"><button class="btn secondary" data-c>Bezárás</button><button class="btn" data-edit>✏️ Szerkesztés</button></div></div></div>`;
       document.body.appendChild(m);bindTabs(m);m.querySelectorAll('input,select,textarea').forEach(e=>e.disabled=true);m.querySelectorAll('[data-x],[data-c]').forEach(b=>b.onclick=()=>m.remove());m.querySelector('[data-edit]').onclick=()=>{m.remove();if(typeof editMachine==='function')editMachine(id)};
     };
+    const oldRender=window.render;
+    if(!window.__KP_MACHINE_UNIFIED_RENDER__){
+      window.__KP_MACHINE_UNIFIED_RENDER__=true;
+      window.render=function(){oldRender.apply(this,arguments);if(typeof current!=='undefined'&&current==='machines'){document.querySelectorAll('[data-action="profile"]').forEach(b=>{b.onclick=()=>window.machineProfile(b.dataset.id)});}};
+    }
+    if(typeof current!=='undefined'&&current==='machines') window.render();
     return true;
   }
   let tries=0;const boot=()=>{if(install()||tries++>30)return;setTimeout(boot,250)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
