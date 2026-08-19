@@ -1,8 +1,8 @@
-/* Kútfő Plusz ERP – Projekt -> Munkanapló automatikus kapcsolat, stabil V5 */
+/* Kútfő Plusz ERP – Projekt -> Munkanapló automatikus kapcsolat, stabil V6 */
 (function(){
   'use strict';
-  if(window.__KP_PROJECT_WORKLOG_AUTO_LINK_V5__) return;
-  window.__KP_PROJECT_WORKLOG_AUTO_LINK_V5__=true;
+  if(window.__KP_PROJECT_WORKLOG_AUTO_LINK_V6__) return;
+  window.__KP_PROJECT_WORKLOG_AUTO_LINK_V6__=true;
 
   var pendingProjectId='';
   function s(v){return v==null?'':String(v);}
@@ -11,81 +11,52 @@
     var id=s(pid);
     return projects().find(function(p){return s(p.id)===id||s(p.supabaseId)===id;})||null;
   }
-  function hideFieldByLabel(words, value, fixedText){
-    var root=document.querySelector('.modal')||document.body;
-    var nodes=root.querySelectorAll('label,div,span,p');
-    for(var i=0;i<nodes.length;i++){
-      var n=nodes[i], txt=s(n.textContent).trim();
-      if(!txt || txt.length>80) continue;
-      var hit=words.some(function(w){return txt.toLowerCase()===w.toLowerCase() || txt.toLowerCase().indexOf(w.toLowerCase()+':')===0;});
-      if(!hit) continue;
-      var box=n.parentElement;
-      if(!box) continue;
-      var field=box.querySelector('select,input,textarea');
-      if(!field && box.parentElement) field=box.parentElement.querySelector('select,input,textarea');
-      if(!field) continue;
-      if(value!=null && value!==''){
-        try{field.value=s(value); field.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}
-      }
-      field.disabled=true;
-      field.setAttribute('data-kp-locked','1');
-      field.style.display='none';
-      var fixed=box.querySelector('.kp-fixed-linked-field');
-      if(!fixed){
-        fixed=document.createElement('div');
-        fixed.className='kp-fixed-linked-field';
-        fixed.style.cssText='padding:11px 12px;border:1px solid #dbe2e9;border-radius:10px;background:#f4f7fa;font-weight:700;color:#243447;margin-top:4px;';
-        field.parentElement.appendChild(fixed);
-      }
-      fixed.textContent='🔒 '+fixedText;
-      return true;
+  function fixed(parent,cls,text){
+    if(!parent)return;
+    var el=parent.querySelector('.'+cls);
+    if(!el){
+      el=document.createElement('div');
+      el.className=cls;
+      el.style.cssText='padding:11px 12px;border:1px solid #dbe2e9;border-radius:10px;background:#f4f7fa;font-weight:700;color:#243447;margin-top:4px;';
+      parent.appendChild(el);
     }
-    return false;
+    el.textContent='🔒 '+text;
   }
-  function lockLinkedFields(p){
-    if(!p) return;
-    var customer=p.customerName||p.customer||p.customerId||'';
-    var location=p.location||'';
-    hideFieldByLabel(['Megrendelő','Ügyfél','Megrendelő / Ügyfél'], customer, customer || 'Projekt ügyfele');
-    hideFieldByLabel(['Helyszín','Munkavégzés helye'], location, location || 'Projekt helyszíne');
+  function lockField(id,text){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(text!=null)el.value=s(text);
+    el.disabled=true;
+    el.setAttribute('data-kp-locked','1');
+    el.style.display='none';
+    fixed(el.parentElement,id+'-kp-fixed',s(text)||'Projektből átvett adat');
   }
   function apply(){
     if(!pendingProjectId)return false;
-    var sel=document.getElementById('wl_project');
     var p=findProject(pendingProjectId);
-    if(sel){
-      var target=p?s(p.id):s(pendingProjectId), match=null;
-      Array.prototype.forEach.call(sel.options,function(o){
-        if(s(o.value)===target || (p&&s(o.textContent).indexOf(s(p.id))>=0))match=o;
-      });
-      if(!match){
-        match=document.createElement('option');
-        match.value=target;
-        match.textContent=p?s(p.id)+' – '+s(p.name):'Projekt '+target;
-        sel.appendChild(match);
-      }
-      sel.value=match.value;
-      sel.dispatchEvent(new Event('change',{bubbles:true}));
-      sel.disabled=true;
-      sel.style.display='none';
-      var parent=sel.parentElement;
-      if(parent){
-        var fixed=parent.querySelector('.kp-fixed-project');
-        if(!fixed){
-          fixed=document.createElement('div');
-          fixed.className='kp-fixed-project';
-          fixed.style.cssText='padding:11px 12px;border:1px solid #dbe2e9;border-radius:10px;background:#f4f7fa;font-weight:700;color:#243447;';
-          parent.appendChild(fixed);
-        }
-        fixed.textContent='🔒 '+(p?s(p.id)+' – '+s(p.name):'Projekt '+target);
-      }
+    var sel=document.getElementById('wl_project');
+    if(!sel)return false;
+
+    var target=p?s(p.id):s(pendingProjectId), match=null;
+    Array.prototype.forEach.call(sel.options,function(o){
+      if(s(o.value)===target || (p&&s(o.textContent).indexOf(s(p.id))>=0))match=o;
+    });
+    if(!match){
+      match=document.createElement('option');
+      match.value=target;
+      match.textContent=p?s(p.id)+' – '+s(p.name):'Projekt '+target;
+      sel.appendChild(match);
     }
+    sel.value=match.value;
+    sel.dispatchEvent(new Event('change',{bubbles:true}));
+    sel.disabled=true;
+    sel.setAttribute('data-kp-locked','1');
+    sel.style.display='none';
+    fixed(sel.parentElement,'kp-fixed-project',p?s(p.id)+' – '+s(p.name):'Projekt '+target);
+
     if(p){
-      var c=document.getElementById('wl_client');
-      var loc=document.getElementById('wl_location');
-      if(c&&p.customerId){c.value=s(p.customerId);c.dispatchEvent(new Event('change',{bubbles:true}));c.disabled=true;c.style.display='none';}
-      if(loc&&p.location){loc.value=s(p.location);loc.disabled=true;loc.style.display='none';}
-      lockLinkedFields(p);
+      if(p.customerId)lockField('wl_client',p.customerId);
+      if(p.location)lockField('wl_location',p.location);
     }
     return true;
   }
@@ -97,16 +68,28 @@
       return;
     }
     window.detailedWorklogEditor(null,pendingProjectId);
-    [0,50,150,300,600,1000,1800].forEach(function(ms){setTimeout(apply,ms);});
+    [0,25,75,150,300,600,1000,1800,3000].forEach(function(ms){setTimeout(apply,ms);});
   }
   function hook(){
-    if(typeof window.newWorklogFor==='function'&&!window.newWorklogFor.__kpAutoV5){
-      function direct(pid){openForProject(pid);}
-      direct.__kpAutoV5=true;
+    if(typeof window.newWorklogFor==='function'&&!window.newWorklogFor.__kpAutoV6){
+      var direct=function(pid){openForProject(pid);};
+      direct.__kpAutoV6=true;
       window.newWorklogFor=direct;
     }
+    if(typeof window.__KP_PRESELECT_WORKLOG__!=='function'){
+      window.__KP_PRESELECT_WORKLOG__=function(pid){
+        pendingProjectId=s(pid);
+        return apply();
+      };
+    }
+    apply();
   }
-  var timer=setInterval(hook,100);
-  setTimeout(function(){clearInterval(timer);},60000);
+
   hook();
+  var timer=setInterval(hook,100);
+  setTimeout(function(){clearInterval(timer);},120000);
+
+  if(window.MutationObserver){
+    new MutationObserver(function(){if(pendingProjectId)apply();}).observe(document.body,{childList:true,subtree:true});
+  }
 })();
