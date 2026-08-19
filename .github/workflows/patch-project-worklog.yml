@@ -1,17 +1,21 @@
 name: Add project to worklog
+
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/patch-project-worklog.yml'
+
 permissions:
   contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch project-worklog linkage safely
+
+      - name: Embed safe project-worklog bridge
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -19,82 +23,129 @@ jobs:
 
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          original = s
+          marker = '<!-- KP_PROJECT_WORKLOG_BRIDGE_V1 -->'
 
-          # 1) Preserve the project id when starting a worklog from a project.
-          s, n = re.subn(
-              r'function\s+newWorklogFor\s*\(pid\)\s*\{\s*openWorklogEditor\(\)\s*\}',
-              'function newWorklogFor(pid){detailedWorklogEditor(null,pid||"")}',
-              s, count=1
-          )
-          if n != 1:
-              raise SystemExit('newWorklogFor target not found')
+          # Idempotent: if already embedded, do nothing.
+          if marker in s:
+              print('Project-worklog bridge already embedded.')
+              raise SystemExit(0)
 
-          # 2) Let the detailed editor receive an optional project id and resolve it.
-          s, n = re.subn(
-              r'function\s+detailedWorklogEditor\s*\(id\)\s*\{',
-              'function detailedWorklogEditor(id,projectId){',
-              s, count=1
-          )
-          if n != 1:
-              raise SystemExit('detailedWorklogEditor signature not found')
+          bridge = r'''<!-- KP_PROJECT_WORKLOG_BRIDGE_V1 -->
+          <script>
+          (function(){
+            if(window.__KP_PROJECT_WORKLOG_BRIDGE__) return;
+            window.__KP_PROJECT_WORKLOG_BRIDGE__=true;
+            var pending='';
 
-          marker = 'editingWorklogId=id||null;'
-          if marker not in s:
-              raise SystemExit('editingWorklogId marker not found')
-          s = s.replace(marker, marker + '\n const selectedProjectId=projectId||w?.projectId||"";', 1)
+            function projects(){ return (window.db && Array.isArray(window.db.projects)) ? window.db.projects : []; }
 
-          # 3) Add the actual Project selector to the form.
-          client_field = '<div class="wl-field"><label>Megrendelő</label><select id="wl_client"><option value="">— Válassz —</option>${custOpts}</select></div>'
-          if client_field not in s:
-              raise SystemExit('client field not found')
-          project_field = client_field + '\n <div class="wl-field"><label>Projekt</label><select id="wl_project" onchange="wlProjectChanged()"><option value="">— Nincs kiválasztva —</option>${projOpts}</select></div>'
-          s = s.replace(client_field, project_field, 1)
+            function findWorklogRoot(){
+              var el=document.querySelector('#wlForm');
+              if(el) return el;
+              var client=document.querySelector('#wl_client');
+              if(client) return client.closest('.wl-form,.modal,.drawer,.card,form') || client.parentElement;
+              return null;
+            }
 
-          # 4) Use the project passed by the caller when building the options.
-          s, n = re.subn(
-              r'const\s+projOpts=db\.projects\.map\(p=>`<option value="\$\{p\.id\}"\s+\$\{p\.id===w\?\.projectId\?"selected":""\}>\$\{esc\(p\.id\)\}\s+–\s+\$\{esc\(p\.name\)\}</option>`\)\.join\(""\);',
-              'const projOpts=db.projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?"selected":""}>${esc(p.id)} – ${esc(p.name)}</option>`).join("");',
-              s, count=1
-          )
-          if n != 1:
-              raise SystemExit('project options target not found')
+            function ensureProjectField(){
+              var root=findWorklogRoot();
+              if(!root) return null;
+              var client=document.querySelector('#wl_client');
+              var select=document.querySelector('#wl_project');
+              if(!select){
+                var wrap=document.createElement('div');
+                wrap.className='wl-field';
+                wrap.innerHTML='<label>Projekt</label><select id="wl_project"><option value="">— Nincs kiválasztva —</option></select>';
+                var clientWrap=client && (client.closest('.wl-field') || client.closest('.field'));
+                if(clientWrap && clientWrap.parentNode) clientWrap.parentNode.insertBefore(wrap,clientWrap.nextSibling);
+                else root.insertBefore(wrap,root.firstChild);
+                select=wrap.querySelector('#wl_project');
+                select.addEventListener('change',function(){
+                  pending=select.value||'';
+                  syncProject();
+                });
+              }
 
-          # 5) Selecting a project fills the linked customer/location where available.
-          marker = 'function wlAddLayer(v){'
-          if marker not in s:
-              raise SystemExit('wlAddLayer marker not found')
-          helper = '''function wlProjectChanged(){
- const id=document.getElementById("wl_project")?.value||"";
- const p=(db.projects||[]).find(x=>String(x.id)===String(id));
- if(!p)return;
- const c=document.getElementById("wl_client");
- const loc=document.getElementById("wl_location");
- if(c&&p.customerId)c.value=p.customerId;
- if(loc&&p.location&&!loc.value)loc.value=p.location;
-}
-'''
-          if 'function wlProjectChanged(){' not in s:
-              s = s.replace(marker, helper + marker, 1)
+              var list=projects();
+              var sig=list.map(function(p){return String(p.id)+'|'+String(p.name||'')}).join(';;');
+              if(select.dataset.kpSig!==sig){
+                select.innerHTML='<option value="">— Nincs kiválasztva —</option>';
+                list.forEach(function(p){
+                  var o=document.createElement('option');
+                  o.value=String(p.id);
+                  o.textContent=(p.project_number||p.projectNumber||p.id)+' – '+(p.name||'');
+                  select.appendChild(o);
+                });
+                select.dataset.kpSig=sig;
+              }
+              if(pending) select.value=String(pending);
+              syncProject();
+              return select;
+            }
 
-          # 6) Save the explicit project field, never a generic select.
-          old = 'projectId:document.querySelector("#wlForm select:not(#wl_client)")?.value||""'
-          new = 'projectId:document.getElementById("wl_project")?.value||""'
-          if old not in s:
-              raise SystemExit('wlCollect project selector target not found')
-          s = s.replace(old, new, 1)
+            function syncProject(){
+              var select=document.querySelector('#wl_project');
+              if(!select || !select.value) return;
+              var p=projects().find(function(x){return String(x.id)===String(select.value)});
+              if(!p) return;
+              var client=document.querySelector('#wl_client');
+              if(client && p.customerId){ client.value=String(p.customerId); client.dispatchEvent(new Event('change',{bubbles:true})); }
+              var loc=document.querySelector('#wl_location');
+              if(loc && p.location && !loc.value) loc.value=p.location;
+            }
 
-          if s == original:
-              raise SystemExit('No changes made')
+            function afterOpen(){
+              var i=0;
+              var t=setInterval(function(){
+                ensureProjectField();
+                if(document.querySelector('#wl_project') || ++i>30) clearInterval(t);
+              },100);
+            }
 
-          p.write_text(s, encoding='utf-8')
-          print('Project-worklog patch applied successfully.')
+            function hook(){
+              if(typeof window.newWorklogFor==='function' && !window.__KP_NWF_HOOKED__){
+                var original=window.newWorklogFor;
+                window.__KP_NWF_HOOKED__=true;
+                window.newWorklogFor=function(pid){
+                  pending=pid||'';
+                  var result=original.apply(this,arguments);
+                  afterOpen();
+                  return result;
+                };
+              }
+              if(typeof window.detailedWorklogEditor==='function' && !window.__KP_DWE_HOOKED__){
+                var originalEditor=window.detailedWorklogEditor;
+                window.__KP_DWE_HOOKED__=true;
+                window.detailedWorklogEditor=function(id){
+                  var result=originalEditor.apply(this,arguments);
+                  afterOpen();
+                  return result;
+                };
+              }
+              ensureProjectField();
+            }
+
+            var observer=new MutationObserver(function(){hook();});
+            observer.observe(document.documentElement,{childList:true,subtree:true});
+            var timer=setInterval(hook,250);
+            setTimeout(function(){clearInterval(timer);},30000);
+            hook();
+          })();
+          </script>'''
+
+          pos=s.rfind('</body>')
+          if pos < 0:
+              raise SystemExit('index.html: </body> not found; no change made')
+          s=s[:pos]+bridge+'\n'+s[pos:]
+          p.write_text(s,encoding='utf-8')
+          print('Embedded project-worklog bridge successfully.')
           PY
-      - name: Commit patched index.html
+
+      - name: Commit embedded index.html
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix project selection in worklogs'
+          git commit -m 'Embed stable project selection in worklogs'
           git push
