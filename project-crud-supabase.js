@@ -4,7 +4,22 @@
   const TABLE='projects';
   function config(){const c=window.SUPABASE_CONFIG;if(!c||!c.url||!c.publishableKey)throw new Error('Supabase konfiguráció nincs betöltve.');return c;}
   async function request(path,options){const c=config();const headers=Object.assign({apikey:c.publishableKey,Authorization:'Bearer '+c.publishableKey,Accept:'application/json'},(options&&options.headers)||{});const res=await fetch(c.url+'/rest/v1/'+path,Object.assign({},options,{headers}));const text=await res.text();let body=null;try{body=text?JSON.parse(text):null}catch(e){body=text}if(!res.ok){const msg=body&&(body.message||body.error||body.hint||body.details)?[body.message,body.details,body.hint].filter(Boolean).join(' | '):String(body||res.statusText);throw new Error('Supabase '+res.status+': '+msg)}return body;}
-  async function customerUuid(p){const raw=p.customer_id??p.customerId;if(!raw)return null;if(String(raw).match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))return raw;const name=p.customerName??p.customer_name??null;if(!name)return null;const rows=await request('customers?select=id&company_name=eq.'+encodeURIComponent(name)+'&limit=1');return Array.isArray(rows)&&rows[0]?rows[0].id:null;}
+
+  async function customerUuid(p){
+    const raw=p.customer_id??p.customerId;
+    if(!raw)return null;
+    const rawText=String(raw);
+    if(rawText.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))return raw;
+    let name=p.customerName??p.customer_name??null;
+    if(!name && window.db && Array.isArray(window.db.customers)){
+      const c=window.db.customers.find(x=>String(x.id??x.customerId??'')===rawText);
+      if(c)name=c.company_name??c.companyName??c.name??c.nev??null;
+    }
+    if(!name)return null;
+    const rows=await request('customers?select=id&company_name=eq.'+encodeURIComponent(String(name))+'&limit=1');
+    return Array.isArray(rows)&&rows[0]?rows[0].id:null;
+  }
+
   async function clean(p){return{project_number:p.project_number??p.projectNumber??p.id??null,customer_id:await customerUuid(p),name:p.name??p.projectName??'',location:p.location??null,status:p.status??'Tervezés',contract_value:p.contract_value??p.contractValue??p.value??0,planned_cost:p.planned_cost??p.plannedCost??p.planned??0,actual_cost:p.actual_cost??p.actualCost??p.cost??0,progress_pct:Math.max(0,Math.min(100,Number(p.progress_pct??p.progress??0)||0)),notes:p.notes??null};}
   async function list(){const rows=await request(TABLE+'?select=*&order=created_at.desc');return Array.isArray(rows)?rows:[];}
   async function create(project){const payload=await clean(project);if(!payload.customer_id)throw new Error('A kiválasztott ügyfél nincs összekötve a Supabase customers táblával.');const rows=await request(TABLE,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)});return Array.isArray(rows)?rows[0]:rows;}
