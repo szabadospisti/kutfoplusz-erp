@@ -1,6 +1,7 @@
 /* Kútfő Plusz ERP – Géppark tartós műveletek
  * A géptáblát közvetlenül a renderelő views.machines függvényben bővíti,
  * ezért a műveletek nem tűnnek el egy újrarenderelés után.
+ * A kezelőfelület az Anyag/Raktár nézetével azonos: soronként Szerkesztés + Törlés.
  */
 (function installFleetPersistent(){
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -16,7 +17,7 @@
         <div class="field"><label>Állapot</label><select class="select" name="status"><option ${m.status==='Üzemképes'?'selected':''}>Üzemképes</option><option ${m.status==='Szervizre vár'?'selected':''}>Szervizre vár</option><option ${m.status==='Meghibásodott'?'selected':''}>Meghibásodott</option><option ${m.status==='Üzemen kívül'?'selected':''}>Üzemen kívül</option></select></div>
         <div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="notes">${esc(m.notes||'')}</textarea></div>
       </div>
-      <div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">💾 Változtatások mentése</button></div>
+      <div class="modalfoot"><button type="button" class="btn danger" onclick="kpDeleteMachine('${esc(id)}')">Törlés</button><span style="flex:1"></span><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div>
     </form>`);
   }
 
@@ -30,9 +31,9 @@
 
   window.kpDeleteMachine=function(id){
     const m=db.machines.find(x=>x.id===id); if(!m)return;
-    if(!confirm(`Biztosan törlöd a(z) „${m.name}” gépet?`))return;
+    if(!confirm(`Biztosan törlöd a(z) „${m.name}” gépet?\n\nA törlés végleges.`))return;
     db.machines=db.machines.filter(x=>x.id!==id);
-    save();render();toast('Gép törölve');
+    save();closeModal();render();toast('Gép törölve');
   };
 
   window.kpMachineProfile=function(id){
@@ -53,9 +54,9 @@
 
   views.machines=function(){
     const list=Array.isArray(db.machines)?db.machines:[];
-    return `<div class="panel"><div class="panelhead"><div><h2>Géppark</h2><div class="label">Gépek, üzemórák és szervizadatok</div></div><div style="display:flex;gap:8px"><button class="btn secondary" onclick="newMachine()">+ Új gép</button><button id="kpFleetEditAll" class="btn secondary" onclick="kpFleetEditFirst()">✏️ Géppark szerkesztése</button></div></div>
-      <div class="tablewrap"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Szerviz</th><th>Állapot</th><th>Művelet</th></tr></thead><tbody>
-      ${list.map(m=>`<tr data-kp-fleet-bound="1"><td><b>${esc(m.name)}</b></td><td>${esc(m.model||'')}</td><td>${Number(m.hours)||0}</td><td>${Number(m.service)||0}</td><td><span class="badge ${m.status==='Üzemképes'?'green':m.status==='Meghibásodott'?'red':'amber'}">${esc(m.status||'Üzemképes')}</span></td><td class="fleet-actions mfdfAction" data-fleet-fallback="1"><button class="btn secondary small" onclick="kpMachineProfile('${esc(m.id)}')">Adatlap</button> <button class="btn small" onclick="kpEditMachine('${esc(m.id)}')">✏️ Szerkesztés</button> <button class="btn danger small" onclick="kpDeleteMachine('${esc(m.id)}')">🗑️ Törlés</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nincs gép rögzítve.</td></tr>'}
+    return `<div class="panel"><div class="panelhead"><div><h2>Géppark</h2><div class="label">Gépek, üzemórák és szervizadatok</div></div><button class="btn" onclick="newMachine()">+ Új gép</button></div>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Gép</th><th>Típus</th><th>Üzemóra</th><th>Szerviz</th><th>Állapot</th><th>Műveletek</th></tr></thead><tbody>
+      ${list.map(m=>`<tr data-kp-fleet-bound="1"><td><a class="link" onclick="kpEditMachine('${esc(m.id)}')"><b>${esc(m.name)}</b></a></td><td>${esc(m.model||'')}</td><td>${Number(m.hours)||0}</td><td>${Number(m.service)||0}</td><td><span class="badge ${m.status==='Üzemképes'?'green':m.status==='Meghibásodott'?'red':'amber'}">${esc(m.status||'Üzemképes')}</span></td><td><div style="display:flex;gap:6px;align-items:center"><button class="btn secondary small" onclick="kpEditMachine('${esc(m.id)}')">Szerkesztés</button><button class="btn danger small" onclick="kpDeleteMachine('${esc(m.id)}')">Törlés</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="label">Nincs gép.</td></tr>'}
       </tbody></table></div></div>`;
   };
   window.kpFleetEditFirst=function(){const m=db.machines?.[0];if(m)editMachine(m.id);else newMachine();};
