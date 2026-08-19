@@ -65,12 +65,12 @@ jobs:
           required = [
               'data-page="inbox"',
               'Beérkező dokumentumok',
-              'kpRecordMaterialUse',
               'Projekt anyagigény',
               'Anyagok szerkesztése',
               'Változtatások mentése',
               'kpDeleteMaterial',
-              'Gép szerkesztése',
+              'Géppark szerkesztése',
+              'kpOpenMachineEditor',
               'function installErpFixes',
               'window.save=async function',
               'window.deleteCustomer=function',
@@ -80,7 +80,7 @@ jobs:
           missing = [x for x in required if x not in page]
           if missing:
               raise SystemExit('BUILD ERROR: missing modules: ' + ', '.join(missing))
-          print('OK: inbox, warehouse, machine controls and central ERP fixes present')
+          print('OK: inbox, warehouse CRUD, machine fleet controls and central ERP fixes present')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
