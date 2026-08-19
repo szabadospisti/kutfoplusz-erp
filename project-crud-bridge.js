@@ -73,5 +73,6 @@
     await loadScript('project-worklog-auto-link.js');
     await loadScript('worklog-project-lock.js');
     installProjectSaveHooks();
+    await loadScript('project-save-final.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
