@@ -22,5 +22,7 @@
     await loadScript('machine-fleet-final.js');
     /* A végleges Géppark modul után ismét betöltjük az új-eszköz modult, hogy az esetleges régi newMachine/profile definíciókat biztosan felülírja. */
     await loadScript('machine-new-unified.js');
+    /* Az Adatlap külön, csak olvasható nézet legyen: ne jelenjenek meg szerkeszthető mezők. */
+    await loadScript('machine-profile-readonly.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
