@@ -8,12 +8,28 @@
     throw new Error('Supabase projekt modul nem töltődött be.');
   }
 
+  function inferId(form,id){
+    if(id)return String(id);
+    const q=form&&form.querySelector?form.querySelector('[name="projectId"],[name="project_id"],[name="id"]'):null;
+    if(q&&q.value)return String(q.value);
+    const candidates=[window.editingProjectId,window.currentProjectId,window.selectedProjectId,window.activeProjectId,window.projectId];
+    for(const v of candidates)if(v)return String(v);
+    const nodes=document.querySelectorAll('[data-project-id],[data-project-number]');
+    for(const n of nodes){
+      const v=n.getAttribute('data-project-id')||n.getAttribute('data-project-number');
+      if(v&&/^KP[-A-Z0-9]+$/i.test(v))return v;
+    }
+    const text=document.body?document.body.innerText:'';
+    const m=text.match(/\bKP-[0-9]{4,}\b/);
+    return m?m[0]:'';
+  }
+
   async function resolve(id,api){
     const key=String(id||'');
     const list=(window.db&&Array.isArray(db.projects))?db.projects:[];
-    let p=list.find(x=>String(x.id)===key||String(x.supabaseId||'')===key);
+    let p=list.find(x=>String(x.id)===key||String(x.supabaseId||'')===key||String(x.project_number||'')===key);
     if(p)return p;
-    if(api&&api.findByProjectNumber){
+    if(api&&api.findByProjectNumber&&key){
       const r=await api.findByProjectNumber(key);
       if(r)return {id:r.project_number||key,supabaseId:r.id,customerId:r.customer_id||'',customerName:'',name:r.name||'',status:r.status||'Tervezés',location:r.location||'',value:+r.contract_value||0,progress:+r.progress_pct||0,planned:+r.planned_cost||0,cost:+r.actual_cost||0,notes:r.notes||''};
     }
@@ -24,7 +40,8 @@
     e.preventDefault();
     try{
       const api=await ready();
-      const p=await resolve(id,api);
+      const resolvedId=inferId(e.target,id);
+      const p=await resolve(resolvedId,api);
       if(!p)throw new Error('A projekt nem található.');
       const o=Object.fromEntries(new FormData(e.target).entries());
       const local={id:p.id,supabaseId:p.supabaseId||'',customerId:o.customerId,name:o.name,status:o.status,location:o.location,value:+o.value||0,progress:Math.max(0,Math.min(100,+o.progress||0)),planned:+o.planned||0,cost:+o.cost||0,notes:o.notes||''};
