@@ -1,5 +1,5 @@
 /* Kútfő Plusz ERP – központi mentési és alap CRUD javítások.
- * Egyetlen helyen kezeli a mentést és a hiányzó globális műveleteket.
+ * V2: Supabase erp_state séma + munkanapló rétegmentés javítása.
  */
 (function installErpFixes(){
   const MACHINE_KEY='kp_machine_fleet_v1';
@@ -16,6 +16,14 @@
     }catch(e){console.error('Helyi mentési hiba:',e);}
   }
 
+  /*
+   * A Supabase public.erp_state tényleges sémája:
+   * id TEXT PRIMARY KEY (alapértelmezés: main)
+   * data JSONB
+   * updated_at TIMESTAMPTZ
+   * updated_by UUID -> auth.users
+   * A régi kód user_id/state mezőket próbált írni, ezért a felhőmentés hibára futott.
+   */
   window.save=async function(){
     localSave();
     try{
@@ -23,11 +31,17 @@
       if(!client||!window.db)return;
       const result=await client.auth.getUser();
       const user=result?.data?.user;
-      if(!user)return;
-      const {error}=await client.from('erp_state').upsert(
-        {user_id:user.id,state:window.db,updated_at:new Date().toISOString()},
-        {onConflict:'user_id'}
-      );
+      if(!user){
+        console.warn('Supabase mentés kihagyva: nincs bejelentkezett felhasználó.');
+        return;
+      }
+      const payload={
+        id:'main',
+        data:window.db,
+        updated_at:new Date().toISOString(),
+        updated_by:user.id
+      };
+      const {error}=await client.from('erp_state').upsert(payload,{onConflict:'id'});
       if(error)throw error;
       const pill=document.querySelector('[data-save-status],#saveStatus,.save-status');
       if(pill){const old=pill.textContent;pill.textContent='☁️ Mentve';setTimeout(()=>pill.textContent=old,1600);}
@@ -36,6 +50,43 @@
       if(typeof toast==='function')toast('Helyben mentve – felhőmentés sikertelen');
     }
   };
+
+  /* Rétegnapló javítás: a jelenlegi UI mélységei spanok, a mentő viszont inputokat keresett.
+     A modal létrejöttekor rejtett, szabványos mezőket adunk a sorokhoz. */
+  function patchLayerRows(){
+    const table=document.getElementById('wl_layers');
+    if(!table)return;
+    [...table.querySelectorAll('tbody tr')].forEach(tr=>{
+      if(tr.querySelector('input[name="layer_from[]"]'))return;
+      const cells=tr.querySelectorAll('td');
+      if(cells.length<4)return;
+      const vals=[];
+      cells[0].querySelectorAll('.wl-depth-value').forEach(x=>vals.push((x.textContent||'').replace(/\s*m\s*$/i,'').trim()));
+      const from=vals[0]||'';
+      const to=vals[1]||'';
+      const a=document.createElement('input');a.type='hidden';a.name='layer_from[]';a.value=from;
+      const b=document.createElement('input');b.type='hidden';b.name='layer_to[]';b.value=to;
+      tr.append(a,b);
+    });
+  }
+
+  function installLayerPatch(){
+    const observer=new MutationObserver(()=>patchLayerRows());
+    if(document.body)observer.observe(document.body,{childList:true,subtree:true});
+    setTimeout(patchLayerRows,300);
+    setTimeout(patchLayerRows,1000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installLayerPatch,{once:true});
+  else installLayerPatch();
+
+  /* Új réteg hozzáadásakor az eredeti függvény után is biztosítjuk a hidden depth mezőket. */
+  const originalAddLayer=window.addWorklogLayerRow;
+  if(typeof originalAddLayer==='function'){
+    window.addWorklogLayerRow=function(){
+      originalAddLayer.apply(this,arguments);
+      patchLayerRows();
+    };
+  }
 
   window.deleteCustomer=function(id){
     const c=(window.db?.customers||[]).find(x=>String(x.id)===String(id));
@@ -56,7 +107,6 @@
     });
   };
 
-  /* A meglévő raktári „+ Anyagcikk” modalját használjuk, így nem készül második anyagmodell. */
   window.newMaterial=function(){
     const btn=document.getElementById('wmAddProduct');
     if(btn){btn.click();return;}
@@ -65,7 +115,6 @@
     alert('A raktár modul nem érhető el.');
   };
 
-  /* Új gép – ugyanazt a gép-adatmodellt használja, amelyet a géppark modul kezel. */
   window.newMachine=function(){
     if(document.getElementById('kpNewMachineModal'))return;
     let state={items:[]};
@@ -98,7 +147,6 @@
     };
   };
 
-  /* Aliasok, ha a régi UI eltérő neveket használ. */
   window.addMaterial=window.newMaterial;
   window.addMachine=window.newMachine;
 })();
