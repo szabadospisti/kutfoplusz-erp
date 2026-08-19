@@ -1,104 +1,106 @@
 /* Kútfő Plusz ERP – Projektek stabil CRUD
- * Ugyanazt a működési mintát használja, mint az Anyag/Raktár és a Géppark:
- * db.projects módosítása -> save() -> closeModal() -> render().
+ * Ugyanaz a működési minta, mint a működő Géppark / Anyag-Raktár CRUD:
+ * közvetlen DOM esemény -> db.projects módosítás -> save() -> render().
  */
 (function installProjectCrud(){
   'use strict';
+  if(typeof window.db==='undefined' || typeof window.views==='undefined' || typeof window.render!=='function'){
+    setTimeout(installProjectCrud,250); return;
+  }
 
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const projects=()=>Array.isArray(db?.projects)?db.projects:[];
-  const customers=()=>Array.isArray(db?.customers)?db.customers:[];
+  const projects=()=>Array.isArray(window.db.projects)?window.db.projects:[];
+  const customers=()=>Array.isArray(window.db.customers)?window.db.customers:[];
   const customerName=p=>{
     const id=p.customerId ?? p.customer_id;
     const c=customers().find(x=>String(x.id)===String(id));
     return c?.company_name || c?.name || p.customer_name || '—';
   };
 
-  function close(){ if(typeof closeModal==='function') closeModal(); else document.querySelector('.modal')?.remove(); }
-  function refresh(){ if(typeof render==='function') render(); }
   function persist(){
-    try{ if(typeof save==='function') save(); else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(db)); }
-    catch(e){ console.error('Projekt mentés:',e); }
+    try{
+      if(typeof window.localSaveOnly==='function') window.localSaveOnly();
+      else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db));
+      if(typeof window.save==='function'){
+        const r=window.save();
+        if(r&&typeof r.catch==='function')r.catch(e=>console.error('Projekt Supabase háttérszinkron:',e));
+      }
+      return true;
+    }catch(e){
+      console.error('Projekt mentés:',e);
+      alert('A projekt mentése nem sikerült.\n\n'+(e?.message||e));
+      return false;
+    }
   }
+
+  function closeEditor(){document.getElementById('kpProjectEdit')?.remove();}
 
   function openProjectEditor(id){
     const p=projects().find(x=>String(x.id)===String(id));
     if(!p)return;
     const customerId=p.customerId ?? p.customer_id ?? '';
-    const body=`<form onsubmit="kpSaveProjectEdit(event,'${esc(p.id)}')">
-      <div class="formgrid">
-        <div class="field"><label>Projekt neve</label><input required class="input" name="name" value="${esc(p.name||'')}"></div>
-        <div class="field"><label>Projektazonosító</label><input class="input" name="project_number" value="${esc(p.project_number||'')}" readonly></div>
-        <div class="field full"><label>Megrendelő</label><select class="select" name="customerId">
-          <option value="">— Nincs megrendelő —</option>
-          ${customers().map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(customerId)?'selected':''}>${esc(c.company_name||c.name||c.id)}</option>`).join('')}
-        </select></div>
-        <div class="field full"><label>Helyszín</label><input class="input" name="location" value="${esc(p.location||'')}"></div>
-        <div class="field"><label>Státusz</label><select class="select" name="status">
-          ${['interest','quote','contracted','active','completed','cancelled'].map(s=>`<option value="${s}" ${String(p.status||'interest')===s?'selected':''}>${esc(({interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'}[s]||s))}</option>`).join('')}
-        </select></div>
-        <div class="field"><label>Szerződéses érték</label><input class="input" type="number" step="0.01" name="contract_value" value="${Number(p.contract_value)||0}"></div>
-        <div class="field"><label>Tervezett kezdés</label><input class="input" type="date" name="start_date" value="${esc(p.start_date||'')}"></div>
-        <div class="field"><label>Tervezett befejezés</label><input class="input" type="date" name="planned_end_date" value="${esc(p.planned_end_date||'')}"></div>
-      </div>
-      <div class="modalfoot">
-        <button type="button" class="btn danger" onclick="kpDeleteProject('${esc(p.id)}')">Törlés</button>
-        <span style="flex:1"></span>
-        <button type="button" class="btn secondary" onclick="closeModal()">Mégse</button>
-        <button class="btn">Mentés</button>
-      </div>
-    </form>`;
-    openModal('Projekt szerkesztése',body);
+    document.getElementById('kpProjectEdit')?.remove();
+    const m=document.createElement('div');
+    m.id='kpProjectEdit'; m.className='modal';
+    m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>Projekt szerkesztése</h2><button class="icon" data-close>×</button></div>
+      <div class="modalbody"><div class="formgrid">
+        <div class="field"><label>Projekt neve</label><input required class="input" id="kpPName" value="${esc(p.name||'')}"></div>
+        <div class="field"><label>Projektazonosító</label><input class="input" value="${esc(p.project_number||'')}" readonly></div>
+        <div class="field full"><label>Megrendelő</label><select class="select" id="kpPCustomer"><option value="">— Nincs megrendelő —</option>${customers().map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(customerId)?'selected':''}>${esc(c.company_name||c.name||c.id)}</option>`).join('')}</select></div>
+        <div class="field full"><label>Helyszín</label><input class="input" id="kpPLocation" value="${esc(p.location||'')}"></div>
+        <div class="field"><label>Státusz</label><select class="select" id="kpPStatus">${['interest','quote','contracted','active','completed','cancelled'].map(s=>`<option value="${s}" ${String(p.status||'interest')===s?'selected':''}>${esc(({interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'}[s]||s))}</option>`).join('')}</select></div>
+        <div class="field"><label>Szerződéses érték</label><input class="input" type="number" step="0.01" id="kpPValue" value="${Number(p.contract_value)||0}"></div>
+        <div class="field"><label>Tervezett kezdés</label><input class="input" type="date" id="kpPStart" value="${esc(p.start_date||'')}"></div>
+        <div class="field"><label>Tervezett befejezés</label><input class="input" type="date" id="kpPEnd" value="${esc(p.planned_end_date||'')}"></div>
+      </div><div class="modalfoot"><button class="btn danger" data-delete>🗑️ Törlés</button><span style="flex:1"></span><button class="btn secondary" data-cancel>Mégse</button><button class="btn" data-save>💾 Mentés</button></div></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector('[data-close]').onclick=closeEditor;
+    m.querySelector('[data-cancel]').onclick=closeEditor;
+    m.querySelector('[data-delete]').onclick=()=>window.kpDeleteProject(id);
+    m.querySelector('[data-save]').onclick=()=>{
+      const before=JSON.parse(JSON.stringify(p));
+      p.name=m.querySelector('#kpPName').value.trim();
+      p.location=m.querySelector('#kpPLocation').value.trim();
+      p.customerId=m.querySelector('#kpPCustomer').value||'';
+      p.customer_id=p.customerId;
+      p.status=m.querySelector('#kpPStatus').value||p.status||'interest';
+      p.contract_value=Number(m.querySelector('#kpPValue').value)||0;
+      p.start_date=m.querySelector('#kpPStart').value||'';
+      p.planned_end_date=m.querySelector('#kpPEnd').value||'';
+      if(!persist()){Object.assign(p,before);return;}
+      closeEditor();
+      window.render();
+      if(typeof window.toast==='function')window.toast('Projekt módosítva és mentve');
+    };
   }
 
   window.kpEditProject=openProjectEditor;
-  window.kpSaveProjectEdit=function(e,id){
-    e.preventDefault();
-    const p=projects().find(x=>String(x.id)===String(id));
-    if(!p)return;
-    const o=Object.fromEntries(new FormData(e.target).entries());
-    p.name=String(o.name||'').trim();
-    p.location=String(o.location||'').trim();
-    p.customerId=String(o.customerId||'');
-    p.customer_id=p.customerId;
-    p.status=String(o.status||p.status||'interest');
-    p.contract_value=Number(o.contract_value)||0;
-    p.start_date=o.start_date||'';
-    p.planned_end_date=o.planned_end_date||'';
-    persist();
-    close();
-    refresh();
-    if(typeof toast==='function')toast('Projekt módosítva');
-  };
-
   window.kpDeleteProject=function(id){
-    const p=projects().find(x=>String(x.id)===String(id));
-    if(!p)return;
+    const p=projects().find(x=>String(x.id)===String(id)); if(!p)return;
     if(!confirm(`Biztosan törlöd a(z) „${p.name||p.project_number||id}” projektet?\n\nA törlés végleges.`))return;
-    db.projects=db.projects.filter(x=>String(x.id)!==String(id));
-    persist();
-    close();
-    refresh();
-    if(typeof toast==='function')toast('Projekt törölve');
+    const old=window.db.projects.slice();
+    window.db.projects=window.db.projects.filter(x=>String(x.id)!==String(id));
+    if(!persist()){window.db.projects=old;return;}
+    closeEditor(); window.render();
+    if(typeof window.toast==='function')window.toast('Projekt törölve és mentve');
   };
 
-  /* A meglévő projektlistát egységes, stabil CRUD-listára cseréljük. */
-  views.projects=function(){
+  window.views.projects=function(){
     const list=projects();
-    return `<div class="panel">
-      <div class="panelhead"><h2>Projektek</h2><button class="btn" onclick="newProject()">+ Új projekt</button></div>
-      <div class="tablewrap"><table class="table">
-        <thead><tr><th>Projekt</th><th>Megrendelő</th><th>Helyszín</th><th>Státusz</th><th>Műveletek</th></tr></thead>
-        <tbody>${list.map(p=>`<tr>
-          <td><a class="link" onclick="kpEditProject('${esc(p.id)}')"><b>${esc(p.name||'Névtelen projekt')}</b></a><div class="label">${esc(p.project_number||'')}</div></td>
-          <td>${esc(customerName(p))}</td>
-          <td>${esc(p.location||'—')}</td>
-          <td><span class="badge ${p.status==='active'?'green':p.status==='completed'?'blue':p.status==='cancelled'?'red':'amber'}">${esc(({interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'}[p.status]||p.status||'—'))}</span></td>
-          <td><div style="display:flex;gap:6px;align-items:center"><button class="btn secondary small" onclick="kpEditProject('${esc(p.id)}')">Szerkesztés</button><button class="btn danger small" onclick="kpDeleteProject('${esc(p.id)}')">Törlés</button></div></td>
-        </tr>`).join('')||'<tr><td colspan="5" class="empty">Nincs projekt.</td></tr>'}</tbody>
-      </table></div>
-    </div>`;
+    return `<div class="panel"><div class="panelhead"><h2>Projektek</h2><button class="btn" id="kpNewProject">+ Új projekt</button></div>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Projekt</th><th>Megrendelő</th><th>Helyszín</th><th>Státusz</th><th>Műveletek</th></tr></thead><tbody>
+      ${list.map(p=>`<tr><td><a class="link" data-edit="${esc(p.id)}"><b>${esc(p.name||'Névtelen projekt')}</b></a><div class="label">${esc(p.project_number||'')}</div></td><td>${esc(customerName(p))}</td><td>${esc(p.location||'—')}</td><td><span class="badge ${p.status==='active'?'green':p.status==='completed'?'blue':p.status==='cancelled'?'red':'amber'}">${esc(({interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'}[p.status]||p.status||'—'))}</span></td><td><div style="display:flex;gap:6px"><button class="btn secondary small" data-edit="${esc(p.id)}">✏️ Szerkesztés</button><button class="btn danger small" data-delete="${esc(p.id)}">🗑️ Törlés</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nincs projekt.</td></tr>'}</tbody></table></div></div>`;
   };
 
-  if(typeof render==='function' && typeof current!=='undefined' && current==='projects') refresh();
+  const oldRender=window.render;
+  window.render=function(){
+    oldRender();
+    if(typeof window.current!=='undefined' && window.current==='projects'){
+      const root=document.querySelector('.content'); if(!root)return;
+      root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProjectEditor(b.dataset.edit));
+      root.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>window.kpDeleteProject(b.dataset.delete));
+      const n=root.querySelector('#kpNewProject'); if(n)n.onclick=()=>{if(typeof window.newProject==='function')window.newProject();};
+    }
+  };
+  if(window.current==='projects')window.render();
 })();
