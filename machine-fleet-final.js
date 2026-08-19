@@ -1,19 +1,26 @@
-/* FINAL Géppark CRUD – az Anyag/Raktár mintájára, eseménykezelőkkel */
+/* FINAL Géppark CRUD – az Anyag/Raktár mintájára, egységes mentéssel */
 (function(){
   'use strict';
   function install(){
     if(typeof views==='undefined' || typeof db==='undefined' || typeof render!=='function') return false;
     const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-    async function persist(){
+    /*
+     * Ugyanaz a mentési modell, mint az Anyag/Raktár oldalon:
+     * a központi save() azonnal elmenti a helyi ERP-adatot, majd megpróbálja
+     * a Supabase szinkront is. A CRUD UI-t nem blokkoljuk a Supabase válaszával.
+     */
+    function persist(){
       try{
         if(typeof window.save!=='function') throw new Error('A központi mentés nem érhető el.');
-        const ok=await window.save();
-        if(ok!==true) throw new Error('A Supabase mentés nem sikerült.');
+        const result=window.save();
+        if(result && typeof result.catch==='function'){
+          result.catch(e=>console.error('Géppark Supabase háttérszinkron:',e));
+        }
         return true;
       }catch(e){
         console.error('Géppark mentés:',e);
-        alert('A gép módosítása nem lett véglegesítve.\n\n'+(e?.message||e));
+        alert('A gép mentése nem sikerült.\n\n'+(e?.message||e));
         return false;
       }
     }
@@ -27,33 +34,33 @@
       const b='<div class="formgrid"><div class="field"><label>Gép neve</label><input class="input" id="fmN" value="'+esc(m.name)+'"></div><div class="field"><label>Típus / modell</label><input class="input" id="fmM" value="'+esc(m.model)+'"></div><div class="field"><label>Üzemóra</label><input class="input" type="number" id="fmH" value="'+(Number(m.hours)||0)+'"></div><div class="field"><label>Következő szerviz</label><input class="input" type="number" id="fmS" value="'+(Number(m.service)||0)+'"></div><div class="field"><label>Állapot</label><select class="select" id="fmSt"><option '+(m.status==='Üzemképes'?'selected':'')+'>Üzemképes</option><option '+(m.status==='Szervizre vár'?'selected':'')+'>Szervizre vár</option><option '+(m.status==='Meghibásodott'?'selected':'')+'>Meghibásodott</option><option '+(m.status==='Üzemen kívül'?'selected':'')+'>Üzemen kívül</option></select></div><div class="field full"><label>Megjegyzés</label><textarea class="textarea" id="fmNo">'+esc(m.notes||'')+'</textarea></div></div>';
       const x=modal('finalMachineEdit','Gép szerkesztése',b,'<button class="btn danger" data-delete>🗑️ Törlés</button><button class="btn secondary" data-c>Mégse</button><button class="btn" data-save>💾 Mentés</button>');
       x.querySelector('[data-c]').onclick=()=>x.remove();
-      x.querySelector('[data-save]').onclick=async()=>{
+      x.querySelector('[data-save]').onclick=()=>{
         m.name=x.querySelector('#fmN').value.trim();
         m.model=x.querySelector('#fmM').value.trim();
         m.hours=Number(x.querySelector('#fmH').value)||0;
         m.service=Number(x.querySelector('#fmS').value)||0;
         m.status=x.querySelector('#fmSt').value;
         m.notes=x.querySelector('#fmNo').value.trim();
-        const ok=await persist();
+        const ok=persist();
         if(!ok){Object.assign(m,before);return;}
         x.remove();
         render();
-        if(typeof toast==='function')toast('Gép módosítva és Supabase-ben mentve');
+        if(typeof toast==='function')toast('Gép módosítva és mentve');
       };
       x.querySelector('[data-delete]').onclick=()=>deleteMachine(id);
     }
 
-    async function deleteMachine(id){
+    function deleteMachine(id){
       const m=(db.machines||[]).find(x=>String(x.id)===String(id));
       if(!m)return;
       if(!confirm('Biztosan törlöd a(z) „'+m.name+'” gépet?'))return;
       const old=db.machines.slice();
       db.machines=db.machines.filter(q=>String(q.id)!==String(id));
-      const ok=await persist();
+      const ok=persist();
       if(!ok){db.machines=old;return;}
       document.getElementById('finalMachineEdit')?.remove();
       render();
-      if(typeof toast==='function')toast('Gép törölve és Supabase-ben mentve');
+      if(typeof toast==='function')toast('Gép törölve és mentve');
     }
 
     function profile(id){const m=(db.machines||[]).find(x=>String(x.id)===String(id));if(!m)return;const x=modal('finalMachineProfile','Gépadatlap – '+esc(m.name),'<div class="kpi"><span>Gép</span><b>'+esc(m.name)+'</b></div><div class="kpi"><span>Típus / modell</span><b>'+esc(m.model||'—')+'</b></div><div class="kpi"><span>Üzemóra</span><b>'+(Number(m.hours)||0)+' h</b></div><div class="kpi"><span>Következő szerviz</span><b>'+(Number(m.service)||0)+' h</b></div><div class="kpi"><span>Állapot</span><b>'+esc(m.status||'—')+'</b></div><div class="kpi"><span>Megjegyzés</span><b>'+esc(m.notes||'—')+'</b></div>','<button class="btn secondary" data-edit>✏️ Szerkesztés</button>');x.querySelector('[data-edit]').onclick=()=>{x.remove();editMachine(id)};}
