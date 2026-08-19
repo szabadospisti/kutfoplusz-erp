@@ -45,6 +45,15 @@
     s.onerror=e=>console.error('Géppark CRUD betöltési hiba',e);
     document.head.appendChild(s);
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadMachineCrud,{once:true});else loadMachineCrud();
-  let mc=0;const mt=setInterval(()=>{loadMachineCrud();if(++mc>40||window.__machineFleetCrudLoaded)clearInterval(mt)},250);
+  function loadProjectCrud(){
+    if(window.__projectCrudLoaded)return;
+    if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;
+    const s=document.createElement('script');
+    s.src='project-crud-fix.js?v=1';
+    s.onload=()=>{window.__projectCrudLoaded=true};
+    s.onerror=e=>console.error('Projekt CRUD betöltési hiba',e);
+    document.head.appendChild(s);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{loadMachineCrud();loadProjectCrud()},{once:true});else {loadMachineCrud();loadProjectCrud();}
+  let mc=0;const mt=setInterval(()=>{loadMachineCrud();loadProjectCrud();if(++mc>40||(window.__machineFleetCrudLoaded&&window.__projectCrudLoaded))clearInterval(mt)},250);
 })();
