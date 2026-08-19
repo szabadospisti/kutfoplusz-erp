@@ -1,7 +1,17 @@
-/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V4 */
+/* Kútfő Plusz ERP – központi mentési és alap CRUD javítások. V5 */
 (function(){
   function localSave(){try{if(typeof localSaveOnly==='function')localSaveOnly();else localStorage.setItem('kutfoplusz_erp_db',JSON.stringify(window.db||{}))}catch(e){console.error(e)}}
-  window.save=async function(){localSave();try{const c=window._supabaseClient;if(!c||!window.db)return;const {data:{user}}=await c.auth.getUser();if(!user)return;const {error}=await c.from('erp_state').upsert({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id},{onConflict:'id'});if(error)throw error}catch(e){console.error('Supabase mentés:',e)}};
+  window.save=async function(){
+    localSave();
+    try{
+      const c=window._supabaseClient;if(!c||!window.db)return false;
+      const {data:{user},error:authError}=await c.auth.getUser();
+      if(authError||!user)return false;
+      const {error}=await c.from('erp_state').upsert({id:'main',data:window.db,updated_at:new Date().toISOString(),updated_by:user.id},{onConflict:'id'});
+      if(error)throw error;
+      return true;
+    }catch(e){console.error('Supabase mentés:',e);return false}
+  };
   function layers(){const t=document.getElementById('wl_layers');if(!t)return;[...t.querySelectorAll('tbody tr')].forEach(r=>{if(r.querySelector('[name="layer_from[]"]'))return;const v=[...r.querySelectorAll('.wl-depth-value')].map(x=>(x.textContent||'').replace(/\s*m\s*$/i,'').trim());const a=document.createElement('input'),b=document.createElement('input');a.type=b.type='hidden';a.name='layer_from[]';b.name='layer_to[]';a.value=v[0]||'';b.value=v[1]||'';r.append(a,b)})}
   function worklogForm(e){if(!e||e.nodeType!==1)return false;return e.id==='wlForm'||!!(e.querySelector?.('#wl_client')&&e.querySelector?.('#wl_layers'))}
   function projectField(f){if(!worklogForm(f))return;const client=f.querySelector('#wl_client');if(!client)return;let field=f.querySelector('#wl_project')?.closest('.field');if(!field){field=document.createElement('div');field.className='field wl-project-field';field.innerHTML='<label for="wl_project">Projekt</label><select id="wl_project" name="projectId" class="select"><option value="">— Nincs projekt —</option></select>';const cf=client.closest('.field');cf?.parentNode?cf.parentNode.insertBefore(field,cf.nextSibling):f.insertBefore(field,f.firstChild)}const s=field.querySelector('#wl_project'), old=s.value||window.__pendingWorklogProjectId||'', ps=window.db?.projects||[], sig=ps.map(p=>String(p.id)+'|'+(p.project_number||'')+'|'+(p.name||'')).join(';');if(s.dataset.sig!==sig){s.innerHTML='<option value="">— Nincs projekt —</option>';ps.forEach(p=>{const o=document.createElement('option');o.value=String(p.id);o.textContent=(p.project_number||p.id)+' – '+(p.name||'');s.append(o)});s.dataset.sig=sig}s.value=old;s.onchange=()=>{window.__pendingWorklogProjectId=s.value||'';const p=ps.find(x=>String(x.id)===String(s.value));if(p&&client.value!==p.customerId){client.value=p.customerId;client.dispatchEvent(new Event('change',{bubbles:true}))}}}
@@ -16,7 +26,7 @@
     if(window.__machineFleetCrudLoaded)return;
     if(typeof window.views==='undefined'||typeof window.render!=='function'||typeof window.db==='undefined')return;
     const s=document.createElement('script');
-    s.src='machine-fleet-final.js?v=7';
+    s.src='machine-fleet-final.js?v=8';
     s.onload=()=>{window.__machineFleetCrudLoaded=true};
     s.onerror=e=>console.error('Géppark CRUD betöltési hiba',e);
     document.head.appendChild(s);
