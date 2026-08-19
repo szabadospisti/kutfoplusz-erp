@@ -1756,7 +1756,7 @@ window.addEventListener("beforeunload",()=>{try{if(document.getElementById("wlFo
     if(!select) return;
     select.value=String(projectId);
     select.dispatchEvent(new Event('change',{bubbles:true}));
-    var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];
+    var projects=(typeof db!=='undefined'&&db&&Array.isArray(db.projects))?db.projects:[];
     var p=projects.find(function(x){return String(x.id)===String(projectId)});
     if(!p) return;
     var client=document.getElementById('wl_client');
