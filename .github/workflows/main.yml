@@ -30,13 +30,8 @@ jobs:
         run: |
           from pathlib import Path
           page = Path('index.html').read_text(encoding='utf-8')
-          nav_marker = '<nav id="nav">'
-          inbox_button = '<button class="nav" data-page="inbox" onclick="openInbox()"><i>📥</i>Beérkező dokumentumok</button>'
-          if 'data-page="inbox"' not in page:
-              if nav_marker not in page: raise SystemExit('index.html: #nav marker not found')
-              page = page.replace(nav_marker, nav_marker + '\n    ' + inbox_button, 1)
           patches = [
-              'customer-work-types.js','ui-polish.js','ai-inbox-pilot.js','ai-quote-prep.js','inbox-file-upload.js',
+              'customer-work-types.js','ui-polish.js','ai-quote-prep.js',
               'warehouse-materials.js','warehouse-material-delete.js','warehouse-material-edit.js','erp-fixes.js',
               'machine-fleet-actions.js','machine-fleet-final.js','erp-delete-manager.js','customer-details-actions.js','customer-details-dom-fix.js'
           ]
@@ -53,7 +48,7 @@ jobs:
           required=['kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
-          print('OK: customer/project/quote/worklog delete layer and customer detail DOM fix present')
+          print('OK: stable ERP modules present; inbox pilot intentionally disabled')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
