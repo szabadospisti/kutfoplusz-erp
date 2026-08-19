@@ -11,28 +11,44 @@
   async function install(){for(let i=0;i<100&&(!window.KPProjectSupabase||!window.db);i++)await sleep(100);if(!window.KPProjectSupabase||!window.db)return;try{await loadProjects();await loadWorklogs();if(typeof save==='function')save();}catch(e){console.error('ERP Supabase betöltés:',e);}if(typeof window.wlSave==='function'&&!window.__KP_WL_SUPABASE_HOOKED__){window.wlSave=async function(){try{document.querySelectorAll('#wl_layers .wl-layer-type').forEach((el,i)=>{if(window.wlLayers&&wlLayers[i])wlLayers[i][2]=el.value});const o=window.wlCollect();const remote=await saveWorklogRemote(o);o.supabaseId=remote.id;const idx=db.worklogs.findIndex(x=>String(x.id)===String(o.id));if(idx>=0)db.worklogs[idx]=o;else db.worklogs.push(o);if(typeof wlClearDraft==='function')wlClearDraft(o.id);if(typeof closeModal==='function')closeModal();if(typeof nav==='function')nav('worklogs');if(typeof toast==='function')toast('Munkanapló, rétegsor és szűrők Supabase-ben mentve');}catch(e){console.error(e);if(typeof toast==='function')toast('Hiba: '+(e.message||e));}};window.__KP_WL_SUPABASE_HOOKED__=true;}}
   window.KPSupabaseSync={loadProjects,loadWorklogs,saveWorklogRemote};install();
 
-  // Projekt -> Munkanapló: közvetlen, megbízható előválasztás.
-  // Nem a modal megnyitása UTÁN próbáljuk kitalálni a projektet, hanem
-  // közvetlenül átadjuk a projekt helyi azonosítóját az editornek.
+  // Projekt -> Munkanapló közvetlen előválasztás.
   (async function bindProjectWorklog(){
     for(let i=0;i<120;i++){
       if(typeof window.detailedWorklogEditor==='function' && typeof window.newWorklogFor==='function') break;
       await sleep(100);
     }
     if(typeof window.detailedWorklogEditor!=='function') return;
+    function applyProject(pid){
+      const projectId=String(pid||'');
+      if(!projectId)return;
+      const p=(window.db&&Array.isArray(db.projects))?db.projects.find(x=>String(x.id)===projectId):null;
+      const projectSelect=document.getElementById('wl_project');
+      const customerSelect=document.getElementById('wl_client');
+      const locationInput=document.getElementById('wl_location');
+      if(projectSelect){projectSelect.value=projectId;projectSelect.dispatchEvent(new Event('change',{bubbles:true}));}
+      if(p&&customerSelect&&p.customerId){customerSelect.value=String(p.customerId);customerSelect.dispatchEvent(new Event('change',{bubbles:true}));}
+      if(p&&locationInput&&!locationInput.value)locationInput.value=p.location||'';
+    }
     window.newWorklogFor=function(projectId){
       const pid=String(projectId||'');
       window.__kpPendingWorklogProjectId=pid;
       window.detailedWorklogEditor(null,pid);
-      setTimeout(function(){
-        const p=(window.db&&Array.isArray(db.projects))?db.projects.find(x=>String(x.id)===pid):null;
-        const projectSelect=document.getElementById('wl_project');
-        const customerSelect=document.getElementById('wl_client');
-        const locationInput=document.getElementById('wl_location');
-        if(projectSelect){projectSelect.value=pid;projectSelect.dispatchEvent(new Event('change',{bubbles:true}));}
-        if(p&&customerSelect&&p.customerId){customerSelect.value=String(p.customerId);customerSelect.dispatchEvent(new Event('change',{bubbles:true}));}
-        if(p&&locationInput&&!locationInput.value) locationInput.value=p.location||'';
-      },50);
+      setTimeout(()=>applyProject(pid),50);
+      setTimeout(()=>applyProject(pid),300);
+      setTimeout(()=>applyProject(pid),800);
     };
+    // A későbbi script is felülírhatja a globális newWorklogFor függvényt.
+    // Ezért a Projekt -> Munkanapló gomb kattintását is figyeljük capture fázisban.
+    document.addEventListener('click',function(e){
+      const btn=e.target&&e.target.closest?e.target.closest('button'):null;
+      if(!btn)return;
+      const code=btn.getAttribute('onclick')||'';
+      const m=code.match(/newWorklogFor\(['"]([^'"]+)['"]\)/);
+      if(!m)return;
+      const pid=m[1];
+      setTimeout(()=>applyProject(pid),80);
+      setTimeout(()=>applyProject(pid),400);
+      setTimeout(()=>applyProject(pid),1000);
+    },true);
   })();
 })();
