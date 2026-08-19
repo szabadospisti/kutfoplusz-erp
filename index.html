@@ -1190,7 +1190,7 @@ function saveProject(e){e.preventDefault();let o=Object.fromEntries(new FormData
 function projectDetails(id){let p=db.projects.find(x=>x.id===id),pr=p.value-p.cost;openDrawer(p.id,`<h2>${esc(p.name)}</h2><p class="label">${esc(p.location)} · ${esc(cust(p.customerId))}</p><div class="cards" style="grid-template-columns:1fr 1fr"><div class="card"><div class="label">Érték</div><div class="value">${money(p.value)}</div></div><div class="card"><div class="label">Profit</div><div class="value ${pr>=0?'green':'red'}">${money(pr)}</div></div></div><p><b>Készültség:</b> ${p.progress||0}%</p><p><b>Státusz:</b> ${esc(p.status)}</p><p><b>Tervezett költség:</b> ${money(p.planned)}</p><p><b>Tényleges költség:</b> ${money(p.cost)}</p><hr><button class="btn secondary" onclick="newWorklogFor('${p.id}')">+ Munkanapló</button>`)}
 let editingWorklogId=null, wlLayers=[], wlFilters=[["0","3","Vak"]];
 function newWorklog(){openWorklogEditor()}
-function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor()}
+function newWorklogFor(pid){window.__kpPendingWorklogProjectId=pid||"";openWorklogEditor();setTimeout(function(){window.__KP_PRESELECT_WORKLOG__(pid)},0)}
 function detailedWorklogEditor(id,projectId){
  editingWorklogId=id||null;
  const w=id?db.worklogs.find(x=>x.id===id):null;
@@ -1746,5 +1746,30 @@ window.addEventListener("beforeunload",()=>{try{if(document.getElementById("wlFo
   };
 })();
 </script>
+<!-- KP_PROJECT_PRESELECT_V2 -->
+<script>
+(function(){
+  function preselect(pid){
+    var projectId=pid||window.__kpPendingWorklogProjectId||'';
+    if(!projectId) return;
+    var select=document.getElementById('wl_project');
+    if(!select) return;
+    select.value=String(projectId);
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+    var projects=(window.db&&Array.isArray(window.db.projects))?window.db.projects:[];
+    var p=projects.find(function(x){return String(x.id)===String(projectId)});
+    if(!p) return;
+    var client=document.getElementById('wl_client');
+    if(client && p.customerId){
+      client.value=String(p.customerId);
+      client.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    var loc=document.getElementById('wl_location');
+    if(loc && p.location && !loc.value) loc.value=p.location;
+  }
+  window.__KP_PRESELECT_WORKLOG__=preselect;
+})();
+</script>
+
 </body>
 </html>
