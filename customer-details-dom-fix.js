@@ -1,96 +1,82 @@
-/* Kútfő Plusz ERP – ügyfél adatlap műveletek. */
+/* Kútfő Plusz ERP – végleges ügyfél adatlap műveletek.
+   Fontos: az ERP adatbázisa `let db` változó, ezért nem window.db.
+   A javítás közvetlenül a globális #drawer / #dbody nézetet kezeli. */
 (function(){
   'use strict';
-  let lastCustomerId=null;
 
-  function visible(e){
-    if(!e)return false;
-    const s=getComputedStyle(e),r=e.getBoundingClientRect();
-    return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0;
+  function getDB(){
+    try { return (typeof db !== 'undefined') ? db : null; }
+    catch(e){ return null; }
   }
 
-  function rememberFromClicks(){
-    document.addEventListener('click',function(ev){
-      const el=ev.target.closest&&ev.target.closest('[onclick]');
-      if(!el)return;
-      const code=el.getAttribute('onclick')||'';
-      const m=code.match(/customerDetails\s*\(\s*["']([^"']+)["']/);
-      if(m) lastCustomerId=m[1];
-      setTimeout(add,50);
-    },true);
+  function visible(el){
+    if(!el) return false;
+    var s=getComputedStyle(el), r=el.getBoundingClientRect();
+    return s.display!=='none' && s.visibility!=='hidden' && r.width>0 && r.height>0;
   }
 
-  function findCustomerId(){
-    if(lastCustomerId)return lastCustomerId;
-    const els=[...document.querySelectorAll('[onclick]')];
-    for(const el of els){
-      const code=el.getAttribute('onclick')||'';
-      const m=code.match(/customerDetails\s*\(\s*["']([^"']+)["']/);
-      if(m)return m[1];
-    }
-    const db=window.db||{};
-    const cs=Array.isArray(db.customers)?db.customers:[];
-    const hs=[...document.querySelectorAll('h1,h2,h3')].filter(visible);
-    for(const h of hs){
-      const n=(h.textContent||'').trim();
-      if(!n||/ügyfél|ajánlatok|projektek/i.test(n))continue;
-      const c=cs.find(x=>String(x.name||'').trim()===n||String(x.company_name||'').trim()===n);
-      if(c)return c.id;
-    }
-    return null;
+  function getCustomer(){
+    var data=getDB();
+    if(!data || !Array.isArray(data.customers)) return null;
+
+    var title=document.getElementById('dtitle');
+    if(!title) return null;
+    var name=(title.textContent||'').trim();
+    if(!name) return null;
+
+    return data.customers.find(function(c){
+      return String(c.name||'').trim()===name || String(c.company_name||'').trim()===name;
+    }) || null;
   }
 
-  function findHost(){
-    const candidates=[...document.querySelectorAll('body *')].filter(visible).filter(e=>{
-      const t=(e.textContent||'');
-      return /Ajánlatok\s*\(/.test(t)&&/Projektek\s*\(/.test(t);
-    });
-    return candidates.sort((a,b)=>a.children.length-b.children.length)[0]||null;
-  }
+  function addActions(){
+    var drawer=document.getElementById('drawer');
+    var body=document.getElementById('dbody');
+    if(!drawer || !body || !drawer.classList.contains('open')) return;
 
-  function add(){
-    if(document.getElementById('kpCustomerDetailActions'))return;
-    const id=findCustomerId();
-    const host=findHost();
-    if(!id||!host)return;
+    var customer=getCustomer();
+    if(!customer) return;
 
-    const box=document.createElement('div');
+    var old=document.getElementById('kpCustomerDetailActions');
+    if(old) old.remove();
+
+    var box=document.createElement('div');
     box.id='kpCustomerDetailActions';
-    box.className='no-print';
-    box.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 4px;padding-top:16px;border-top:1px solid #e3e8ee;position:relative;z-index:9999;pointer-events:auto';
+    box.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid #e3e8ee;position:relative;z-index:9999;pointer-events:auto;';
 
-    const edit=document.createElement('button');
-    edit.type='button';edit.className='btn secondary';edit.textContent='✏️ Szerkesztés';
+    var edit=document.createElement('button');
+    edit.type='button';
+    edit.className='btn secondary';
+    edit.textContent='✏️ Szerkesztés';
     edit.onclick=function(){
-      if(typeof window.editCustomer==='function')window.editCustomer(id);
-      else if(typeof window.openCustomerEdit==='function')window.openCustomerEdit(id);
-      else alert('A szerkesztő funkció nem érhető el.');
+      var id=customer.id;
+      if(typeof editCustomer==='function') editCustomer(id);
+      else if(typeof newCustomer==='function') newCustomer(customer);
     };
 
-    const del=document.createElement('button');
-    del.type='button';del.className='btn danger';del.textContent='🗑️ Törlés';
-    del.onclick=async function(){
-      try{
-        if(typeof window.deleteCustomer==='function')await window.deleteCustomer(id);
-        else if(typeof window.kpDeleteCustomer==='function')await window.kpDeleteCustomer(id);
-        else alert('A törlési funkció nem érhető el.');
-      }catch(e){
-        console.error(e);
-        if(typeof window.toast==='function')window.toast(e.message||'A törlés nem sikerült');
-        else alert(e.message||'A törlés nem sikerült');
-      }
+    var del=document.createElement('button');
+    del.type='button';
+    del.className='btn danger';
+    del.textContent='🗑️ Törlés';
+    del.onclick=function(){
+      var id=customer.id;
+      if(typeof deleteCustomer==='function') return deleteCustomer(id);
+      if(typeof kpDeleteCustomer==='function') return kpDeleteCustomer(id);
+      alert('A törlési funkció nem érhető el.');
     };
 
-    box.append(edit,del);
-    host.appendChild(box);
+    box.appendChild(edit);
+    box.appendChild(del);
+    body.appendChild(box);
   }
 
   function boot(){
-    rememberFromClicks();
-    add();
-    new MutationObserver(add).observe(document.body,{childList:true,subtree:true});
-    setInterval(add,500);
+    addActions();
+    var observer=new MutationObserver(function(){ addActions(); });
+    observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    setInterval(addActions,500);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
 })();
