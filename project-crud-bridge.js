@@ -12,16 +12,15 @@
   bootstrap().then(async function(){
     await loadScript('project-crud-live.js');
     await waitForProjectCrud();
-    /* Szerkesztés megnyitásakor mindig a Supabase aktuális értékeit tölti vissza. */
     await loadScript('project-edit-live.js');
     await loadScript('erp-supabase-sync.js');
     await loadScript('erp-delete-manager.js');
     await loadScript('customer-details-dom-fix.js');
     await loadScript('project-worklog-auto-link.js');
     await loadScript('worklog-project-lock.js');
-    /* Anyag/Raktár CRUD: ugyanaz a szerkesztés/mentés/törlés UX, mint az Ügyfeleknél. */
     await loadScript('material-crud-fix.js');
-    /* Géppark CRUD: ugyanaz a stabil soronkénti Szerkesztés/Törlés működés. */
     await loadScript('machine-fleet-final.js');
+    /* A végleges Géppark modul után ismét betöltjük az új-eszköz modult, hogy az esetleges régi newMachine/profile definíciókat biztosan felülírja. */
+    await loadScript('machine-new-unified.js');
   }).catch(function(err){console.error('Supabase project bridge:',err);});
 })();
