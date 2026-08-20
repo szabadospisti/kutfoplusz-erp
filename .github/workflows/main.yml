@@ -72,13 +72,33 @@ jobs:
           for x in required:
             if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
           print('OK: static Rendszer nav + final Géppark bridge + runtime guard')
-      - name: JavaScript syntax check
-        shell: bash
+      - name: JavaScript syntax gate
+        shell: python
         run: |
-          node --check machine-fleet.js
-          node --check machine-fleet-bridge.js
-          node --check system-workflow.js
-          node --check erp-fixes.js
+          from pathlib import Path
+          import re, subprocess
+          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js']
+          failed=False
+          for name in files:
+            r=subprocess.run(['node','--check',name],text=True,capture_output=True)
+            if r.returncode:
+              failed=True
+              print(f'EXTERNAL_JS_SYNTAX_ERROR: {name}')
+              print(r.stderr)
+          page=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',page,re.I)
+          if not blocks:
+            raise SystemExit('BUILD ERROR: no inline JavaScript blocks found')
+          for i,code in enumerate(blocks,1):
+            path=Path(f'/tmp/pages-inline-{i}.js')
+            path.write_text(code,encoding='utf-8')
+            r=subprocess.run(['node','--check',str(path)],text=True,capture_output=True)
+            if r.returncode:
+              failed=True
+              print(f'INLINE_JS_SYNTAX_ERROR: block {i}')
+              print(r.stderr)
+          if failed: raise SystemExit(1)
+          print(f'OK: {len(files)} critical external JS files and {len(blocks)} inline blocks passed node --check')
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
