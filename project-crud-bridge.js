@@ -1,10 +1,14 @@
-/* Kútfő Plusz ERP – egyetlen projekt CRUD + Supabase/workflow bridge.
- * A Géppark betöltése teljesen független a projekt CRUD-tól.
- * Hiányzó opcionális modul nem állíthatja le a teljes bootstrap folyamatot.
+/* Kútfő Plusz ERP – Projektek központi CRUD bridge.
+ *
+ * FONTOS: a Projekt modul egyetlen adatútja a project-fleet-bridge.js:
+ * db.projects -> központi save() -> Supabase erp_state.
+ *
+ * Nem töltünk be régi project-crud-live / project-edit-live / direct
+ * Supabase projects-table író modulokat, mert ezek párhuzamos mentési
+ * útvonalat és eltérő adatmodellt hoztak létre.
  */
 (function(){
   'use strict';
-
   function loadScript(src){
     return new Promise(function(resolve,reject){
       var s=document.createElement('script');
@@ -15,76 +19,45 @@
     });
   }
 
-  async function safeLoad(src){
-    try{
-      await loadScript(src);
-      console.info('[ERP] Betöltve:',src);
-      return true;
-    }catch(err){
-      console.warn('[ERP] Opcionális modul kihagyva:',src,err.message);
+  function install(){
+    if(window.__KP_PROJECT_CENTRAL_BRIDGE__) return true;
+    if(typeof window.views==='undefined' || typeof window.render!=='function') return false;
+    if(typeof window.__pfCreate!=='function' || typeof window.__pfEdit!=='function' || typeof window.__pfProfile!=='function' || typeof window.__pfDelete!=='function') return false;
+
+    /* A régi index.html-es Projekt gombok ugyanide kerülnek átirányításra. */
+    window.openProject=function(){ return window.__pfCreate(); };
+    window.editProject=function(id){ return window.__pfEdit(id); };
+    window.projectDetails=function(id){ return window.__pfProfile(id); };
+    window.deleteProject=function(id){ return window.__pfDelete(id); };
+
+    /* Régi form-handler csak kompatibilitási név; az új UI nem használja. */
+    window.saveProject=function(e){
+      if(e&&e.preventDefault)e.preventDefault();
+      console.warn('[ERP] A régi saveProject() útvonal le van tiltva; a központi Projekt CRUD kezeli a mentést.');
       return false;
-    }
+    };
+    window.saveProjectEdit=function(e){
+      if(e&&e.preventDefault)e.preventDefault();
+      console.warn('[ERP] A régi saveProjectEdit() útvonal le van tiltva; a központi Projekt CRUD kezeli a mentést.');
+      return false;
+    };
+
+    window.__KP_PROJECT_CENTRAL_BRIDGE__=true;
+    console.info('[ERP] Projektek: single central CRUD active');
+    return true;
   }
 
-  safeLoad('machine-fleet-bridge.js').then(function(ok){
-    if(ok) return safeLoad('machine-fleet-force.js');
-    return false;
-  });
-
-  safeLoad('system-workflow.js');
-
-  async function waitForConfig(){
-    if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
-
-    /* A projekt CRUD nem függhet attól, hogy az index.html milyen sorrendben
-       tölti a konfigurációs scriptet. Ha még nincs jelen, központilag betöltjük. */
-    try{
-      await loadScript('supabase_config.js');
-    }catch(err){
-      console.warn('[ERP] supabase_config.js automatikus betöltése sikertelen:',err.message);
-    }
-
-    if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
-    for(var i=0;i<100;i++){
-      await new Promise(function(r){setTimeout(r,50)});
-      if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
-    }
-    throw new Error('Supabase konfiguráció nem töltődött be.');
+  function boot(){
+    loadScript('project-fleet-bridge.js').catch(function(err){
+      console.error('[ERP] Projekt központi bridge betöltési hiba:',err);
+    });
+    loadScript('system-workflow.js').catch(function(err){
+      console.warn('[ERP] Rendszer workflow nem töltődött be:',err);
+    });
+    var n=0;
+    var timer=setInterval(function(){
+      if(install()||++n>160)clearInterval(timer);
+    },50);
   }
-
-  async function waitForProjectCrud(){
-    for(var i=0;i<120;i++){
-      if(window.KPProjectCRUDLive)return true;
-      await new Promise(function(r){setTimeout(r,50)});
-    }
-    throw new Error('Az egységes projekt CRUD nem töltődött be.');
-  }
-
-  async function bootstrap(){
-    await waitForConfig();
-    if(!window.KPProjectSupabase)await loadScript('project-crud-supabase.js');
-    if(!window.KPProjectSupabase)throw new Error('Supabase projekt CRUD adapter nem töltődött be.');
-    return window.KPProjectSupabase;
-  }
-
-  window.KPProjectCRUD={
-    ready:bootstrap,
-    async list(){return(await bootstrap()).list();},
-    async create(p){return(await bootstrap()).create(p);},
-    async update(id,p){return(await bootstrap()).update(id,p);},
-    async remove(id){return(await bootstrap()).remove(id);}
-  };
-
-  bootstrap().then(async function(){
-    await safeLoad('project-crud-live.js');
-    await waitForProjectCrud();
-    await safeLoad('project-edit-live.js');
-    await safeLoad('erp-supabase-sync.js');
-    await safeLoad('erp-delete-manager.js');
-    await safeLoad('project-worklog-auto-link.js');
-    await safeLoad('worklog-project-lock.js');
-    await safeLoad('material-crud-fix.js');
-  }).catch(function(err){
-    console.error('Supabase project bridge:',err);
-  });
+  boot();
 })();
