@@ -38,7 +38,7 @@ jobs:
           marker='</script>'; pos=page.rfind(marker)
           if pos<0: raise SystemExit('index.html: closing script tag not found')
           page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
-          machine_script='<script src="machine-fleet-final.js?v=5"></script>\n<script src="machine-profile-edit-inline.js?v=2"></script>\n'
+          machine_script='<script src="machine-fleet-crud.js?v=1"></script>\n'
           page=page.replace('</body>',machine_script+'</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
@@ -47,13 +47,13 @@ jobs:
         run: |
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['machine-fleet-final.js','machine-profile-edit-inline.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
+          required=['machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
-          forbidden=['machine-fleet-actions.js','machine-profile-native.js','machine-fleet-stable.js']
+          forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
           present=[x for x in forbidden if x in page]
           if present: raise SystemExit('BUILD ERROR: legacy machine modules present: '+', '.join(present))
-          print('OK: one authoritative machine fleet module')
+          print('OK: one authoritative machine CRUD module')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
