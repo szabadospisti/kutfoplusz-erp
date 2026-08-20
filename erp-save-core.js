@@ -33,14 +33,14 @@
     const current=window.db.customers;
     const currentIds=new Set(current.map(c=>String(c.id||'')));
 
-    // A központi customers tábla a CRUD tartós adatforrása.
     for(const c of current){
       const p=customerPayload(c);
       if(!p.id||!p.name) continue;
       const old=customerSnapshot[p.id];
       if(old && JSON.stringify(old)===JSON.stringify(p)) continue;
       const existing=await customerRequest('customers?id=eq.'+encodeURIComponent(p.id)+'&select=id',{method:'GET'});
-      if(Array.isArray(existing)&&existing.length){
+      const existingRows=await existing.json();
+      if(Array.isArray(existingRows)&&existingRows.length){
         await customerRequest('customers?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(p)});
       }else{
         await customerRequest('customers',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(p)});
@@ -48,7 +48,6 @@
       customerSnapshot[p.id]=p;
     }
 
-    // Csak olyan rekordot törlünk, amelyet ez a kliens korábban már ismert.
     for(const id of Object.keys(customerSnapshot)){
       if(!currentIds.has(id)){
         await customerRequest('customers?id=eq.'+encodeURIComponent(id),{method:'DELETE'});
@@ -60,44 +59,34 @@
   async function loadCustomers(){
     if(!window.db||!window.KPSupabaseAuth?.request) return;
     try{
-      const rows=await customerRequest('customers?select=*&order=created_at.asc',{method:'GET'});
+      const r=await customerRequest('customers?select=*&order=created_at.asc',{method:'GET'});
+      if(!r.ok)return;
+      const rows=await r.json();
       if(!Array.isArray(rows)) return;
       const local=Array.isArray(window.db.customers)?window.db.customers:[];
       const byId=new Map(local.map(c=>[String(c.id),c]));
       rows.forEach(r=>{
-        const id=String(r.id);
-        if(!byId.has(id)){
-          byId.set(id,{id,name:r.name||'',taxNumber:r.tax||'',companyNo:r.company_no||'',contact:r.contact||'',phone:r.phone||'',email:r.email||'',address:r.address||'',notes:r.notes||'',status:r.status==='Inaktív'?'inactive':'active'});
-        }
-        customerSnapshot[id]=customerPayload(byId.get(id));
+        if(!byId.has(String(r.id)))byId.set(String(r.id),{id:r.id,name:r.name||'',taxNumber:r.tax_number||'',companyNo:r.company_number||'',contact:r.contact_person||'',phone:r.phone||'',email:r.email||'',address:r.address||'',billingAddress:r.billing_address||'',notes:r.notes||'',status:r.status==='Inaktív'?'inactive':'active'});
       });
       window.db.customers=Array.from(byId.values());
     }catch(e){console.warn('[ERP] Ügyfelek Supabase betöltése:',e);}
   }
 
   function install(){
-    if(typeof window.supabaseCloudSave!=='function' || (typeof window.localSaveOnly!=='function' && typeof window.db==='undefined')) return false;
-    window.save=async function(){
-      if(typeof window.db!=='undefined'){
-        try{localStorage.setItem('kutfoplusz_erp_v12',JSON.stringify(window.db));}catch(e){}
-      }
-      if(typeof window.supabaseCloudSave!=='function') throw new Error('A központi Supabase mentés nem érhető el.');
-      await syncCustomers();
-      await window.supabaseCloudSave();
-      if(typeof window.setCloudStatus==='function')window.setCloudStatus('☁️ Mentve');
-      return true;
-    };
-    window.__KP_SAVE_CORE__=true;
+    if(typeof window.localSaveOnly!=='function' && typeof window.db==='undefined') return false;
     window.KPCustomerSupabase={load:loadCustomers,sync:syncCustomers};
-    (async()=>{
-      for(let i=0;i<100&&!window.KPSupabaseAuth;i++) await sleep(100);
-      await loadCustomers();
-      customerSnapshot={};
-      (window.db?.customers||[]).forEach(c=>{const p=customerPayload(c);if(p.id)customerSnapshot[p.id]=p;});
-    })();
-    console.info('[ERP] Central save core active; customers use Supabase customers table');
+    console.info('[ERP] Central save core active; relational bridge will own cloud persistence');
     return true;
   }
   let n=0,t=setInterval(()=>{if(install()||++n>200)clearInterval(t)},50);
   install();
+
+  // The HTML application already loads this save-core file. Keep the relational
+  // bridge as a separate module so the legacy UI does not need a large rewrite.
+  const s=document.createElement('script');
+  s.src='erp-relational-bridge-v3.js?build=3';
+  s.async=false;
+  s.onload=()=>console.info('[ERP] Relational bridge v3 loaded');
+  s.onerror=e=>console.error('[ERP] Relational bridge load failed',e);
+  document.head.appendChild(s);
 })();
