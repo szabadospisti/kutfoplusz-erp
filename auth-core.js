@@ -63,6 +63,7 @@
       showERP(j.user);
     }catch(err){console.error('[ERP] Login:',err);status(err.message||'Sikertelen bejelentkezés',true)}
   };
+  window.__KP_AUTH_LOGIN__=window.supabaseLogin;
 
   window.supabaseSignup=async function(){
     const email=(document.getElementById('authEmail')?.value||'').trim();
@@ -89,11 +90,27 @@
     try{
       let active=ss;
       const test=await fetch(SB_URL+'/auth/v1/user',{headers:headers(ss.access_token)});
-      if(test.status===401){active=await refresh();if(!active)throw new Error('Session lejárt')}
+      if(test.status===401){
+        active=await refresh();
+        if(!active)throw new Error('Session lejárt');
+      }else if(test.status===403){
+        // A 403 from /auth/v1/user is not proof that the stored session is invalid.
+        // Keep the session and use the user object already carried by the token response.
+        active=ss;
+      }else if(test.ok){
+        const user=await test.json();
+        active=Object.assign({},active,{user:user});
+        setSession(active);
+      }
       if(!active?.user)throw new Error('Érvénytelen Supabase session');
-      try{await cloudLoad()}catch(err){console.warn('[ERP] Cloud load on boot:',err)}
+      try{await cloudLoad()}catch(err){console.warn('[ERP] Cloud load on boot:',err);}
       showERP(active.user);
-    }catch(err){console.warn('[ERP] Auth boot:',err);clearSession();showLogin();status('Jelentkezz be újra. '+(err.message||''),true)}
+    }catch(err){
+      console.warn('[ERP] Auth boot:',err);
+      // Only a failed refresh means the session is definitely unusable.
+      if(!session()?.access_token){clearSession();showLogin();status('Jelentkezz be újra. '+(err.message||''),true);return}
+      showERP(session().user||{});
+    }
   };
 
   setTimeout(function(){window.__KP_AUTH_BOOT__();},0);
