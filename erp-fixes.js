@@ -1,8 +1,10 @@
-/* Kútfő Plusz ERP – modulbetöltő és alap CRUD javítások. V11
+/* Kútfő Plusz ERP – modulbetöltő és alap CRUD javítások. V12
  *
  * A központi mentést az index.html saját save() útvonala kezeli:
  * localStorage + Supabase erp_state.
- * Ez a fájl NEM definiálhat window.save()-ot és NEM írhat közvetlenül erp_state-ba.
+ *
+ * A Gépparkot a deploy build közvetlenül a machine-fleet.js-ből injektálja,
+ * ezért ez a bridge NEM tölt régi Géppark-modulokat, és NEM definiál window.save()-ot.
  */
 (function(){
   function loadScriptOnce(name,src,flag){
@@ -15,15 +17,12 @@
     document.head.appendChild(s);
   }
 
-  function loadMachineCrud(){loadScriptOnce('Géppark','machine-fleet-final.js?v=11','__machineFleetCrudLoaded')}
-  function loadNewMachine(){loadScriptOnce('Új eszköz teljes adatlap','machine-new-form-v2.js?v=1','__machineNewFormV2Loaded')}
+  // A Géppark nem kerül ide: a build közvetlenül a machine-fleet.js-t injektálja.
   function loadProjectCrud(){loadScriptOnce('Projekt CRUD','project-crud-fix.js?v=2','__projectCrudLoaded')}
   function loadProjectSync(){loadScriptOnce('Projekt Supabase sync','project-sync-fix.js?v=1','__projectSyncLoaded')}
   function loadProjectSaveFinal(){loadScriptOnce('Projekt végleges Supabase mentés','project-save-final.js?v=1','__projectSaveFinalLoaded')}
 
   function loadAll(){
-    loadMachineCrud();
-    loadNewMachine();
     loadProjectCrud();
     loadProjectSync();
     loadProjectSaveFinal();
@@ -36,8 +35,6 @@
   const mt=setInterval(()=>{
     loadAll();
     if(++mc>40||(
-      window.__machineFleetCrudLoaded&&
-      window.__machineNewFormV2Loaded&&
       window.__projectCrudLoaded&&
       window.__projectSyncLoaded&&
       window.__projectSaveFinalLoaded
