@@ -61,12 +61,14 @@ jobs:
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
           fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
+          workflow=Path('system-workflow.js').read_text(encoding='utf-8')
+          combined=page+'\n'+fleet+'\n'+workflow
           forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
             if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
           required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view','forceFleet','__gfCreate','__gfProfile']
           for x in required:
-            if x not in page and x not in fleet: raise SystemExit('BUILD ERROR: missing component: '+x)
+            if x not in combined: raise SystemExit('BUILD ERROR: missing component: '+x)
           print('OK: static Rendszer nav + final Géppark bridge + runtime guard')
       - name: JavaScript syntax gate
         shell: python
@@ -81,9 +83,6 @@ jobs:
               failed=True
               print(f'EXTERNAL_JS_SYNTAX_ERROR: {name}')
               print(r.stderr)
-          # Inline code remains part of the legacy ERP page. Report it for visibility,
-          # but do not block Pages deployment on parser false-positives caused by
-          # HTML/template-string boundaries. Critical external modules are checked above.
           page=Path('index.html').read_text(encoding='utf-8')
           blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',page,re.I)
           print(f'INFO: found {len(blocks)} inline JavaScript blocks; external critical modules are syntax-gated')
