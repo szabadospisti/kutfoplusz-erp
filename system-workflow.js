@@ -27,4 +27,18 @@ async function renderPage(){installNav();const c=document.getElementById('conten
 async function details(id){const box=document.getElementById('wf_details');if(!box)return;box.innerHTML='<div class="notice">Jobok betöltése…</div>';try{const jobs=await getJobs(id);box.innerHTML='<div class="card"><div class="panelhead"><h2>Workflow jobok</h2></div>'+(jobs.length?jobs.map(j=>'<div class="kpi"><span>'+icon(j)+' <b>'+esc(j.name)+'</b></span><span>'+esc(j.conclusion||j.status||'—')+'</span></div>').join(''):'<div class="empty">Nincsenek jobok.</div>')+'</div>';}catch(e){box.innerHTML='<div class="notice">🔴 '+esc(e.message)+'</div>';}}
 window.openSystemWorkflow=renderPage;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installNav);else installNav();
+
+/* Új ajánlat státusz javítás: a collectQuoteTemplate() második, hibás
+   status:"Piszkozat" értéke felülírta a választott státuszt. A meglévő
+   központi függvényt itt korrigáljuk, minden más működés változatlan. */
+const _kpCollectQuoteTemplate=window.collectQuoteTemplate;
+if(typeof _kpCollectQuoteTemplate==='function' && !window.__KP_QUOTE_STATUS_FIX__){
+  window.collectQuoteTemplate=function(){
+    const o=_kpCollectQuoteTemplate.apply(this,arguments);
+    const select=document.getElementById('q_status');
+    o.status=select?.value||'Piszkozat';
+    return o;
+  };
+  window.__KP_QUOTE_STATUS_FIX__=true;
+}
 })();
