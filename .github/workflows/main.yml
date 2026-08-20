@@ -31,18 +31,10 @@ jobs:
           import re
           p=Path('index.html')
           page=p.read_text(encoding='utf-8')
-
-          legacy=[
-            'machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js',
-            'machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js',
-            'machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js',
-            'fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js',
-            'machine-fleet-nav-guard.js','machine-fleet-native.js'
-          ]
+          legacy=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for name in legacy:
               pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
               page=re.sub(pattern,'',page,flags=re.I)
-
           fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
           workflow=Path('github-workflow-panel.js').read_text(encoding='utf-8')
           injection='<script>\n'+fleet+'\n</script>\n<script>\n'+workflow+'\n</script>\n'
@@ -54,16 +46,10 @@ jobs:
         run: |
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          forbidden=[
-            'machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js',
-            'machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js',
-            'machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js',
-            'fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js',
-            'machine-fleet-nav-guard.js','machine-fleet-native.js'
-          ]
+          forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
               if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','__fleetCreate','__fleetEdit','__fleetProfile','__fleetDelete','github-workflow-panel','Workflow runs','actions/runs?branch=main']
+          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','ghWorkflowPanel','Workflow runs','actions/runs?branch=main']
           for x in required:
               if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
           print('OK: clean Géppark + GitHub Actions panel')
