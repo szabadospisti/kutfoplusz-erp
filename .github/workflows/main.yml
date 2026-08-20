@@ -32,7 +32,7 @@ jobs:
             page=re.sub(pattern,'',page,flags=re.I)
           for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js']:
             page=re.sub(r'<script[^>]+src=["\'][^"\']*'+re.escape(src)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*','',page,flags=re.I)
-          scripts=''.join(f'<script src="{src}"></script>\n' for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js'])
+          scripts=''.join(f'<script src="{src}?v=20260820-2"></script>\n' for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js'])
           page=page.replace('</body>',scripts+'</body>',1)
           guard='''<script>\n(function(){\n  function fleetActive(){var a=document.querySelector('.nav.active');return !!(a&&/Géppark/i.test(a.textContent||''));}\n  function forceFleet(){try{if(!fleetActive())return;var c=document.getElementById('content')||document.querySelector('.content');if(!c)return;if(typeof window.__gfView==='function'){c.innerHTML=window.__gfView();return;}if(typeof window.views!=='undefined'&&window.views&&typeof window.views.machines==='function')c.innerHTML=window.views.machines();}catch(e){console.error('Géppark render guard:',e);}}\n  document.addEventListener('click',function(e){var n=e.target&&e.target.closest?e.target.closest('.nav'):null;if(n&&/Géppark/i.test(n.textContent||'')){setTimeout(forceFleet,0);setTimeout(forceFleet,80);setTimeout(forceFleet,250);setTimeout(forceFleet,600);}},true);\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);});else{setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);}\n})();\n</script>\n'''
           page=page.replace('</body>',guard+'</body>',1)
@@ -74,7 +74,7 @@ jobs:
         run: |
           from pathlib import Path
           import re, subprocess
-          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js','customer-crud-central.js']
+          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js','customer-crud-central.js','erp-delete-manager.js']
           failed=False
           for name in files:
             r=subprocess.run(['node','--check',name],text=True,capture_output=True)
