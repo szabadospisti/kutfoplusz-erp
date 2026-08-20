@@ -1,126 +1,22 @@
-/* Kútfő Plusz ERP – központi Ügyfél CRUD.
- * Egyetlen UI/CRUD útvonal: db.customers -> központi save() -> erp_state.
- * Nem ír közvetlenül Supabase táblát, és nem hoz létre második mentési útvonalat.
- */
+/* Kútfő Plusz ERP – központi Ügyfél CRUD. */
 (function(){
-  'use strict';
-  if(window.__KP_CUSTOMER_CENTRAL__) return;
-
-  const getDB=()=>{try{return typeof db!=='undefined'?db:null}catch(e){return null}};
-  const content=()=>document.getElementById('content')||document.querySelector('.content');
-  const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
-  const idOf=c=>String(c?.id??'');
-  const field=(c,...keys)=>{for(const k of keys){if(c&&c[k]!==undefined&&c[k]!==null&&String(c[k])!=='')return c[k]}return ''};
-  const customers=()=>{const d=getDB();if(!d)return [];if(!Array.isArray(d.customers))d.customers=[];return d.customers};
-  const normalize=c=>({
-    ...c,
-    id:idOf(c)||('CUST-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),
-    name:String(field(c,'name','company_name','customerName')||'').trim(),
-    taxNumber:field(c,'taxNumber','tax_number','taxId','adoszam'),
-    contact:field(c,'contact','contactPerson','contact_person'),
-    phone:field(c,'phone','telephone'),
-    email:field(c,'email','e_mail'),
-    address:field(c,'address','fullAddress','city'),
-    status:field(c,'status','active')||'active'
-  });
-  function setDB(list){const d=getDB();if(!d)throw new Error('Az ERP adatállapot nem érhető el.');d.customers=list;}
-  async function persist(){
-    if(typeof window.save!=='function')throw new Error('A központi mentés nem érhető el.');
-    await window.save();
-  }
-  function toast(msg){if(typeof window.toast==='function')window.toast(msg);else console.info('[ERP]',msg)}
-  function render(){
-    const root=content();if(!root)return;
-    const list=customers();
-    const active=list.filter(c=>String(field(c,'status')||'active').toLowerCase()!=='inactive').length;
-    const quoted=list.filter(c=>Array.isArray(getDB()?.quotes)&&getDB().quotes.some(q=>String(field(q,'customerId','customer_id'))===idOf(c))).length;
-    root.innerHTML=`<div class="panel">
-      <div class="panelhead"><div><h2>Ügyfelek</h2><div class="sub">Ügyféladatbázis és kapcsolódó munkák</div></div><button class="btn" type="button" data-kp-customer-new>+ Új ügyfél</button></div>
-      <div class="cards" style="margin-bottom:16px">
-        <div class="card"><div class="label">Összes ügyfél</div><div class="value">${list.length}</div></div>
-        <div class="card"><div class="label">Aktív ügyfél</div><div class="value">${active}</div></div>
-        <div class="card"><div class="label">Ajánlattal rendelkező</div><div class="value">${quoted}</div></div>
-      </div>
-      <div class="toolbar"><input class="input search" data-kp-customer-search placeholder="Keresés név, adószám, kapcsolattartó, telefon, e-mail vagy cím alapján..."></div>
-      <div class="tablewrap"><table class="table"><thead><tr><th>Ügyfél</th><th>Adószám</th><th>Kapcsolattartó</th><th>Telefon</th><th>E-mail</th><th>Státusz</th><th>Műveletek</th></tr></thead><tbody data-kp-customer-rows></tbody></table></div>
-    </div>`;
-    const rows=root.querySelector('[data-kp-customer-rows]');
-    const search=root.querySelector('[data-kp-customer-search]');
-    function draw(){
-      const q=String(search?.value||'').toLowerCase().trim();
-      const filtered=list.filter(c=>[field(c,'name','company_name'),field(c,'taxNumber','tax_number','taxId'),field(c,'contact','contactPerson'),field(c,'phone'),field(c,'email'),field(c,'address')].join(' ').toLowerCase().includes(q));
-      rows.innerHTML=filtered.length?filtered.map(c=>{
-        const id=esc(idOf(c));const name=esc(field(c,'name','company_name')||'—');
-        const status=String(field(c,'status')||'active').toLowerCase();
-        return `<tr><td><a href="#" class="link" data-kp-customer-detail="${id}"><b>${name}</b></a><div class="sub">${esc(field(c,'address'))}</div></td><td>${esc(field(c,'taxNumber','tax_number','taxId'))}</td><td>${esc(field(c,'contact','contactPerson'))}</td><td>${esc(field(c,'phone'))}</td><td>${esc(field(c,'email'))}</td><td><span class="badge ${status==='inactive'?'':'green'}">${status==='inactive'?'Inaktív':'Aktív'}</span></td><td><button class="btn secondary small" type="button" data-kp-customer-edit="${id}">Szerkesztés</button> <button class="btn danger small" type="button" data-kp-customer-delete="${id}">Törlés</button></td></tr>`;
-      }).join(''):'<tr><td colspan="7" class="empty">Nincs találat.</td></tr>';
-    }
-    draw();
-    search?.addEventListener('input',draw);
-    root.querySelector('[data-kp-customer-new]')?.addEventListener('click',()=>edit(null));
-    root.addEventListener('click',e=>{
-      const d=e.target.closest('[data-kp-customer-detail]');if(d){e.preventDefault();detail(d.dataset.kpCustomerDetail);return}
-      const ed=e.target.closest('[data-kp-customer-edit]');if(ed){edit(ed.dataset.kpCustomerEdit);return}
-      const del=e.target.closest('[data-kp-customer-delete]');if(del){remove(del.dataset.kpCustomerDelete);return}
-    });
-  }
-  function get(id){return customers().find(c=>idOf(c)===String(id))||null}
-  function overlay(){
-    let m=document.getElementById('kpCustomerCentralModal');
-    if(!m){m=document.createElement('div');m.id='kpCustomerCentralModal';m.className='modal hidden';document.body.appendChild(m)}
-    return m;
-  }
-  function edit(id){
-    const existing=id?get(id):null;const c=normalize(existing||{});const m=overlay();
-    m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>${existing?'Ügyfél szerkesztése':'Új ügyfél'}</h2><button class="icon" data-close>×</button></div><div class="modalbody"><div class="formgrid">
-      <div class="field"><label>Ügyfél neve *</label><input class="input" data-f="name" value="${esc(c.name)}"></div>
-      <div class="field"><label>Adószám</label><input class="input" data-f="taxNumber" value="${esc(c.taxNumber)}"></div>
-      <div class="field"><label>Kapcsolattartó</label><input class="input" data-f="contact" value="${esc(c.contact)}"></div>
-      <div class="field"><label>Telefon</label><input class="input" data-f="phone" value="${esc(c.phone)}"></div>
-      <div class="field"><label>E-mail</label><input class="input" data-f="email" value="${esc(c.email)}"></div>
-      <div class="field"><label>Státusz</label><select class="select" data-f="status"><option value="active" ${c.status==='active'?'selected':''}>Aktív</option><option value="inactive" ${c.status==='inactive'?'selected':''}>Inaktív</option></select></div>
-      <div class="field full"><label>Cím</label><input class="input" data-f="address" value="${esc(c.address)}"></div>
-    </div></div><div class="modalfoot">${existing?'<button class="btn danger" data-delete-edit>Törlés</button>':''}<button class="btn secondary" data-close>Mégse</button><button class="btn" data-save>Mentés</button></div></div>`;
-    m.classList.remove('hidden');
-    m.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>m.classList.add('hidden')));
-    m.querySelector('[data-delete-edit]')?.addEventListener('click',()=>remove(id));
-    m.querySelector('[data-save]').addEventListener('click',async()=>{
-      const values={...c};m.querySelectorAll('[data-f]').forEach(el=>values[el.dataset.f]=el.value);
-      values.name=String(values.name||'').trim();if(!values.name){alert('Az ügyfél neve kötelező.');return}
-      try{
-        const list=customers();const item=normalize(values);const idx=list.findIndex(x=>idOf(x)===idOf(item));
-        if(idx>=0)list[idx]=item;else list.push(item);setDB(list);await persist();m.classList.add('hidden');render();toast(existing?'Ügyfél módosítva':'Ügyfél létrehozva');
-      }catch(e){console.error(e);alert(e.message||'A mentés nem sikerült.');}
-    });
-  }
-  function detail(id){
-    const c=get(id);if(!c)return;
-    const m=overlay();m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>Ügyfél adatlap – ${esc(field(c,'name','company_name'))}</h2><button class="icon" data-close>×</button></div><div class="modalbody"><div class="kpi"><b>Adószám</b><span>${esc(field(c,'taxNumber','tax_number','taxId'))}</span></div><div class="kpi"><b>Kapcsolattartó</b><span>${esc(field(c,'contact','contactPerson'))}</span></div><div class="kpi"><b>Telefon</b><span>${esc(field(c,'phone'))}</span></div><div class="kpi"><b>E-mail</b><span>${esc(field(c,'email'))}</span></div><div class="kpi"><b>Cím</b><span>${esc(field(c,'address'))}</span></div><div class="kpi"><b>Státusz</b><span>${String(field(c,'status')||'active')==='inactive'?'Inaktív':'Aktív'}</span></div></div><div class="modalfoot"><button class="btn secondary" data-close>Bezárás</button><button class="btn secondary" data-edit>Szerkesztés</button><button class="btn danger" data-delete>Törlés</button></div></div>`;
-    m.classList.remove('hidden');m.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>m.classList.add('hidden')));m.querySelector('[data-edit]').addEventListener('click',()=>{m.classList.add('hidden');edit(id)});m.querySelector('[data-delete]').addEventListener('click',()=>remove(id));
-  }
-  async function remove(id){
-    const c=get(id);if(!c)return;if(!confirm('Biztosan törlöd ezt az ügyfelet?\n\n'+(field(c,'name','company_name')||id)))return;
-    const d=getDB();const linked=(d.projects||[]).filter(p=>String(field(p,'customerId','customer_id','clientId','client_id'))===String(id));
-    if(linked.length){alert('Az ügyfél nem törölhető: kapcsolódó projekt tartozik hozzá.');return}
-    try{setDB(customers().filter(x=>idOf(x)!==String(id)));await persist();overlay().classList.add('hidden');render();toast('Ügyfél törölve')}catch(e){console.error(e);alert(e.message||'A törlés nem sikerült.');}
-  }
-  function install(){
-    if(window.__KP_CUSTOMER_CENTRAL__)return;
-    const originalNav=window.nav;
-    if(typeof originalNav!=='function')return false;
-    window.nav=function(view){
-      const v=String(view||'').toLowerCase();
-      if(v==='customers'||v==='customer'||v==='ugyfelek'){
-        try{originalNav.apply(this,arguments)}catch(e){}
-        setTimeout(render,0);setTimeout(render,100);setTimeout(render,300);return;
-      }
-      return originalNav.apply(this,arguments);
-    };
-    window.kpCustomerCentral={render,edit,detail,remove};
-    window.editCustomer=edit;window.customerDetails=detail;window.deleteCustomer=remove;
-    window.__KP_CUSTOMER_CENTRAL__=true;
-    if(typeof window.current!=='undefined'&&String(window.current).toLowerCase()==='customers')render();
-    console.info('[ERP] Central customer CRUD active');return true;
-  }
-  let n=0;const timer=setInterval(()=>{if(install()||++n>200)clearInterval(timer)},50);install();
-})();
+'use strict';
+if(window.__KP_CUSTOMER_CENTRAL__) return;
+const getDB=()=>{try{return typeof db!=='undefined'?db:null}catch(e){return null}};
+const content=()=>document.getElementById('content')||document.querySelector('.content');
+const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+const idOf=c=>String(c?.id??'');
+const field=(c,...keys)=>{for(const k of keys){if(c&&c[k]!==undefined&&c[k]!==null&&String(c[k])!=='')return c[k]}return ''};
+const customers=()=>{const d=getDB();if(!d)return [];if(!Array.isArray(d.customers))d.customers=[];return d.customers};
+const normalize=c=>({...c,id:idOf(c)||('CUST-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),name:String(field(c,'name','company_name','customerName')||'').trim(),taxNumber:field(c,'taxNumber','tax_number','taxId','adoszam'),contact:field(c,'contact','contactPerson','contact_person'),phone:field(c,'phone','telephone'),email:field(c,'email','e_mail'),address:field(c,'address','fullAddress','city'),status:field(c,'status','active')||'active'});
+function setDB(list){const d=getDB();if(!d)throw new Error('Az ERP adatállapot nem érhető el.');d.customers=list}
+async function persist(){if(typeof window.save!=='function')throw new Error('A központi mentés nem érhető el.');await window.save()}
+function toast(msg){if(typeof window.toast==='function')window.toast(msg)}
+function render(){const root=content();if(!root)return;const list=customers();const active=list.filter(c=>String(field(c,'status')||'active').toLowerCase()!=='inactive').length;const quoted=list.filter(c=>Array.isArray(getDB()?.quotes)&&getDB().quotes.some(q=>String(field(q,'customerId','customer_id'))===idOf(c))).length;root.innerHTML=`<div class="panel"><div class="panelhead"><div><h2>Ügyfelek</h2><div class="sub">Ügyféladatbázis és kapcsolódó munkák</div></div><button class="btn" type="button" data-kp-customer-new>+ Új ügyfél</button></div><div class="cards" style="margin-bottom:16px"><div class="card"><div class="label">Összes ügyfél</div><div class="value">${list.length}</div></div><div class="card"><div class="label">Aktív ügyfél</div><div class="value">${active}</div></div><div class="card"><div class="label">Ajánlattal rendelkező</div><div class="value">${quoted}</div></div></div><div class="toolbar"><input class="input search" data-kp-customer-search placeholder="Keresés..."></div><div class="tablewrap"><table class="table"><thead><tr><th>Ügyfél</th><th>Adószám</th><th>Kapcsolattartó</th><th>Telefon</th><th>E-mail</th><th>Státusz</th><th>Műveletek</th></tr></thead><tbody data-kp-customer-rows></tbody></table></div></div>`;
+const rows=root.querySelector('[data-kp-customer-rows]'),search=root.querySelector('[data-kp-customer-search]');function draw(){const q=String(search?.value||'').toLowerCase().trim();const filtered=list.filter(c=>[field(c,'name','company_name'),field(c,'taxNumber','tax_number','taxId'),field(c,'contact','contactPerson'),field(c,'phone'),field(c,'email'),field(c,'address')].join(' ').toLowerCase().includes(q));rows.innerHTML=filtered.length?filtered.map(c=>{const id=esc(idOf(c)),name=esc(field(c,'name','company_name')||'—'),status=String(field(c,'status')||'active').toLowerCase();return `<tr><td><a href="#" class="link" data-kp-customer-detail="${id}"><b>${name}</b></a><div class="sub">${esc(field(c,'address'))}</div></td><td>${esc(field(c,'taxNumber','tax_number','taxId'))}</td><td>${esc(field(c,'contact','contactPerson'))}</td><td>${esc(field(c,'phone'))}</td><td>${esc(field(c,'email'))}</td><td><span class="badge ${status==='inactive'?'':'green'}">${status==='inactive'?'Inaktív':'Aktív'}</span></td><td><button class="btn secondary small" type="button" data-kp-customer-edit="${id}">Szerkesztés</button> <button class="btn danger small" type="button" data-kp-customer-delete="${id}">Törlés</button></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Nincs találat.</td></tr>'}draw();search?.addEventListener('input',draw);root.querySelector('[data-kp-customer-new]')?.addEventListener('click',()=>edit(null));root.addEventListener('click',e=>{const d=e.target.closest('[data-kp-customer-detail]');if(d){e.preventDefault();detail(d.dataset.kpCustomerDetail);return}const ed=e.target.closest('[data-kp-customer-edit]');if(ed){edit(ed.dataset.kpCustomerEdit);return}const del=e.target.closest('[data-kp-customer-delete]');if(del){remove(del.dataset.kpCustomerDelete);return}})}
+function get(id){return customers().find(c=>idOf(c)===String(id))||null}
+function overlay(){let m=document.getElementById('kpCustomerCentralModal');if(!m){m=document.createElement('div');m.id='kpCustomerCentralModal';m.className='modal hidden';document.body.appendChild(m)}return m}
+function edit(id){const existing=id?get(id):null,c=normalize(existing||{}),m=overlay();m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>${existing?'Ügyfél szerkesztése':'Új ügyfél'}</h2><button class="icon" data-close>×</button></div><div class="modalbody"><div class="formgrid"><div class="field"><label>Ügyfél neve *</label><input class="input" data-f="name" value="${esc(c.name)}"></div><div class="field"><label>Adószám</label><input class="input" data-f="taxNumber" value="${esc(c.taxNumber)}"></div><div class="field"><label>Kapcsolattartó</label><input class="input" data-f="contact" value="${esc(c.contact)}"></div><div class="field"><label>Telefon</label><input class="input" data-f="phone" value="${esc(c.phone)}"></div><div class="field"><label>E-mail</label><input class="input" data-f="email" value="${esc(c.email)}"></div><div class="field"><label>Státusz</label><select class="select" data-f="status"><option value="active" ${c.status==='active'?'selected':''}>Aktív</option><option value="inactive" ${c.status==='inactive'?'selected':''}>Inaktív</option></select></div><div class="field full"><label>Cím</label><input class="input" data-f="address" value="${esc(c.address)}"></div></div></div><div class="modalfoot">${existing?'<button class="btn danger" data-delete-edit>Törlés</button>':''}<button class="btn secondary" data-close>Mégse</button><button class="btn" data-save>Mentés</button></div></div>`;m.classList.remove('hidden');m.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>m.classList.add('hidden')));m.querySelector('[data-delete-edit]')?.addEventListener('click',()=>remove(id));m.querySelector('[data-save]').addEventListener('click',async()=>{const values={...c};m.querySelectorAll('[data-f]').forEach(el=>values[el.dataset.f]=el.value);values.name=String(values.name||'').trim();if(!values.name){alert('Az ügyfél neve kötelező.');return}try{const list=customers(),item=normalize(values),idx=list.findIndex(x=>idOf(x)===idOf(item));if(idx>=0)list[idx]=item;else list.push(item);setDB(list);await persist();m.classList.add('hidden');render();toast(existing?'Ügyfél módosítva':'Ügyfél létrehozva')}catch(e){console.error(e);alert(e.message||'A mentés nem sikerült.')}})}
+function detail(id){const c=get(id);if(!c)return;const m=overlay();m.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>Ügyfél adatlap – ${esc(field(c,'name','company_name'))}</h2><button class="icon" data-close>×</button></div><div class="modalbody"><div class="kpi"><b>Adószám</b><span>${esc(field(c,'taxNumber','tax_number','taxId'))}</span></div><div class="kpi"><b>Kapcsolattartó</b><span>${esc(field(c,'contact','contactPerson'))}</span></div><div class="kpi"><b>Telefon</b><span>${esc(field(c,'phone'))}</span></div><div class="kpi"><b>E-mail</b><span>${esc(field(c,'email'))}</span></div><div class="kpi"><b>Cím</b><span>${esc(field(c,'address'))}</span></div></div><div class="modalfoot"><button class="btn secondary" data-close>Bezárás</button><button class="btn secondary" data-edit>Szerkesztés</button><button class="btn danger" data-delete>Törlés</button></div></div>`;m.classList.remove('hidden');m.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>m.classList.add('hidden')));m.querySelector('[data-edit]').addEventListener('click',()=>{m.classList.add('hidden');edit(id)});m.querySelector('[data-delete]').addEventListener('click',()=>remove(id))}
+async function remove(id){const c=get(id);if(!c)return;if(!confirm('Biztosan törlöd ezt az ügyfelet?\n\n'+(field(c,'name','company_name')||id)))return;try{setDB(customers().filter(x=>idOf(x)!==String(id)));await persist();overlay().classList.add('hidden');render();toast('Ügyfél törölve')}catch(e){console.error(e);alert(e.message||'A törlés nem sikerült.')}}
+function install(){if(window.__KP_CUSTOMER_CENTRAL__)return;const originalNav=window.nav;if(typeof originalNav!=='function')return false;window.nav=function(view){const v=String(view||'').toLowerCase();if(v==='customers'||v==='customer'||v==='ugyfelek'){try{originalNav.apply(this,arguments)}catch(e){}setTimeout(render,0);setTimeout(render,100);setTimeout(render,300);return}return originalNav.apply(this,arguments)};window.kpCustomerCentral={render,edit,detail,remove};window.editCustomer=edit;window.customerDetails=detail;window.deleteCustomer=remove;window.__KP_CUSTOMER_CENTRAL__=true;if(typeof window.current!=='undefined'&&String(window.current).toLowerCase()==='customers')render();return true}let n=0;const timer=setInterval(()=>{if(install()||++n>200)clearInterval(timer)},50);install();})();
