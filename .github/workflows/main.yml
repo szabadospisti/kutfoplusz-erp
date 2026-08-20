@@ -31,6 +31,7 @@ jobs:
             pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
             page=re.sub(pattern,'',page,flags=re.I)
           fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
+          fleet=fleet.replace('views.machines=view;return true;','views.machines=view;if(typeof current!==\'undefined\'&&current===\'machines\'&&typeof render===\'function\')render();return true;')
           system=Path('system-workflow.js').read_text(encoding='utf-8')
           injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n'
           page=page.replace('</body>',injection+'</body>',1)
