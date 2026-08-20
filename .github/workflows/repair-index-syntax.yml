@@ -51,6 +51,23 @@ jobs:
           else:
               print('Quote bullets block not found; leaving source unchanged.')
 
+      - name: Guard main auth functions behind isolated core
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          login = 'async function supabaseLogin(e){'
+          guarded_login = 'async function supabaseLogin(e){ if(window.__KP_AUTH_CORE__) return window.__KP_AUTH_LOGIN__(e);'
+          if login in s and guarded_login not in s:
+              s = s.replace(login, guarded_login, 1)
+          boot = 'async function bootERP(){'
+          guarded_boot = 'async function bootERP(){ if(window.__KP_AUTH_CORE__) return;'
+          if boot in s and guarded_boot not in s:
+              s = s.replace(boot, guarded_boot, 1)
+          p.write_text(s, encoding='utf-8')
+          print('Main login and boot are delegated to isolated auth core.')
+
       - name: Commit protected login bootstrap
         shell: bash
         run: |
@@ -71,7 +88,6 @@ jobs:
           from pathlib import Path
           import re
           import subprocess
-          import sys
           s = Path('index.html').read_text(encoding='utf-8')
           blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>', s, re.I)
           if not blocks:
