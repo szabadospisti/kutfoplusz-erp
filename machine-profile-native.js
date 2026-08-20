@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – Géppark natív teljes oldalas adatlap */
+/* Kútfő Plusz ERP – Géppark egyetlen natív adatlap */
 (function(){
 'use strict';
 function install(){
@@ -24,17 +24,28 @@ function install(){
  views.machines=function(){const id=window.__machineProfileId;if(!id)return original();const m=(db.machines||[]).find(x=>String(x.id)===String(id));if(!m){window.__machineProfileId=null;return original();}return profileHtml(m);};
  function open(id){window.__machineProfileId=String(id);render();setTimeout(bind,0);}
  function back(){window.__machineProfileId=null;render();setTimeout(bind,0);}
+ function openEditor(id){
+   const fn=window.machineProfileInlineEdit;
+   if(typeof fn==='function'){fn(String(id));return;}
+   const script=document.createElement('script');
+   script.src='machine-profile-edit-inline.js?v=unified1';
+   script.onload=function(){if(typeof window.machineProfileInlineEdit==='function')window.machineProfileInlineEdit(String(id));else alert('A gépszerkesztő modul nem töltődött be.');};
+   script.onerror=function(){alert('A gépszerkesztő modul betöltése sikertelen.');};
+   document.head.appendChild(script);
+ }
  function bind(){
-  document.querySelectorAll('[data-action="profile"][data-id]').forEach(b=>{if(b.dataset.mpnBound)return;b.dataset.mpnBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(b.dataset.id);});});
-  const edit=document.getElementById('mpnEdit');if(edit&&!edit.dataset.mpnBound){edit.dataset.mpnBound='1';edit.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const id=window.__machineProfileId;if(id&&typeof window.machineProfileInlineEdit==='function')window.machineProfileInlineEdit(id);});}
-  const backBtn=document.getElementById('mpnBack');if(backBtn&&!backBtn.dataset.mpnBound){backBtn.dataset.mpnBound='1';backBtn.addEventListener('click',e=>{e.preventDefault();back();});}
+  const edit=document.getElementById('mpnEdit');
+  if(edit&&!edit.dataset.mpnBound){edit.dataset.mpnBound='1';edit.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const id=window.__machineProfileId;if(id)openEditor(id);});}
+  const backBtn=document.getElementById('mpnBack');
+  if(backBtn&&!backBtn.dataset.mpnBound){backBtn.dataset.mpnBound='1';backBtn.addEventListener('click',e=>{e.preventDefault();back();});}
   document.querySelectorAll('.mpn-tab').forEach(tab=>{if(tab.dataset.mpnBound)return;tab.dataset.mpnBound='1';tab.addEventListener('click',()=>{const m=(db.machines||[]).find(x=>String(x.id)===String(window.__machineProfileId));if(!m)return;document.querySelectorAll('.mpn-tab').forEach(x=>x.classList.toggle('active',x===tab));document.getElementById('mpnPane').innerHTML=pane(m,tab.dataset.tab);});});
  }
  window.machineProfilePage=open;
+ window.kpMachineProfile=open;
  window.__machineProfileNativeInstalled=true;
  setTimeout(()=>{if(window.current==='machines')render();},0);
  setTimeout(bind,10);
  return true;
-}
+ }
  let n=0;function boot(){if(install()||n++>120)return;setTimeout(boot,250)}boot();
 })();
