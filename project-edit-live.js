@@ -13,22 +13,35 @@
     return c?(c.id||c.customerId||''):(local&&local.customerId||'');
   }
   function customerOptions(selected){
-    if(typeof window.opts==='function'){
-      var html=window.opts();
-      setTimeout(function(){var s=document.querySelector('#modal select[name="customerId"]');if(s&&selected)s.value=selected;},0);
-      return html;
-    }
+    /* A régi window.opts() más azonosítókat is használhatott, ezért a Projekt
+       szerkesztő kizárólag a központi db.customers lokális ID-jait használja. */
     var customers=(window.db&&Array.isArray(window.db.customers))?window.db.customers:[];
-    return customers.map(function(c){var id=c.id||c.customerId||'';var name=c.name||c.company_name||c.companyName||'';return '<option value="'+escLocal(id)+'" '+(String(id)===String(selected)?'selected':'')+'>'+escLocal(name)+'</option>';}).join('');
+    return customers.map(function(c){
+      var id=c.id||c.customerId||'';
+      var name=c.name||c.company_name||c.companyName||'';
+      return '<option value="'+escLocal(id)+'" '+(String(id)===String(selected)?'selected':'')+'>'+escLocal(name)+'</option>';
+    }).join('');
+  }
+  async function persistERPState(){
+    /* Egyetlen központi felhőmentési útvonal: az index.html által biztosított
+       supabaseCloudSave. A save() csak a helyi állapotot frissíti. */
+    if(typeof window.supabaseCloudSave==='function'){
+      await window.supabaseCloudSave();
+      return;
+    }
+    if(typeof window.save==='function'){
+      var result=window.save();
+      if(result&&typeof result.then==='function')await result;
+      return;
+    }
+    throw new Error('A központi ERP mentési útvonal nem érhető el.');
   }
   async function install(){
-    /* A modul maga definiálja az editProject függvényt; erre nem várunk. */
     for(var i=0;i<160;i++){if(window.KPProjectSupabase)break;await sleep(50);}
     if(!window.KPProjectSupabase){console.error('Projekt szerkesztő live fix: Supabase projekt adapter nem töltődött be.');return;}
     if(window.__KP_PROJECT_EDIT_LIVE__)return;
     window.editProject=async function(id){
       var key=String(id||'');
-      /* A helyi cache opcionális; a szerkesztő akkor is működik, ha a db még nincs inicializálva. */
       var local=(window.db&&Array.isArray(window.db.projects))?window.db.projects.find(function(x){return String(x.id)===key||String(x.supabaseId||'')===key;}):null;
       var remote=null;
       try{remote=await window.KPProjectSupabase.findByProjectNumber(local?local.id:key);}catch(err){console.error('Projekt Supabase visszatöltés:',err);}
