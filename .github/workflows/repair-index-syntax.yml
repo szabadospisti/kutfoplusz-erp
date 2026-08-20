@@ -42,10 +42,15 @@ jobs:
           if start >= 0:
               end = s.find(marker, start)
               if end >= 0:
-                  replacement = ' const bullets=t=>String(t||"").split(/\\r?\\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");\n const declarations=esc(q.declarations||"").replace(/\\n/g,"<br><br>");\n'
+                  bs = chr(92)
+                  nl = chr(10)
+                  replacement = (
+                      ' const bullets=t=>String(t||"").split(/' + bs + 'r?' + bs + 'n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");' + nl +
+                      ' const declarations=esc(q.declarations||"").replace(/' + bs + 'n/g,"<br><br>");' + nl
+                  )
                   s = s[:start] + replacement + s[end:]
                   p.write_text(s, encoding='utf-8')
-                  print('Regex repair applied.')
+                  print('Regex repair applied safely.')
               else:
                   print('Quote document marker not found; leaving source unchanged.')
           else:
