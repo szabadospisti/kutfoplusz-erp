@@ -1,0 +1,44 @@
+name: Install ERP system workflow
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    if: ${{ !contains(github.event.head_commit.message, '[system-nav-installed]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install static Rendszer navigation
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='id="system-workflow-nav"'
+          if marker not in s:
+              needle='<button class="nav" data-page="reports"><i>◔</i>Riportok</button>'
+              if needle not in s:
+                  raise SystemExit('ERROR: Riportok sidebar button not found')
+              s=s.replace(needle, needle+'\n    <button class="nav" id="system-workflow-nav" type="button"><i>⚙</i>Rendszer</button>',1)
+          if 'src="system-workflow.js"' not in s:
+              s=s.replace('</body>','<script src="system-workflow.js"></script>\n</body>',1)
+          p.write_text(s,encoding='utf-8')
+      - name: Verify
+        shell: python
+        run: |
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'id="system-workflow-nav"' in s
+          assert 'src="system-workflow.js"' in s
+          print('OK: static system navigation installed')
+      - name: Commit installation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Install Rendszer Workflow navigation [system-nav-installed]'
+          git push
