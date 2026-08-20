@@ -1,12 +1,12 @@
 /* Kútfő Plusz ERP – isolated authentication core.
  * Login must remain available even if an optional ERP/module script has a syntax error.
+ * The relational bridge owns ERP data; erp_state is no longer loaded during authentication.
  */
 (function(){
   'use strict';
   if(window.__KP_AUTH_CORE__) return;
   window.__KP_AUTH_CORE__=true;
 
-  const STORE='kutfoplusz_erp_v12';
   const SESSION_KEY='kutfoplusz_supabase_session_v1';
   const cfg=window.SUPABASE_CONFIG||{};
   const SB_URL=String(cfg.url||'').replace(/\/$/,'');
@@ -21,61 +21,31 @@
   function showERP(user){document.getElementById('authOverlay')?.classList.add('auth-hidden');document.getElementById('erpApp')?.classList.remove('auth-hidden');const el=document.getElementById('cloudStatus');if(el)el.textContent='☁️ '+(user?.email||'Supabase');if(typeof window.render==='function')window.render()}
 
   async function refresh(){
-    const ss=session();
-    if(!ss?.refresh_token)return null;
-    try{
-      const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:ss.refresh_token})});
-      const j=await r.json();
-      if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Session lejárt');
-      setSession(j);return j;
-    }catch(e){clearSession();return null}
+    const ss=session();if(!ss?.refresh_token)return null;
+    try{const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:ss.refresh_token})});const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Session lejárt');setSession(j);return j;}catch(e){clearSession();return null}
   }
 
   async function request(path,options,retry){
-    let ss=session();
-    if(!ss?.access_token)throw new Error('Nincs bejelentkezve');
-    const opts=Object.assign({},options||{}, {headers:headers(ss.access_token,(options&&options.headers)||{})});
+    let ss=session();if(!ss?.access_token)throw new Error('Nincs bejelentkezve');
+    const opts=Object.assign({},options||{},{headers:headers(ss.access_token,(options&&options.headers)||{})});
     let r=await fetch(SB_URL+path,opts);
-    if(r.status===401 && retry!==false){ss=await refresh();if(ss)return request(path,options,false)}
+    if(r.status===401&&retry!==false){ss=await refresh();if(ss)return request(path,options,false)}
     return r;
   }
-
-  async function cloudLoad(){
-    const r=await request('/rest/v1/erp_state?id=eq.main&select=id,data,updated_at,updated_by');
-    if(!r.ok)throw new Error('Supabase adatbetöltési hiba: '+await r.text());
-    const rows=await r.json();
-    if(rows.length && rows[0].data && typeof rows[0].data==='object'){
-      localStorage.setItem(STORE,JSON.stringify(rows[0].data));
-    }
-  }
+  window.KPSupabaseAuth={request,session,refresh};
 
   window.supabaseLogin=async function(e){
-    if(e&&e.preventDefault)e.preventDefault();
-    status('Bejelentkezés...',false);
-    const email=(document.getElementById('authEmail')?.value||'').trim();
-    const password=document.getElementById('authPassword')?.value||'';
-    try{
-      const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-      const j=await r.json();
-      if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Sikertelen bejelentkezés');
-      setSession(j);
-      try{await cloudLoad()}catch(err){console.warn('[ERP] Cloud load after login:',err);}
-      showERP(j.user);
-    }catch(err){console.error('[ERP] Login:',err);status(err.message||'Sikertelen bejelentkezés',true)}
+    if(e&&e.preventDefault)e.preventDefault();status('Bejelentkezés...',false);
+    const email=(document.getElementById('authEmail')?.value||'').trim();const password=document.getElementById('authPassword')?.value||'';
+    try{const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Sikertelen bejelentkezés');setSession(j);showERP(j.user);}catch(err){console.error('[ERP] Login:',err);status(err.message||'Sikertelen bejelentkezés',true)}
   };
   window.__KP_AUTH_LOGIN__=window.supabaseLogin;
 
   window.supabaseSignup=async function(){
-    const email=(document.getElementById('authEmail')?.value||'').trim();
-    const password=document.getElementById('authPassword')?.value||'';
+    const email=(document.getElementById('authEmail')?.value||'').trim();const password=document.getElementById('authPassword')?.value||'';
     if(!email||password.length<6){status('Adj meg e-mail címet és legalább 6 karakteres jelszót.',true);return}
     status('Felhasználó létrehozása...',false);
-    try{
-      const r=await fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-      const j=await r.json();if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'Regisztráció sikertelen');
-      if(j.access_token){setSession(j);try{await cloudLoad()}catch(err){}showERP(j.user)}
-      else status('A regisztráció sikerült. Ellenőrizd az e-mail címedet, majd jelentkezz be.',false);
-    }catch(err){console.error('[ERP] Signup:',err);status(err.message||'Regisztráció sikertelen',true)}
+    try{const r=await fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)throw new Error(j.msg||j.message||j.error_description||'Regisztráció sikertelen');if(j.access_token){setSession(j);showERP(j.user)}else status('A regisztráció sikerült. Ellenőrizd az e-mail címedet, majd jelentkezz be.',false);}catch(err){console.error('[ERP] Signup:',err);status(err.message||'Regisztráció sikertelen',true)}
   };
 
   window.supabaseLogout=async function(){
@@ -84,34 +54,20 @@
   };
 
   window.__KP_AUTH_BOOT__=async function(){
-    showLogin();
-    const ss=session();
-    if(!ss?.access_token)return;
+    showLogin();const ss=session();if(!ss?.access_token)return;
     try{
-      let active=ss;
-      const test=await fetch(SB_URL+'/auth/v1/user',{headers:headers(ss.access_token)});
-      if(test.status===401){
-        active=await refresh();
-        if(!active)throw new Error('Session lejárt');
-      }else if(test.status===403){
-        // A 403 from /auth/v1/user is not proof that the stored session is invalid.
-        // Keep the session and use the user object already carried by the token response.
-        active=ss;
-      }else if(test.ok){
-        const user=await test.json();
-        active=Object.assign({},active,{user:user});
-        setSession(active);
-      }
+      let active=ss;const test=await fetch(SB_URL+'/auth/v1/user',{headers:headers(ss.access_token)});
+      if(test.status===401){active=await refresh();if(!active)throw new Error('Session lejárt')}
+      else if(test.status===403){active=ss}
+      else if(test.ok){const user=await test.json();active=Object.assign({},active,{user});setSession(active)}
       if(!active?.user)throw new Error('Érvénytelen Supabase session');
-      try{await cloudLoad()}catch(err){console.warn('[ERP] Cloud load on boot:',err);}
       showERP(active.user);
     }catch(err){
       console.warn('[ERP] Auth boot:',err);
-      // Only a failed refresh means the session is definitely unusable.
       if(!session()?.access_token){clearSession();showLogin();status('Jelentkezz be újra. '+(err.message||''),true);return}
       showERP(session().user||{});
     }
   };
 
-  setTimeout(function(){window.__KP_AUTH_BOOT__();},0);
+  setTimeout(()=>window.__KP_AUTH_BOOT__(),0);
 })();
