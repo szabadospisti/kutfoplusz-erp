@@ -26,10 +26,6 @@
     }
   }
 
-  /*
-   * KRITIKUS: a Géppark nem függ sem a projekt CRUD-tól,
-   * sem a régi/hiányzó ügyfél- vagy munkanapló-fixektől.
-   */
   safeLoad('machine-fleet-bridge.js').then(function(ok){
     if(ok) return safeLoad('machine-fleet-force.js');
     return false;
@@ -38,6 +34,16 @@
   safeLoad('system-workflow.js');
 
   async function waitForConfig(){
+    if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
+
+    /* A projekt CRUD nem függhet attól, hogy az index.html milyen sorrendben
+       tölti a konfigurációs scriptet. Ha még nincs jelen, központilag betöltjük. */
+    try{
+      await loadScript('supabase_config.js');
+    }catch(err){
+      console.warn('[ERP] supabase_config.js automatikus betöltése sikertelen:',err.message);
+    }
+
     if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
     for(var i=0;i<100;i++){
       await new Promise(function(r){setTimeout(r,50)});
@@ -70,8 +76,6 @@
   };
 
   bootstrap().then(async function(){
-    /* A projekt CRUD alapmodulok. Egyenként töltjük őket, hogy egy hibás
-       opcionális modul ne szakítsa meg a későbbi modulok betöltését. */
     await safeLoad('project-crud-live.js');
     await waitForProjectCrud();
     await safeLoad('project-edit-live.js');
@@ -80,9 +84,6 @@
     await safeLoad('project-worklog-auto-link.js');
     await safeLoad('worklog-project-lock.js');
     await safeLoad('material-crud-fix.js');
-
-    /* customer-details-dom-fix.js jelenleg nincs a repositoryban,
-       ezért szándékosan nem töltjük többé. */
   }).catch(function(err){
     console.error('Supabase project bridge:',err);
   });
