@@ -28,9 +28,7 @@ async function details(id){const box=document.getElementById('wf_details');if(!b
 window.openSystemWorkflow=renderPage;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installNav);else installNav();
 
-/* Új ajánlat státusz javítás: a collectQuoteTemplate() második, hibás
-   status:"Piszkozat" értéke felülírta a választott státuszt. A meglévő
-   központi függvényt itt korrigáljuk, minden más működés változatlan. */
+/* Ajánlat státusz javítás */
 const _kpCollectQuoteTemplate=window.collectQuoteTemplate;
 if(typeof _kpCollectQuoteTemplate==='function' && !window.__KP_QUOTE_STATUS_FIX__){
   window.collectQuoteTemplate=function(){
@@ -41,4 +39,43 @@ if(typeof _kpCollectQuoteTemplate==='function' && !window.__KP_QUOTE_STATUS_FIX_
   };
   window.__KP_QUOTE_STATUS_FIX__=true;
 }
+
+/* Munkanapló lista javítás – V1.5
+   A ténylegesen mentett munkanapló mezői: finalDepth és projectId.
+   A korábbi lista depthEnd/depth és project mezőket keresett, ezért
+   a Végmélység üres maradt, a Projekt pedig csak az ügyfélre esett vissza.
+   Itt a már betöltött index.html lista-függvényeit célzottan felülírjuk,
+   így az aktív detailedWorklogEditor/wlCollect adatmodell változatlan marad. */
+function kpWorklogProjectName(w){
+  const p=(db?.projects||[]).find(p=>String(p.id)===String(w?.projectId||''));
+  return p?.name||'';
+}
+function kpWorklogProjectLabel(w){
+  const project=kpWorklogProjectName(w);
+  if(project)return project;
+  return typeof cust==='function'?cust(w?.customerId):'';
+}
+window.worklogListRows=function(arr=db.worklogs||[]){
+ return `<div class="tablewrap"><table class="table"><thead><tr>
+<th>Azonosító</th><th>Dátum</th><th>Projekt</th><th>Helyszín</th><th>Végmélység</th><th>Állapot</th><th></th>
+</tr></thead><tbody>${
+ (arr||[]).slice().reverse().map(w=>`<tr>
+<td><b>${esc(w.id||"MN-"+(w.date||""))}</b></td>
+<td>${esc(w.date||"")}</td>
+<td>${esc(kpWorklogProjectLabel(w))}</td>
+<td>${esc(w.location||"")}</td>
+<td>${w.finalDepth!==undefined&&w.finalDepth!==null&&w.finalDepth!==""?esc(w.finalDepth)+" m":"—"}</td>
+<td><span class="badge ${w.status==="Kész"||w.status==="Lezárt"?"green":"blue"}">${esc(w.status||"Piszkozat")}</span></td>
+<td><button class="btn secondary small" onclick="openWorklogEditor('${esc(w.id||"")}')">Megnyitás</button></td>
+</tr>`).join("")
+}</tbody></table></div>`;
+window.filterWorklogs=function(){
+ const q=(document.getElementById("wsearch")?.value||"").toLowerCase().trim();
+ const arr=(db.worklogs||[]).filter(w=>[
+   w.id,w.date,w.projectId,kpWorklogProjectName(w),w.location,w.status,w.finalDepth
+ ].join(" ").toLowerCase().includes(q));
+ const el=document.getElementById("worklogTable");
+ if(el)el.innerHTML=window.worklogListRows(arr);
+};
+window.__KP_WORKLOG_LIST_FIX_V15__=true;
 })();
