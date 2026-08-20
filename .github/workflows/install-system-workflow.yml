@@ -43,6 +43,25 @@ jobs:
           else:
               print('No malformed regex found')
 
+      - name: Verify inline JavaScript syntax
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, sys
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',s,re.I)
+          if not blocks:
+              raise SystemExit('ERROR: no inline JavaScript blocks found')
+          for i,code in enumerate(blocks,1):
+              Path(f'/tmp/erp-inline-{i}.js').write_text(code,encoding='utf-8')
+              r=subprocess.run(['node','--check',f'/tmp/erp-inline-{i}.js'],text=True,capture_output=True)
+              if r.returncode:
+                  print(f'INLINE_SCRIPT_{i}_SYNTAX_ERROR')
+                  print(r.stdout)
+                  print(r.stderr)
+                  raise SystemExit(r.returncode)
+          print(f'OK: {len(blocks)} inline JavaScript blocks passed node --check')
+
       - name: Install static Rendszer navigation
         shell: python
         run: |
