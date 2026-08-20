@@ -1,0 +1,60 @@
+name: Repair index syntax
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !startsWith(github.event.head_commit.message, '[auto-fix-index]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Repair malformed JavaScript regex literals
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          start = s.find(' const bullets=t=>')
+          marker = ' return `<div class=\\"quote-doc\\">'
+          end = s.find(marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit('quote document block not found')
+
+          replacement = ''' const bullets=t=>String(t||"").split(/\\r?\\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+ const declarations=esc(q.declarations||"").replace(/\\n/g,"<br><br>");
+'''
+          s = s[:start] + replacement + s[end:]
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Verify repaired JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path('index.html').read_text(encoding='utf-8')
+          if 'const bullets=t=>String(t||"").split(/\\r?\\n/)' not in s:
+              raise SystemExit('bullets regex was not repaired')
+          if 'replace(/\\n/g,"<br><br>")' not in s:
+              raise SystemExit('declarations regex was not repaired')
+          print('index syntax repair markers OK')
+          PY
+
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No repair needed.'
+            exit 0
+          fi
+          git commit -m '[auto-fix-index] Repair malformed regex literals'
+          git push
