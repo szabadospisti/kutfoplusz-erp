@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Build clean Géppark
+      - name: Build clean Géppark + Workflow panel
         shell: python
         run: |
           from pathlib import Path
@@ -39,18 +39,17 @@ jobs:
             'fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js',
             'machine-fleet-nav-guard.js','machine-fleet-native.js'
           ]
-
-          # Remove every old external Géppark script. The previous workflow used
-          # an over-escaped regex, so those tags were never actually removed.
           for name in legacy:
               pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
               page=re.sub(pattern,'',page,flags=re.I)
 
-          module=Path('machine-fleet.js').read_text(encoding='utf-8')
-          page=page.replace('</body>','<script>\n'+module+'\n</script>\n</body>',1)
+          fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
+          workflow=Path('github-workflow-panel.js').read_text(encoding='utf-8')
+          injection='<script>\n'+fleet+'\n</script>\n<script>\n'+workflow+'\n</script>\n'
+          page=page.replace('</body>',injection+'</body>',1)
           p.write_text(page,encoding='utf-8')
 
-      - name: Verify Géppark
+      - name: Verify Géppark and Workflow panel
         shell: python
         run: |
           from pathlib import Path
@@ -64,14 +63,16 @@ jobs:
           ]
           for x in forbidden:
               if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','__fleetCreate','__fleetEdit','__fleetProfile','__fleetDelete']
+          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','__fleetCreate','__fleetEdit','__fleetProfile','__fleetDelete','github-workflow-panel','Workflow runs','actions/runs?branch=main']
           for x in required:
-              if x not in page: raise SystemExit('BUILD ERROR: missing clean Géppark component: '+x)
-          print('OK: one clean Géppark CRUD implementation')
+              if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
+          print('OK: clean Géppark + GitHub Actions panel')
 
       - name: JavaScript syntax check
         shell: bash
-        run: node --check machine-fleet.js
+        run: |
+          node --check machine-fleet.js
+          node --check github-workflow-panel.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
