@@ -1,53 +1,68 @@
-/* Géppark navigációs guard – a régi Géppark render soha nem futhat le. */
+/* Kútfő Plusz ERP – Géppark FINAL navigation guard.
+ * A régi machines view nem kaphat render-lehetőséget. A guard megvárja az egyetlen
+ * CRUD modult, majd közvetlenül annak rendererét használja. */
 (function(){
   'use strict';
 
-  function fleetTarget(el){
+  function isFleet(el){
     if(!el) return false;
-    const n=el.closest?.('.nav,button,a,[role="button"]') || el;
-    const view=(n.dataset?.view||n.dataset?.page||n.dataset?.target||n.getAttribute?.('data-view')||n.getAttribute?.('data-page')||n.getAttribute?.('href')||'').toString().toLowerCase();
-    const text=(n.textContent||'').trim().toLowerCase();
-    return view.includes('machines') || view.includes('machine') || view.includes('geppark') || view.includes('géppark') || text.includes('géppark');
+    const n=el.closest?.('.nav,button,a,[role="button"]')||el;
+    const ds=n.dataset||{};
+    const raw=[ds.page,ds.view,ds.target,n.getAttribute?.('data-page'),n.getAttribute?.('data-view'),n.getAttribute?.('href'),n.textContent].filter(Boolean).join(' ').toLowerCase();
+    return raw.includes('machines')||raw.includes('geppark')||raw.includes('géppark');
   }
 
-  function blockPaint(){
-    document.documentElement.classList.add('fleet-navigation-pending');
+  function hide(){
+    document.documentElement.classList.add('fleet-boot-pending');
+  }
+  function show(){
+    document.documentElement.classList.remove('fleet-boot-pending');
   }
 
   function renderFleet(){
-    window.current='machines';
-    blockPaint();
+    hide();
     if(typeof window.__kpFleetRender==='function'){
       window.__kpFleetRender();
-      document.documentElement.classList.remove('fleet-navigation-pending','fleet-boot-pending');
+      show();
       return true;
+    }
+    if(typeof window.__kpFleetCRUD==='boolean' || window.__kpFleetCRUD){
+      const r=document.getElementById('content')||document.querySelector('.content');
+      if(r && window.views && typeof window.views.machines==='function'){
+        r.innerHTML=window.views.machines();
+        show();
+        return true;
+      }
     }
     return false;
   }
 
   function intercept(e){
-    if(!fleetTarget(e.target)) return;
+    if(!isFleet(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    blockPaint();
-    if(!renderFleet()){
-      let n=0;
-      const timer=setInterval(function(){
-        if(renderFleet() || ++n>100) clearInterval(timer);
-      },25);
-    }
+    hide();
+    let n=0;
+    const t=setInterval(function(){
+      if(renderFleet() || ++n>100){clearInterval(t);if(n>100)show();}
+    },25);
   }
 
-  /* Capture at window level and on the earliest pointer/touch events. */
-  ['pointerdown','mousedown','touchstart','click'].forEach(type=>{
-    window.addEventListener(type,intercept,true);
+  ['pointerdown','mousedown','touchstart','click'].forEach(type=>document.addEventListener(type,intercept,true));
+
+  /* If the application starts directly on #/machines, never allow the old view
+     to become the visible first render. */
+  function boot(){
+    if((location.hash||'').toLowerCase().includes('/machines')){
+      hide();
+      let n=0;
+      const t=setInterval(function(){if(renderFleet()||++n>120){clearInterval(t);if(n>120)show();}},25);
+    }
+  }
+  window.addEventListener('hashchange',function(){
+    if((location.hash||'').toLowerCase().includes('/machines')){hide();renderFleet();}
   });
-
-  const style=document.createElement('style');
-  style.id='fleet-navigation-guard-css';
-  style.textContent='.fleet-navigation-pending .content{visibility:hidden!important}.fleet-navigation-pending #content{visibility:hidden!important}';
-  (document.head||document.documentElement).appendChild(style);
-
+  boot();
   window.__kpFleetNavigationGuard=true;
 })();
