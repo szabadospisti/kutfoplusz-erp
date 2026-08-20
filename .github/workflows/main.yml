@@ -1,20 +1,15 @@
 name: Deploy Kútfő Plusz ERP
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
-
 jobs:
   deploy:
     environment:
@@ -24,124 +19,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-
-      - name: Inject ERP modules and stable navigation
+      - name: Build ERP
         shell: python
         run: |
-          import os
-          import re
           from pathlib import Path
-          page = Path('index.html').read_text(encoding='utf-8')
-
-          legacy = [
-              'machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js',
-              'machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js',
-              'machine-new-unified.js','machine-profile-native.js','machine-profile-page.js',
-              'machine-profile-readonly.js','machine-profile-edit-inline.js',
-              'fleet-fallback.js','fleet-machine-profile.js'
-          ]
+          import re
+          p=Path('index.html'); page=p.read_text(encoding='utf-8')
+          legacy=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js']
           for name in legacy:
-              pattern = rf'<script\b[^>]*\bsrc=["\'][^"\']*{re.escape(name)}(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
-              page = re.sub(pattern, '', page, flags=re.IGNORECASE)
-
-          patches = [
-              'customer-work-types.js','ui-polish.js','ai-quote-prep.js',
-              'warehouse-materials.js','warehouse-material-delete.js','warehouse-material-edit.js','erp-fixes.js',
-              'erp-delete-manager.js','customer-details-actions.js','customer-details-dom-fix.js'
-          ]
-          marker='</script>'; pos=page.rfind(marker)
-          if pos<0: raise SystemExit('index.html: closing script tag not found')
-          page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
-
-          version=os.environ.get('GITHUB_SHA','dev')
-          fleet_boot_css='''<style id="fleet-boot-css">html.fleet-boot-pending .app{visibility:hidden!important}</style>\n<script>document.documentElement.classList.add('fleet-boot-pending');</script>\n'''
-          if '</head>' not in page: raise SystemExit('index.html: closing head tag not found')
-          page=page.replace('</head>',fleet_boot_css+'</head>',1)
-
-          machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
-          body_match=re.search(r'<body\b[^>]*>',page,re.IGNORECASE)
-          if not body_match: raise SystemExit('index.html: body tag not found')
-          page=page[:body_match.end()]+'\n'+machine_boot+page[body_match.end():]
-
-          machine_script=f'''<script>
-          (function(){{
-            try {{ window.views = views; }} catch(e) {{}}
-            try {{ window.db = db; }} catch(e) {{}}
-            try {{
-              Object.defineProperty(window,'current',{{configurable:true,get:function(){{return current;}},set:function(v){{current=v;}}}});
-            }} catch(e) {{}}
-          }})();
-          </script>
-          <script src="machine-fleet-crud.js?v={version}"></script>
-          <script src="machine-fleet-crud-fix.js?v={version}"></script>
-          '''
-          machine_override='''<script>
-          (function(){
-            function reveal(){document.documentElement.classList.remove('fleet-boot-pending');}
-            function install(){
-              if(!window.__kpFleetCRUD || !window.views || typeof window.views.machines!=='function' || typeof window.render!=='function') return false;
-              if(window.__kpFleetRenderGuard){
-                if(window.current==='machines' && typeof window.__kpFleetRender==='function') window.__kpFleetRender();
-                reveal();
-                return true;
-              }
-              var fleetView=window.views.machines;
-              var originalRender=window.render;
-              window.__kpFleetRenderGuard=true;
-              window.__kpFleetRender=function(){
-                var r=document.getElementById('content')||document.querySelector('.content');
-                if(!r)return;
-                r.innerHTML=fleetView();
-              };
-              window.render=function(){
-                if(window.current==='machines'){
-                  window.__kpFleetRender();
-                  return;
-                }
-                return originalRender.apply(this,arguments);
-              };
-              if(window.current==='machines') window.__kpFleetRender();
-              reveal();
-              return true;
-            }
-            var n=0;
-            var t=setInterval(function(){if(install()||++n>120)clearInterval(t);},50);
-            install();
-          })();
-          </script>
-          '''
-          page=page.replace('</body>',machine_script+machine_override+'</body>',1)
-          Path('index.html').write_text(page,encoding='utf-8')
-
-      - name: Verify generated page
+              page=re.sub(r'<script\b[^>]*\bsrc=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*','',page,flags=re.I)
+          module=Path('machine-fleet-native.js').read_text(encoding='utf-8')
+          page=page.replace('</body>','<script>\n'+module+'\n</script>\n</body>',1)
+          p.write_text(page,encoding='utf-8')
+      - name: Verify native fleet CRUD
         shell: python
         run: |
-          import re
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['fleet-boot-css','fleet-boot-pending','machine-fleet-nav-guard.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek','__kpFleetRenderGuard','__kpFleetRender','window.views = views','window.db = db','Object.defineProperty(window,\'current\'']
-          missing=[x for x in required if x not in page]
-          if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
-          forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
-          script_srcs=re.findall(r'<script\b[^>]*\bsrc=["\']([^"\']+)["\'][^>]*>',page,re.IGNORECASE)
-          present=[x for x in forbidden if any(x in src for src in script_srcs)]
-          if present: raise SystemExit('BUILD ERROR: legacy machine script loads present: '+', '.join(present))
-          for name in ['machine-fleet-nav-guard.js','machine-fleet-crud.js','machine-fleet-crud-fix.js']:
-              if sum(name in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: '+name+' is not loaded exactly once')
-          guard_pos=page.find('machine-fleet-nav-guard.js')
-          bridge_pos=page.find('window.views = views')
-          crud_pos=page.find('machine-fleet-crud.js')
-          fix_pos=page.find('machine-fleet-crud-fix.js')
-          body_pos=re.search(r'<body\b[^>]*>',page,re.IGNORECASE).end()
-          if not (body_pos < guard_pos < bridge_pos < crud_pos < fix_pos): raise SystemExit('BUILD ERROR: Géppark boot order is invalid')
-          print('OK: Géppark CRUD interaction bridge loaded after the primary CRUD module')
-
-      - name: Setup GitHub Pages
+          for x in ['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js']:
+              if x in page: raise SystemExit('BUILD ERROR: old fleet module remains: '+x)
+          for x in ['function fleetRender','function fleetNew','function fleetEdit','function fleetDelete']:
+              if x not in page: raise SystemExit('BUILD ERROR: native fleet CRUD missing: '+x)
+          print('OK: single native fleet CRUD')
+      - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload website
+      - name: Upload
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
