@@ -1555,7 +1555,7 @@ function sbSetSession(x){localStorage.setItem(SB_SESSION_KEY,JSON.stringify(x))}
 function sbClearSession(){localStorage.removeItem(SB_SESSION_KEY)}
 function authStatus(msg,isError=true){const e=document.getElementById("authStatus");if(e){e.textContent=msg||"";e.style.color=isError?"#c0392b":"#18733a"}}
 
-async function supabaseLogin(e){
+async function supabaseLogin(e){ if(window.__KP_AUTH_CORE__) return window.__KP_AUTH_LOGIN__(e);
  e.preventDefault(); authStatus("Bejelentkezés...");
  const email=document.getElementById("authEmail").value.trim(), password=document.getElementById("authPassword").value;
  try{
@@ -1630,7 +1630,7 @@ async function enterERP(user){
  const who=document.getElementById("cloudStatus");if(who)who.textContent="☁️ "+(user?.email||"Supabase");
  render();
 }
-async function bootERP(){
+async function bootERP(){ if(window.__KP_AUTH_CORE__) return;
  document.getElementById("erpApp")?.classList.add("auth-hidden");
  const ss=sbSession();
  if(!ss){document.getElementById("authOverlay")?.classList.remove("auth-hidden");return}
