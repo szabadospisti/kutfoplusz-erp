@@ -24,7 +24,8 @@ jobs:
         run: |
           from pathlib import Path
           import re
-          p=Path('index.html'); page=p.read_text(encoding='utf-8')
+          p=Path('index.html')
+          page=p.read_text(encoding='utf-8')
           legacy=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for name in legacy:
             pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
@@ -33,6 +34,14 @@ jobs:
           system=Path('system-workflow.js').read_text(encoding='utf-8')
           injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n'
           page=page.replace('</body>',injection+'</body>',1)
+          # A Rendszer gombot statikusan is beírjuk a meglévő oldalsávba.
+          # Így a menüpont akkor is látható, ha a dinamikus menü még nem épült fel.
+          if 'id="system-workflow-nav"' not in page:
+            btn='<button class="nav" id="system-workflow-nav" type="button" onclick="window.openSystemWorkflow&&window.openSystemWorkflow()"><i>⚙</i> Rendszer</button>'
+            m=re.search(r'(<button[^>]*class=["\'][^"\']*nav[^"\']*["\'][^>]*>\s*<i>[^<]*</i>\s*Riportok\s*</button>)',page,re.I)
+            if not m:
+              raise SystemExit('BUILD ERROR: Riportok nav item not found')
+            page=page[:m.end()]+btn+page[m.end():]
           p.write_text(page,encoding='utf-8')
       - name: Verify build
         shell: python
@@ -42,10 +51,10 @@ jobs:
           forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
             if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','Workflow / Deploy','actions/runs?branch=main']
+          required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view']
           for x in required:
             if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
-          print('OK: clean Géppark + Rendszer Workflow')
+          print('OK: static Rendszer nav + clean Géppark + Workflow')
       - name: JavaScript syntax check
         shell: bash
         run: |
@@ -53,10 +62,10 @@ jobs:
           node --check system-workflow.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Deploy
+      - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
