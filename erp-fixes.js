@@ -1,6 +1,5 @@
 /* Kútfő Plusz ERP – modulbetöltő és alap CRUD javítások. V15
- * A központi mentést az index.html saját save() útvonala kezeli.
- * A Géppark végleges CRUD-ja egyetlen UI/CRUD útvonal.
+ * DIAGNOSTIC TEST: visible Géppark label is changed to Géppark 1.
  */
 (function(){
   'use strict';
@@ -19,11 +18,22 @@
   function loadFleetFinal(){loadScriptOnce('Géppark végleges CRUD','machine-fleet-bridge.js?v=final4','__fleetFinalLoaded')}
   function loadFleetForce(){loadScriptOnce('Géppark végső render guard','machine-fleet-force.js?v=final3','__fleetForceLoaded')}
   function loadAll(){loadProjectCrud();loadProjectSync();loadProjectSaveFinal();loadFleetFinal();loadFleetForce()}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAll,{once:true});else loadAll();
-  let mc=0;
-  const mt=setInterval(()=>{
-    loadAll();
-    if(++mc>60&&window.__projectCrudLoaded&&window.__projectSyncLoaded&&window.__projectSaveFinalLoaded&&window.__fleetFinalLoaded&&window.__fleetForceLoaded)clearInterval(mt);
-    if(mc>100)clearInterval(mt);
-  },250);
+  function diagnosticRename(){
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    let n;
+    while(n=walker.nextNode()) if(n.nodeValue && n.nodeValue.trim()==='Géppark') nodes.push(n);
+    nodes.forEach(x=>{x.nodeValue=x.nodeValue.replace('Géppark','Géppark 1')});
+    if(nodes.length) window.__gepparkDiagnostic=true;
+  }
+  function startDiagnostic(){
+    diagnosticRename();
+    let i=0;
+    const t=setInterval(()=>{
+      diagnosticRename();
+      if(++i>120) clearInterval(t);
+    },250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{loadAll();startDiagnostic()},{once:true});
+  else {loadAll();startDiagnostic()}
 })();
