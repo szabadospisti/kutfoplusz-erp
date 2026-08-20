@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – Projektek végleges CRUD bridge
+/* Kútfő Plusz ERP – Projektek végleges központi CRUD bridge
  * Egyetlen adatút: db.projects -> központi save() -> erp_state.
  * A lista, adatlap és szerkesztő ugyanazt a normalizált projektobjektumot használja.
  */
@@ -10,12 +10,16 @@ function install(){
  const arr=()=>{window.db.projects=Array.isArray(window.db.projects)?window.db.projects:[];return window.db.projects};
  const customers=()=>Array.isArray(window.db.customers)?window.db.customers:[];
  const customerId=p=>p.customerId??p.customer_id??p.clientId??p.client_id??'';
- const findCustomer=p=>{const id=customerId(p);let c=customers().find(x=>String(x.id)===String(id));if(c)return c;const wanted=String(p.customerName??p.customer_name??p.customer??'').trim().toLowerCase();if(wanted)c=customers().find(x=>String(x.company_name??x.name??'').trim().toLowerCase()===wanted);return c||null};
- const customerName=p=>{const c=findCustomer(p);return c?.company_name||c?.name||p.customerName||p.customer_name||'—'};
+ const findCustomer=p=>{const id=customerId(p);let c=customers().find(x=>String(x.id)===String(id)||String(x.supabaseId||'')===String(id));if(c)return c;const wanted=String(p.customerName??p.customer_name??p.customer??'').trim().toLowerCase();if(wanted)c=customers().find(x=>String(x.company_name??x.companyName??x.name??'').trim().toLowerCase()===wanted);return c||null};
+ const customerName=p=>{const c=findCustomer(p);return c?.company_name||c?.companyName||c?.name||p.customerName||p.customer_name||'—'};
+ const statuses={interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'};
+ const legacyStatuses={'Tervezés':'interest','Tervezett':'interest','Érdeklődés':'interest','Ajánlat':'quote','Szerződött':'contracted','Folyamatban':'active','Aktív':'active','Befejezett':'completed','Elkészült':'completed','Lezárva':'cancelled','Lezárt':'cancelled'};
+ const normalizeStatus=s=>{const v=String(s??'').trim();return statuses[v]?v:(legacyStatuses[v]||'interest')};
  const normalize=p=>{
    const c=findCustomer(p);
    if(c){p.customerId=c.id;p.customer_id=c.id;}
    else if(customerId(p)){p.customerId=customerId(p);p.customer_id=customerId(p);}
+   p.status=normalizeStatus(p.status);
    if(p.value==null&&p.contract_value!=null)p.value=p.contract_value;
    if(p.contract_value==null&&p.value!=null)p.contract_value=p.value;
    if(p.planned==null&&p.planned_cost!=null)p.planned=p.planned_cost;
@@ -26,7 +30,6 @@ function install(){
    if(p.progress_pct==null&&p.progress!=null)p.progress_pct=p.progress;
    return p;
  };
- const statuses={interest:'Érdeklődés',quote:'Ajánlat',contracted:'Szerződött',active:'Folyamatban',completed:'Befejezett',cancelled:'Lezárt'};
  const fresh=()=>({id:typeof uid==='function'?uid('P'):'P-'+Date.now(),project_number:'',name:'',customerId:'',customer_id:'',location:'',status:'interest',value:0,contract_value:0,planned:0,planned_cost:0,cost:0,actual_cost:0,progress:0,progress_pct:0,notes:''});
  const persist=async()=>{if(typeof window.save!=='function')throw Error('A központi mentési rendszer nem érhető el.');const r=window.save();if(r&&typeof r.then==='function')await r};
  function modal(p,isNew){
@@ -35,7 +38,7 @@ function install(){
   x.innerHTML=`<div class="modalbox"><div class="modalhead"><h2>${isNew?'Új projekt':'Projekt szerkesztése'}</h2><button class="icon" id="pf_close">×</button></div><div class="modalbody"><div class="formgrid">
   <div class="field"><label>Projekt neve</label><input class="input" data-k="name" value="${esc(p.name)}"></div>
   <div class="field"><label>Projektazonosító</label><input class="input" data-k="project_number" value="${esc(p.project_number||p.id)}"></div>
-  <div class="field full"><label>Megrendelő</label><select class="select" data-k="customerId"><option value="">— Nincs megrendelő —</option>${customers().map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(customerId(p))?'selected':''}>${esc(c.company_name||c.name||c.id)}</option>`).join('')}</select></div>
+  <div class="field full"><label>Megrendelő</label><select class="select" data-k="customerId"><option value="">— Nincs megrendelő —</option>${customers().map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(customerId(p))?'selected':''}>${esc(c.company_name||c.companyName||c.name||c.id)}</option>`).join('')}</select></div>
   <div class="field full"><label>Helyszín</label><input class="input" data-k="location" value="${esc(p.location)}"></div>
   <div class="field"><label>Státusz</label><select class="select" data-k="status">${Object.entries(statuses).map(([k,v])=>`<option value="${k}" ${String(p.status||'interest')===k?'selected':''}>${v}</option>`).join('')}</select></div>
   <div class="field"><label>Szerződéses érték (Ft)</label><input class="input" type="number" data-k="value" value="${Number(p.value??p.contract_value)||0}"></div>
