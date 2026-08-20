@@ -18,15 +18,28 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import re
           p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          # The broken source contains a literal line break inside these regexes.
-          s2=re.sub(r'split\(/\\r\?\s*/\)', 'split(/\\r?\\n/)', s)
-          s2=re.sub(r'replace\(/\\s*/g', 'replace(/\\n/g', s2)
-          if s2!=s:
+          lines=p.read_text(encoding='utf-8').splitlines()
+          out=[]
+          i=0
+          repaired=False
+          while i<len(lines):
+              line=lines[i]
+              if 'const bullets=t=>' in line:
+                  out.append(' const bullets=t=>String(t||"").split(/\\r?\\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");')
+                  i += 2
+                  repaired=True
+                  continue
+              if 'const declarations=esc(q.declarations||"").replace(/' in line:
+                  out.append(' const declarations=esc(q.declarations||"").replace(/\\n/g,"<br><br>");')
+                  i += 2
+                  repaired=True
+                  continue
+              out.append(line)
+              i += 1
+          if repaired:
               print('Malformed regex literals repaired')
-              p.write_text(s2,encoding='utf-8')
+              p.write_text('\n'.join(out)+'\n',encoding='utf-8')
           else:
               print('No malformed regex found')
 
@@ -53,7 +66,7 @@ jobs:
           s=Path('index.html').read_text(encoding='utf-8')
           assert s.count('id="system-workflow-nav"')==1
           assert s.count('src="system-workflow.js"')==1
-          assert 'split(/\\r?\\n/)' in s
+          assert 'const bullets=t=>String(t||"").split(/\\r?\\n/)' in s
           assert 'replace(/\\n/g,"<br><br>")' in s
           print('OK: static navigation and regex repair verified')
 
