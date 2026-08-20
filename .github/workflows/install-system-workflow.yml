@@ -21,13 +21,14 @@ jobs:
           import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s2=re.sub(r'split\(/\\r\?\\\n/\)', 'split(/\\r?\\n/)', s)
-          s2=re.sub(r'replace\(/\\\n/g', 'replace(/\\n/g', s2)
-          if s2==s:
-              print('No malformed regex found')
-          else:
+          # The broken source contains a literal line break inside these regexes.
+          s2=re.sub(r'split\(/\\r\?\s*/\)', 'split(/\\r?\\n/)', s)
+          s2=re.sub(r'replace\(/\\s*/g', 'replace(/\\n/g', s2)
+          if s2!=s:
               print('Malformed regex literals repaired')
               p.write_text(s2,encoding='utf-8')
+          else:
+              print('No malformed regex found')
 
       - name: Install static Rendszer navigation
         shell: python
