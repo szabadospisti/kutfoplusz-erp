@@ -16,3 +16,5 @@
 A `supabase_config.js` csak a Supabase publishable key-t tartalmazza. Secret/service-role kulcs nincs a projektben.
 
 A projekt használatához Supabase Auth felhasználó szükséges.
+
+<!-- Deploy validation checkpoint: external CRUD modules are syntax-gated before Pages deployment. -->
