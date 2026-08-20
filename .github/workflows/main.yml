@@ -41,6 +41,21 @@ jobs:
               raise SystemExit('BUILD ERROR: Riportok nav item not found')
             page=page[:m.end()]+btn+page[m.end():]
           p.write_text(page,encoding='utf-8')
+      - name: Verify single central save path
+        shell: python
+        run: |
+          from pathlib import Path
+          page=Path('index.html').read_text(encoding='utf-8')
+          fixes=Path('erp-fixes.js').read_text(encoding='utf-8')
+          if 'function save(' not in page:
+            raise SystemExit('BUILD ERROR: central save() is missing from index.html')
+          if 'async function supabaseCloudSave' not in page:
+            raise SystemExit('BUILD ERROR: central Supabase save is missing from index.html')
+          if 'window.save=' in fixes or 'window.save =' in fixes:
+            raise SystemExit('BUILD ERROR: erp-fixes.js still overrides window.save')
+          if '/rest/v1/erp_state' in fixes or 'from(\'erp_state\')' in fixes or 'from("erp_state")' in fixes:
+            raise SystemExit('BUILD ERROR: erp-fixes.js still contains a duplicate erp_state writer')
+          print('OK: exactly one central save path; erp-fixes is loader-only')
       - name: Verify build
         shell: python
         run: |
@@ -58,6 +73,7 @@ jobs:
         run: |
           node --check machine-fleet.js
           node --check system-workflow.js
+          node --check erp-fixes.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
