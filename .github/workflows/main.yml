@@ -34,7 +34,8 @@ jobs:
           fleet=fleet.replace('views.machines=view;return true;','views.machines=view;if(typeof current!==\'undefined\'&&current===\'machines\'&&typeof render===\'function\')render();return true;')
           system=Path('system-workflow.js').read_text(encoding='utf-8')
           bridge=Path('machine-fleet-bridge.js').read_text(encoding='utf-8')
-          injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n<script>\n'+bridge+'\n</script>\n'
+          customer=Path('customer-crud-central.js').read_text(encoding='utf-8')
+          injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n<script>\n'+bridge+'\n</script>\n<script>\n'+customer+'\n</script>\n'
           page=page.replace('</body>',injection+'</body>',1)
           guard='''<script>\n(function(){\n  function fleetActive(){\n    var a=document.querySelector('.nav.active');\n    return !!(a && /Géppark/i.test(a.textContent||''));\n  }\n  function forceFleet(){\n    try{\n      if(!fleetActive()) return;\n      var c=document.getElementById('content')||document.querySelector('.content');\n      if(!c) return;\n      if(typeof window.__gfView==='function'){\n        c.innerHTML=window.__gfView();\n        return;\n      }\n      if(typeof window.views!=='undefined' && window.views && typeof window.views.machines==='function'){\n        c.innerHTML=window.views.machines();\n      }\n    }catch(e){ console.error('Géppark render guard:',e); }\n  }\n  document.addEventListener('click',function(e){\n    var n=e.target && e.target.closest ? e.target.closest('.nav') : null;\n    if(n && /Géppark/i.test(n.textContent||'')){\n      setTimeout(forceFleet,0);\n      setTimeout(forceFleet,80);\n      setTimeout(forceFleet,250);\n      setTimeout(forceFleet,600);\n    }\n  },true);\n  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){\n    setTimeout(forceFleet,0); setTimeout(forceFleet,100); setTimeout(forceFleet,300); setTimeout(forceFleet,700);\n  });\n  else { setTimeout(forceFleet,0); setTimeout(forceFleet,100); setTimeout(forceFleet,300); setTimeout(forceFleet,700); }\n})();\n</script>\n'''
           page=page.replace('</body>',guard+'</body>',1)
@@ -77,7 +78,7 @@ jobs:
         run: |
           from pathlib import Path
           import re, subprocess
-          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js']
+          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js','customer-crud-central.js']
           failed=False
           for name in files:
             r=subprocess.run(['node','--check',name],text=True,capture_output=True)
