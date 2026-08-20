@@ -54,9 +54,31 @@ jobs:
           page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
 
           version=os.environ.get('GITHUB_SHA','dev')
+
+          # Hide the content area during the tiny bootstrap window. This prevents
+          # the legacy "Gép" view from flashing before the authoritative
+          # "Eszköz" CRUD module takes over.
+          page=page.replace('<head>', '<head>\n<style id="kp-machine-boot-style">body.kp-machine-booting #content{visibility:hidden!important}</style>', 1)
+          page=page.replace('<body>', '<body class="kp-machine-booting">', 1)
+
           machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
           machine_script=f'<script src="machine-fleet-crud.js?v={version}"></script>\n'
-          page=page.replace('</body>',machine_boot+machine_script+'</body>',1)
+          machine_reveal='''<script>
+(function(){
+  function reveal(){
+    if(window.__kpFleetCRUD){
+      document.body.classList.remove('kp-machine-booting');
+      return true;
+    }
+    return false;
+  }
+  if(!reveal()){
+    var n=0;
+    var t=setInterval(function(){if(reveal()||++n>120)clearInterval(t);},50);
+  }
+})();
+</script>\n'''
+          page=page.replace('</body>',machine_boot+machine_script+machine_reveal+'</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
       - name: Verify generated page
@@ -65,7 +87,7 @@ jobs:
           import re
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['machine-fleet-nav-guard.js','machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
+          required=['kp-machine-boot-style','kp-machine-booting','machine-fleet-nav-guard.js','machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
           forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
@@ -74,7 +96,7 @@ jobs:
           if present: raise SystemExit('BUILD ERROR: legacy machine script loads present: '+', '.join(present))
           if sum('machine-fleet-nav-guard.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-nav-guard.js is not loaded exactly once')
           if sum('machine-fleet-crud.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-crud.js is not loaded exactly once')
-          print('OK: one authoritative Géppark CRUD with navigation guard, legacy loads removed, cache-busted per commit')
+          print('OK: no Géppark flash; authoritative Eszköz CRUD is revealed after bootstrap')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
