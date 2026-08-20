@@ -16,18 +16,17 @@
   }
   function data(){try{return typeof db!=='undefined'?db:null}catch(e){return null}}
 
+  /*
+   * ÜGYFÉL: ez csak kompatibilitási adapter.
+   * A tényleges törlés kizárólag a központi customer-crud-central.js remove()
+   * függvényben történik. Így nincs második törlési útvonal, nincs projekt- vagy
+   * ajánlatfüggő blokkolás, és a központi save() menti az állapotot.
+   */
   async function deleteCustomer(id){
-    const d=data();if(!d)return;
-    const c=(d.customers||[]).find(x=>String(x.id)===String(id));if(!c)return;
-    const linkedProjects=(d.projects||[]).filter(x=>String(x.customerId)===String(id));
-    const linkedQuotes=(d.quotes||[]).filter(x=>String(x.customerId)===String(id));
-    const linkedLogs=(d.worklogs||[]).filter(x=>String(x.customerId)===String(id));
-    if(linkedProjects.length||linkedQuotes.length||linkedLogs.length)throw new Error('Az ügyfél nem törölhető: kapcsolódó projekt, ajánlat vagy munkanapló tartozik hozzá.');
-    if(!confirm('Biztosan törlöd ezt az ügyfelet?\n\n'+(c.name||id)))return false;
-    if(c.supabaseId)await rest('customers?id=eq.'+encodeURIComponent(c.supabaseId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
-    d.customers=d.customers.filter(x=>String(x.id)!==String(id));
-    if(typeof save==='function')save();else localStorage.setItem('kutfoplusz_erp_v12',JSON.stringify(d));
-    if(typeof closeModal==='function')closeModal();if(typeof closeDrawer==='function')closeDrawer();if(typeof render==='function')render();if(typeof toast==='function')toast('Ügyfél törölve');return true;
+    if(window.kpCustomerCentral && typeof window.kpCustomerCentral.remove==='function'){
+      return await window.kpCustomerCentral.remove(id);
+    }
+    throw new Error('A központi Ügyfél CRUD még nem töltődött be. Frissítsd az oldalt, majd próbáld újra.');
   }
 
   async function findRemoteProject(p){
@@ -50,7 +49,7 @@
       await rest('projects?id=eq.'+encodeURIComponent(remoteId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
     }
     d.projects=d.projects.filter(x=>String(x.id)!==String(id));
-    if(typeof save==='function')save();
+    if(typeof save==='function')await save();
     if(typeof closeDrawer==='function')closeDrawer();if(typeof closeModal==='function')closeModal();if(typeof nav==='function')nav('projects');if(typeof toast==='function')toast('Projekt törölve');return true;
   }
 
@@ -58,7 +57,7 @@
     const d=data();if(!d)return;const q=(d.quotes||[]).find(x=>String(x.id)===String(id));if(!q)return;
     if(!confirm('Biztosan törlöd ezt az ajánlatot?\n\n'+(q.id||id)))return false;
     if(q.supabaseId)await rest('quotes?id=eq.'+encodeURIComponent(q.supabaseId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
-    d.quotes=d.quotes.filter(x=>String(x.id)!==String(id));if(typeof save==='function')save();if(typeof render==='function')render();if(typeof toast==='function')toast('Ajánlat törölve');return true;
+    d.quotes=d.quotes.filter(x=>String(x.id)!==String(id));if(typeof save==='function')await save();if(typeof render==='function')render();if(typeof toast==='function')toast('Ajánlat törölve');return true;
   }
 
   async function deleteWorklog(id){
@@ -69,15 +68,15 @@
       await rest('work_log_filters?work_log_id=eq.'+encodeURIComponent(w.supabaseId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
       await rest('work_logs?id=eq.'+encodeURIComponent(w.supabaseId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
     }
-    d.worklogs=d.worklogs.filter(x=>String(x.id)!==String(id));if(typeof save==='function')save();if(typeof closeModal==='function')closeModal();if(typeof render==='function')render();if(typeof toast==='function')toast('Munkanapló törölve');return true;
+    d.worklogs=d.worklogs.filter(x=>String(x.id)!==String(id));if(typeof save==='function')await save();if(typeof closeModal==='function')closeModal();if(typeof render==='function')render();if(typeof toast==='function')toast('Munkanapló törölve');return true;
   }
 
-  async function deleteMachine(id){const d=data();if(!d)return;const m=(d.machines||[]).find(x=>String(x.id)===String(id));if(!m)return;if(!confirm('Biztosan törlöd ezt a gépet?\n\n'+(m.name||id)))return false;d.machines=d.machines.filter(x=>String(x.id)!==String(id));if(typeof save==='function')save();if(typeof render==='function')render();if(typeof toast==='function')toast('Gép törölve');return true}
-  async function deleteMaterial(id){const d=data();if(!d)return;const m=(d.materials||[]).find(x=>String(x.id)===String(id));if(!m)return;if(!confirm('Biztosan törlöd ezt az anyagot?\n\n'+(m.name||id)))return false;d.materials=d.materials.filter(x=>String(x.id)!==String(id));if(typeof save==='function')save();if(typeof render==='function')render();if(typeof toast==='function')toast('Anyag törölve');return true}
+  async function deleteMachine(id){const d=data();if(!d)return;const m=(d.machines||[]).find(x=>String(x.id)===String(id));if(!m)return;if(!confirm('Biztosan törlöd ezt a gépet?\n\n'+(m.name||id)))return false;d.machines=d.machines.filter(x=>String(x.id)!==String(id));if(typeof save==='function')await save();if(typeof render==='function')render();if(typeof toast==='function')toast('Gép törölve');return true}
+  async function deleteMaterial(id){const d=data();if(!d)return;const m=(d.materials||[]).find(x=>String(x.id)===String(id));if(!m)return;if(!confirm('Biztosan törlöd ezt az anyagot?\n\n'+(m.name||id)))return false;d.materials=d.materials.filter(x=>String(x.id)!==String(id));if(typeof save==='function')await save();if(typeof render==='function')render();if(typeof toast==='function')toast('Anyag törölve');return true}
 
   function installGlobals(){
+    /* Ügyfélnél a központi CRUD az egyetlen autoritatív törlési útvonal. */
     window.deleteCustomer=deleteCustomer;window.kpDeleteCustomer=deleteCustomer;
-    /* A projekt törlését a projekt CRUD egyetlen, autoritatív rétege kezeli. */
     if(!window.KPProjectCRUDLive){window.deleteProject=deleteProject;window.kpDeleteProject=deleteProject;}
     window.deleteQuote=deleteQuote;window.kpDeleteQuote=deleteQuote;
     window.deleteWorklog=deleteWorklog;window.kpDeleteWorklog=deleteWorklog;
