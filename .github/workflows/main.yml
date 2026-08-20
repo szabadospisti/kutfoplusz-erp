@@ -28,6 +28,7 @@ jobs:
       - name: Inject ERP modules and stable navigation
         shell: python
         run: |
+          import os
           from pathlib import Path
           page = Path('index.html').read_text(encoding='utf-8')
           patches = [
@@ -38,7 +39,8 @@ jobs:
           marker='</script>'; pos=page.rfind(marker)
           if pos<0: raise SystemExit('index.html: closing script tag not found')
           page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
-          machine_script='<script src="machine-fleet-crud.js?v=1"></script>\n'
+          version=os.environ.get('GITHUB_SHA','dev')
+          machine_script=f'<script src="machine-fleet-crud.js?v={version}"></script>\n'
           page=page.replace('</body>',machine_script+'</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
@@ -53,7 +55,8 @@ jobs:
           forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
           present=[x for x in forbidden if x in page]
           if present: raise SystemExit('BUILD ERROR: legacy machine modules present: '+', '.join(present))
-          print('OK: one authoritative machine CRUD module')
+          if page.count('machine-fleet-crud.js') != 1: raise SystemExit('BUILD ERROR: machine-fleet-crud.js is not loaded exactly once')
+          print('OK: one authoritative machine CRUD module, cache-busted per commit')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
