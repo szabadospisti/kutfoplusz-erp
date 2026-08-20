@@ -1,4 +1,5 @@
 create extension if not exists pgcrypto;
+
 create table if not exists customers (id uuid primary key default gen_random_uuid(), company_name text not null, customer_type text default 'company', tax_number text, address text, billing_address text, phone text, email text, contact_person text, notes text, created_at timestamptz default now());
 create table if not exists quotes (id uuid primary key default gen_random_uuid(), quote_number text unique not null, customer_id uuid references customers(id), project_name text, location text, quote_date date default current_date, valid_until date, status text default 'draft', net_total numeric(14,2) default 0, vat_total numeric(14,2) default 0, gross_total numeric(14,2) default 0, notes text, created_at timestamptz default now());
 create table if not exists quote_items (id uuid primary key default gen_random_uuid(), quote_id uuid references quotes(id) on delete cascade, description text not null, category text, quantity numeric(14,3) default 1, unit text, unit_price numeric(14,2) default 0, vat_rate numeric(5,2) default 27, net_total numeric(14,2) default 0, vat_total numeric(14,2) default 0, gross_total numeric(14,2) default 0);
@@ -14,6 +15,44 @@ create table if not exists project_material_usage (id uuid primary key default g
 create table if not exists project_costs (id uuid primary key default gen_random_uuid(), project_id uuid references projects(id) on delete cascade, category text not null, description text, amount numeric(14,2) not null, cost_date date default current_date, source_type text, source_id uuid);
 create table if not exists machine_usage (id uuid primary key default gen_random_uuid(), machine_id uuid references machines(id), project_id uuid references projects(id), usage_date date default current_date, start_hours numeric(12,1), end_hours numeric(12,1), hours numeric(12,1), cost numeric(14,2) default 0);
 create table if not exists machine_service (id uuid primary key default gen_random_uuid(), machine_id uuid references machines(id) on delete cascade, service_date date, operating_hours numeric(12,1), service_type text, cost numeric(14,2) default 0, description text, next_service_hours numeric(12,1), next_service_date date);
+
+-- Központi ERP állapot: a teljes böngészőben kezelt ERP-adat JSONB-ként.
+-- Az alkalmazás a singleton "main" rekordot upserteli.
+create table if not exists public.erp_state (
+  id text primary key default 'main',
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null
+);
+
+create index if not exists idx_erp_state_updated_at on public.erp_state(updated_at desc);
+
+alter table public.erp_state enable row level security;
+
+drop policy if exists "ERP state read" on public.erp_state;
+drop policy if exists "ERP state insert" on public.erp_state;
+drop policy if exists "ERP state update" on public.erp_state;
+drop policy if exists "ERP state delete" on public.erp_state;
+
+create policy "ERP state read" on public.erp_state for select to authenticated using (id = 'main');
+create policy "ERP state insert" on public.erp_state for insert to authenticated with check (id = 'main');
+create policy "ERP state update" on public.erp_state for update to authenticated using (id = 'main') with check (id = 'main');
+create policy "ERP state delete" on public.erp_state for delete to authenticated using (id = 'main');
+
+create or replace function public.erp_state_touch()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  new.updated_by = auth.uid();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_erp_state_touch on public.erp_state;
+create trigger trg_erp_state_touch before insert or update on public.erp_state for each row execute function public.erp_state_touch();
+
 create index if not exists idx_project_material_requirements_project on project_material_requirements(project_id);
 create index if not exists idx_project_material_requirements_product on project_material_requirements(product_id);
 create index if not exists idx_project_material_usage_project on project_material_usage(project_id);
