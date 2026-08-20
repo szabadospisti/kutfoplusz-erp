@@ -1,7 +1,6 @@
-/* Kútfő Plusz ERP – Projektek központi CRUD bridge.
- * Egyetlen adatút: db.projects -> window.save() -> Supabase erp_state.
- * Régi direct project-table CRUD modulok nincsenek betöltve.
- */
+/* Kútfő Plusz ERP – központi CRUD bridge.
+ * A meglévő UI belépési pontjait megtartja, a tartós adatkezelést
+ * relációs Supabase modulokra tereli. */
 (function(){
   'use strict';
   function loadScript(src){
@@ -24,13 +23,15 @@
     window.saveProject=function(e){if(e&&e.preventDefault)e.preventDefault();return false;};
     window.saveProjectEdit=function(e){if(e&&e.preventDefault)e.preventDefault();return false;};
     window.__KP_PROJECT_CENTRAL_BRIDGE__=true;
-    console.info('[ERP] Projektek: single central CRUD active');
+    console.info('[ERP] Projektek: central CRUD active');
     return true;
   }
   function boot(){
+    loadScript('erp-data-v2.js').catch(function(err){console.error('[ERP] Relational data API:',err);});
     loadScript('erp-save-core.js').catch(function(err){console.error('[ERP] Central save core:',err);});
     loadScript('project-fleet-bridge.js').catch(function(err){console.error('[ERP] Project central bridge:',err);});
     loadScript('system-workflow.js').catch(function(err){console.warn('[ERP] System workflow:',err);});
+    loadScript('worklog-relational-bridge-v1.js').catch(function(err){console.error('[ERP] Worklog relational bridge:',err);});
     var n=0,t=setInterval(function(){if(install()||++n>200)clearInterval(t)},50);
   }
   boot();
