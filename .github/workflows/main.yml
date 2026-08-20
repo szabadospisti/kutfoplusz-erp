@@ -35,6 +35,12 @@ jobs:
           system=Path('system-workflow.js').read_text(encoding='utf-8')
           injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n'
           page=page.replace('</body>',injection+'</body>',1)
+          # Hard runtime guard: if the Géppark route is active, the only rendered
+          # view is the new machine-fleet.js CRUD view. This runs after the old
+          # application renderer and after navigation clicks, eliminating the
+          # remaining legacy-render race without touching the other modules.
+          guard='''<script>\n(function(){\n  function fleetActive(){\n    var a=document.querySelector('.nav.active');\n    return !!(a && /Géppark/i.test(a.textContent||''));\n  }\n  function forceFleet(){\n    try{\n      if(!fleetActive()) return;\n      if(typeof views==='undefined' || !views || typeof views.machines!=='function') return;\n      var c=document.getElementById('content')||document.querySelector('.content');\n      if(!c) return;\n      c.innerHTML=views.machines();\n    }catch(e){ console.error('Géppark render guard:',e); }\n  }\n  document.addEventListener('click',function(e){\n    var n=e.target && e.target.closest ? e.target.closest('.nav') : null;\n    if(n && /Géppark/i.test(n.textContent||'')){\n      setTimeout(forceFleet,0);\n      setTimeout(forceFleet,80);\n      setTimeout(forceFleet,250);\n    }\n  },true);\n  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){\n    setTimeout(forceFleet,0); setTimeout(forceFleet,100); setTimeout(forceFleet,300);\n  });\n  else { setTimeout(forceFleet,0); setTimeout(forceFleet,100); setTimeout(forceFleet,300); }\n})();\n</script>\n'''
+          page=page.replace('</body>',guard+'</body>',1)
           if 'id="system-workflow-nav"' not in page:
             btn='<button class="nav" id="system-workflow-nav" type="button" onclick="window.openSystemWorkflow&&window.openSystemWorkflow()"><i>⚙</i> Rendszer</button>'
             m=re.search(r'(<button[^>]*class=["\'][^"\']*nav[^"\']*["\'][^>]*>\s*<i>[^<]*</i>\s*Riportok\s*</button>)',page,re.I)
@@ -65,10 +71,10 @@ jobs:
           forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
             if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view']
+          required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view','forceFleet','ESZKÖZ']
           for x in required:
             if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
-          print('OK: static Rendszer nav + clean Géppark + Workflow')
+          print('OK: static Rendszer nav + clean Géppark + Workflow + runtime guard')
       - name: JavaScript syntax check
         shell: bash
         run: |
