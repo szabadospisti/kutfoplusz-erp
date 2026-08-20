@@ -34,8 +34,6 @@ jobs:
           system=Path('system-workflow.js').read_text(encoding='utf-8')
           injection='<script>\n'+fleet+'\n</script>\n<script>\n'+system+'\n</script>\n'
           page=page.replace('</body>',injection+'</body>',1)
-          # A Rendszer gombot statikusan is beírjuk a meglévő oldalsávba.
-          # Így a menüpont akkor is látható, ha a dinamikus menü még nem épült fel.
           if 'id="system-workflow-nav"' not in page:
             btn='<button class="nav" id="system-workflow-nav" type="button" onclick="window.openSystemWorkflow&&window.openSystemWorkflow()"><i>⚙</i> Rendszer</button>'
             m=re.search(r'(<button[^>]*class=["\'][^"\']*nav[^"\']*["\'][^>]*>\s*<i>[^<]*</i>\s*Riportok\s*</button>)',page,re.I)
@@ -66,6 +64,26 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
+      - name: Cancel stale GitHub Pages deployment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          echo "Checking for stale GitHub Pages deployments..."
+          deployments="$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2026-03-10" "${api}/deployments?environment=github-pages&per_page=20")"
+          echo "$deployments" | jq -r '.[].sha' | while read -r sha; do
+            [ -z "$sha" ] && continue
+            [ "$sha" = "$GITHUB_SHA" ] && continue
+            status="$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2026-03-10" "${api}/pages/deployments/${sha}" | jq -r '.status // empty' || true)"
+            if [ "$status" = "in_progress" ]; then
+              echo "Cancelling stale Pages deployment: $sha"
+              curl -fsS -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2026-03-10" "${api}/pages/deployments/${sha}/cancel"
+              echo
+            fi
+          done
+          sleep 5
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
