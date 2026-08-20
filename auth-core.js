@@ -95,4 +95,6 @@
       showERP(active.user);
     }catch(err){console.warn('[ERP] Auth boot:',err);clearSession();showLogin();status('Jelentkezz be újra. '+(err.message||''),true)}
   };
+
+  setTimeout(function(){window.__KP_AUTH_BOOT__();},0);
 })();
