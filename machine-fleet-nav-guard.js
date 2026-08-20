@@ -1,22 +1,35 @@
-/* Géppark navigációs guard – a régi inline render ne futhasson le a CRUD előtt. */
+/* Géppark navigációs guard – minden navigációs útvonalat elfog, mielőtt a régi Géppark renderelne. */
 (function(){
   'use strict';
-  const isFleetNav=e=>{
-    const n=e.target?.closest?.('.nav');
-    if(!n)return false;
-    const view=n.dataset?.view||n.dataset?.page||n.getAttribute('data-target')||'';
+
+  function fleetTarget(el){
+    if(!el) return false;
+    const n=el.closest?.('.nav,button,a,[role="button"]') || el;
+    const view=(n.dataset?.view||n.dataset?.page||n.dataset?.target||n.getAttribute?.('data-view')||n.getAttribute?.('data-page')||n.getAttribute?.('href')||'').toString().toLowerCase();
     const text=(n.textContent||'').trim().toLowerCase();
-    return view==='machines'||view==='machine'||view==='geppark'||text.includes('géppark');
-  };
-  document.addEventListener('click',e=>{
-    if(!isFleetNav(e))return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    window.current='machines';
-    if(typeof window.render==='function')window.render();
-  },true);
-  if(window.current==='machines'){
-    const r=document.getElementById('content')||document.querySelector('.content');
-    if(r)r.innerHTML='';
+    return view.includes('machines') || view.includes('machine') || view.includes('geppark') || view.includes('géppark') || text.includes('géppark');
   }
+
+  function renderFleet(){
+    window.current='machines';
+    if(typeof window.__kpFleetRender==='function') return window.__kpFleetRender();
+    if(typeof window.render==='function') return window.render();
+  }
+
+  document.addEventListener('click',function(e){
+    if(!fleetTarget(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    renderFleet();
+  },true);
+
+  document.addEventListener('pointerup',function(e){
+    if(!fleetTarget(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  },true);
+
+  window.__kpFleetNavigationGuard=true;
 })();
