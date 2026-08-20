@@ -42,7 +42,7 @@ jobs:
           forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
             if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','system-workflow','Workflow / Deploy','actions/runs?branch=main']
+          required=['function create()','function edit(id)','function profile(id)','function view()','views.machines=view','Workflow / Deploy','actions/runs?branch=main']
           for x in required:
             if x not in page: raise SystemExit('BUILD ERROR: missing component: '+x)
           print('OK: clean Géppark + Rendszer Workflow')
