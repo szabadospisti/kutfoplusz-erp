@@ -1,4 +1,4 @@
-/* Géppark navigációs guard – minden navigációs útvonalat elfog, mielőtt a régi Géppark renderelne. */
+/* Géppark navigációs guard – a régi Géppark render soha nem futhat le. */
 (function(){
   'use strict';
 
@@ -10,26 +10,44 @@
     return view.includes('machines') || view.includes('machine') || view.includes('geppark') || view.includes('géppark') || text.includes('géppark');
   }
 
-  function renderFleet(){
-    window.current='machines';
-    if(typeof window.__kpFleetRender==='function') return window.__kpFleetRender();
-    if(typeof window.render==='function') return window.render();
+  function blockPaint(){
+    document.documentElement.classList.add('fleet-navigation-pending');
   }
 
-  document.addEventListener('click',function(e){
-    if(!fleetTarget(e.target)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    renderFleet();
-  },true);
+  function renderFleet(){
+    window.current='machines';
+    blockPaint();
+    if(typeof window.__kpFleetRender==='function'){
+      window.__kpFleetRender();
+      document.documentElement.classList.remove('fleet-navigation-pending','fleet-boot-pending');
+      return true;
+    }
+    return false;
+  }
 
-  document.addEventListener('pointerup',function(e){
+  function intercept(e){
     if(!fleetTarget(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-  },true);
+    blockPaint();
+    if(!renderFleet()){
+      let n=0;
+      const timer=setInterval(function(){
+        if(renderFleet() || ++n>100) clearInterval(timer);
+      },25);
+    }
+  }
+
+  /* Capture at window level and on the earliest pointer/touch events. */
+  ['pointerdown','mousedown','touchstart','click'].forEach(type=>{
+    window.addEventListener(type,intercept,true);
+  });
+
+  const style=document.createElement('style');
+  style.id='fleet-navigation-guard-css';
+  style.textContent='.fleet-navigation-pending .content{visibility:hidden!important}.fleet-navigation-pending #content{visibility:hidden!important}';
+  (document.head||document.documentElement).appendChild(style);
 
   window.__kpFleetNavigationGuard=true;
 })();
