@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Repair malformed JavaScript regex literals
+        shell: python
         run: |
-          python3 - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
@@ -27,26 +27,43 @@ jobs:
           if start < 0 or end < 0:
               raise SystemExit('quote document block not found')
 
-          replacement = ''' const bullets=t=>String(t||"").split(/\r?\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
- const declarations=esc(q.declarations||"").replace(/\n/g,"<br><br>");
-'''
+          replacement = ' const bullets=t=>String(t||"").split(/\\r?\\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");\n const declarations=esc(q.declarations||"").replace(/\\n/g,"<br><br>");\n'
           s = s[:start] + replacement + s[end:]
           p.write_text(s, encoding='utf-8')
-          PY
+          print('index.html repair applied')
 
       - name: Verify repaired JavaScript syntax
+        shell: python
         run: |
-          python3 - <<'PY'
           from pathlib import Path
+          import re
+          import subprocess
+          import sys
+
           s = Path('index.html').read_text(encoding='utf-8')
           if 'const bullets=t=>String(t||"").split(/\\r?\\n/)' not in s:
               raise SystemExit('bullets regex was not repaired')
           if 'replace(/\\n/g,"<br><br>")' not in s:
               raise SystemExit('declarations regex was not repaired')
-          print('index syntax repair markers OK')
-          PY
+
+          blocks = re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>', s, re.I)
+          if not blocks:
+              raise SystemExit('no inline JavaScript blocks found')
+
+          for i, code in enumerate(blocks, 1):
+              path = Path(f'/tmp/erp-inline-{i}.js')
+              path.write_text(code, encoding='utf-8')
+              result = subprocess.run(['node', '--check', str(path)], text=True, capture_output=True)
+              if result.returncode:
+                  print(f'INLINE_SCRIPT_{i}_SYNTAX_ERROR')
+                  print(result.stdout)
+                  print(result.stderr)
+                  raise SystemExit(result.returncode)
+
+          print(f'OK: {len(blocks)} inline JavaScript blocks passed node --check')
 
       - name: Commit repair
+        shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -56,4 +73,5 @@ jobs:
             exit 0
           fi
           git commit -m '[auto-fix-index] Repair malformed regex literals'
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
