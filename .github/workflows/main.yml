@@ -55,29 +55,29 @@ jobs:
 
           version=os.environ.get('GITHUB_SHA','dev')
 
-          # Hide the content area during the tiny bootstrap window. This prevents
-          # the legacy "Gép" view from flashing before the authoritative
-          # "Eszköz" CRUD module takes over.
+          # Hide the content area during the bootstrap window so the legacy
+          # machine view cannot flash before the authoritative CRUD module loads.
           page=page.replace('<head>', '<head>\n<style id="kp-machine-boot-style">body.kp-machine-booting #content{visibility:hidden!important}</style>', 1)
           page=page.replace('<body>', '<body class="kp-machine-booting">', 1)
 
           machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
           machine_script=f'<script src="machine-fleet-crud.js?v={version}"></script>\n'
           machine_reveal='''<script>
-(function(){
-  function reveal(){
-    if(window.__kpFleetCRUD){
-      document.body.classList.remove('kp-machine-booting');
-      return true;
-    }
-    return false;
-  }
-  if(!reveal()){
-    var n=0;
-    var t=setInterval(function(){if(reveal()||++n>120)clearInterval(t);},50);
-  }
-})();
-</script>\n'''
+          (function(){
+            function reveal(){
+              if(window.__kpFleetCRUD){
+                document.body.classList.remove('kp-machine-booting');
+                return true;
+              }
+              return false;
+            }
+            if(!reveal()){
+              var n=0;
+              var t=setInterval(function(){if(reveal()||++n>120)clearInterval(t);},50);
+            }
+          })();
+          </script>
+          '''
           page=page.replace('</body>',machine_boot+machine_script+machine_reveal+'</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
