@@ -22,13 +22,13 @@ jobs:
           s = p.read_text(encoding='utf-8')
 
           start = s.find(' const bullets=t=>')
-          marker = ' return `<div class=\\"quote-doc\\">'
+          marker = ' return `<div class="quote-doc">'
           end = s.find(marker, start)
           if start < 0 or end < 0:
               raise SystemExit('quote document block not found')
 
-          replacement = ''' const bullets=t=>String(t||"").split(/\\r?\\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
- const declarations=esc(q.declarations||"").replace(/\\n/g,"<br><br>");
+          replacement = ''' const bullets=t=>String(t||"").split(/\r?\n/).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+ const declarations=esc(q.declarations||"").replace(/\n/g,"<br><br>");
 '''
           s = s[:start] + replacement + s[end:]
           p.write_text(s, encoding='utf-8')
@@ -38,7 +38,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           s = Path('index.html').read_text(encoding='utf-8')
           if 'const bullets=t=>String(t||"").split(/\\r?\\n/)' not in s:
               raise SystemExit('bullets regex was not repaired')
