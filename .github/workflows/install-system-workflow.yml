@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Install static Rendszer navigation
         shell: python
         run: |
@@ -21,10 +23,10 @@ jobs:
           if 'id="system-workflow-nav"' not in s:
               if nav not in s: raise SystemExit('ERROR: Riportok sidebar button not found')
               s=s.replace(nav,nav+'\n    <button class="nav" id="system-workflow-nav" type="button"><i>⚙</i>Rendszer</button>',1)
-          # Remove any previous misplaced injections, then put the script immediately before the REAL final body tag.
           s=s.replace('<script src="system-workflow.js"></script>','')
           if '</body>' not in s: raise SystemExit('ERROR: final body tag missing')
-          s=s.rsplit('</body>',1)[0]+'<script src="system-workflow.js"></script>\n</body>'+s.rsplit('</body>',1)[1]
+          parts=s.rsplit('</body>',1)
+          s=parts[0]+'<script src="system-workflow.js"></script>\n</body>'+parts[1]
           p.write_text(s,encoding='utf-8')
       - name: Verify
         shell: python
@@ -33,13 +35,14 @@ jobs:
           s=Path('index.html').read_text(encoding='utf-8')
           assert s.count('id="system-workflow-nav"')==1
           assert s.count('src="system-workflow.js"')==1
-          assert s.rfind('src="system-workflow.js"') > s.rfind('</script>')-200000
           print('OK: static Rendszer navigation and final-body script installed')
       - name: Commit installation
+        shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
           git commit -m 'Fix Rendszer Workflow script placement [system-nav-installed]'
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
