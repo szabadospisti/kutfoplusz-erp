@@ -54,23 +54,15 @@ jobs:
           page=page[:pos]+'\n'+'\n'.join(Path(p).read_text(encoding='utf-8') for p in patches)+'\n'+page[pos:]
 
           version=os.environ.get('GITHUB_SHA','dev')
-
-          # Hide the app from first paint so no legacy Géppark render can flash.
           fleet_boot_css='''<style id="fleet-boot-css">html.fleet-boot-pending .app{visibility:hidden!important}</style>\n<script>document.documentElement.classList.add('fleet-boot-pending');</script>\n'''
           if '</head>' not in page: raise SystemExit('index.html: closing head tag not found')
           page=page.replace('</head>',fleet_boot_css+'</head>',1)
 
-          # IMPORTANT: the navigation guard must be loaded BEFORE the original
-          # inline ERP navigation listeners are registered.
           machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
           body_match=re.search(r'<body\b[^>]*>',page,re.IGNORECASE)
           if not body_match: raise SystemExit('index.html: body tag not found')
           page=page[:body_match.end()]+'\n'+machine_boot+page[body_match.end():]
 
-          # The ERP uses top-level lexical globals (const/let), so they are not
-          # automatically available as window.* properties. The machine modules
-          # use window.* for compatibility; bridge the real application globals
-          # AFTER the original ERP code has initialized them, at the end of body.
           machine_script=f'''<script>
           (function(){{
             try {{ window.views = views; }} catch(e) {{}}
@@ -81,6 +73,7 @@ jobs:
           }})();
           </script>
           <script src="machine-fleet-crud.js?v={version}"></script>
+          <script src="machine-fleet-crud-fix.js?v={version}"></script>
           '''
           machine_override='''<script>
           (function(){
@@ -126,21 +119,22 @@ jobs:
           import re
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['fleet-boot-css','fleet-boot-pending','machine-fleet-nav-guard.js','machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek','__kpFleetRenderGuard','__kpFleetRender','window.views = views','window.db = db','Object.defineProperty(window,\'current\'']
+          required=['fleet-boot-css','fleet-boot-pending','machine-fleet-nav-guard.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek','__kpFleetRenderGuard','__kpFleetRender','window.views = views','window.db = db','Object.defineProperty(window,\'current\'']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
           forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
           script_srcs=re.findall(r'<script\b[^>]*\bsrc=["\']([^"\']+)["\'][^>]*>',page,re.IGNORECASE)
           present=[x for x in forbidden if any(x in src for src in script_srcs)]
           if present: raise SystemExit('BUILD ERROR: legacy machine script loads present: '+', '.join(present))
-          if sum('machine-fleet-nav-guard.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-nav-guard.js is not loaded exactly once')
-          if sum('machine-fleet-crud.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-crud.js is not loaded exactly once')
+          for name in ['machine-fleet-nav-guard.js','machine-fleet-crud.js','machine-fleet-crud-fix.js']:
+              if sum(name in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: '+name+' is not loaded exactly once')
           guard_pos=page.find('machine-fleet-nav-guard.js')
           bridge_pos=page.find('window.views = views')
           crud_pos=page.find('machine-fleet-crud.js')
+          fix_pos=page.find('machine-fleet-crud-fix.js')
           body_pos=re.search(r'<body\b[^>]*>',page,re.IGNORECASE).end()
-          if not (body_pos < guard_pos < bridge_pos < crud_pos): raise SystemExit('BUILD ERROR: Géppark boot order is invalid')
-          print('OK: Géppark receives the real db/views/current globals after ERP initialization')
+          if not (body_pos < guard_pos < bridge_pos < crud_pos < fix_pos): raise SystemExit('BUILD ERROR: Géppark boot order is invalid')
+          print('OK: Géppark CRUD interaction bridge loaded after the primary CRUD module')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
