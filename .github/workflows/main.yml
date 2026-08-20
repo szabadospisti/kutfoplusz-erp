@@ -28,8 +28,9 @@ jobs:
           legacy=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js']
           for name in legacy:
               page=re.sub(r'<script\b[^>]*\bsrc=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*','',page,flags=re.I)
+          bridge='''<script>(function(){try{window.__fleetGetDB=function(){return db};window.__fleetSave=function(){return save()};window.__fleetGetCurrent=function(){return current};window.__fleetSetCurrent=function(v){current=v};}catch(e){console.error("Fleet bridge failed",e);}})();</script>'''
           module=Path('machine-fleet-native.js').read_text(encoding='utf-8')
-          page=page.replace('</body>','<script>\n'+module+'\n</script>\n</body>',1)
+          page=page.replace('</body>',bridge+'<script>\n'+module+'\n</script>\n</body>',1)
           p.write_text(page,encoding='utf-8')
       - name: Verify native fleet CRUD
         shell: python
@@ -38,9 +39,9 @@ jobs:
           page=Path('index.html').read_text(encoding='utf-8')
           for x in ['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js']:
               if x in page: raise SystemExit('BUILD ERROR: old fleet module remains: '+x)
-          for x in ['function fleetRender','function fleetNew','function fleetEdit','function fleetDelete']:
-              if x not in page: raise SystemExit('BUILD ERROR: native fleet CRUD missing: '+x)
-          print('OK: single native fleet CRUD')
+          for x in ['__fleetGetDB=function','__fleetSave=function','__fleetGetCurrent=function','__fleetSetCurrent=function','function fleetRender','function fleetNew','function fleetEdit','function fleetDelete']:
+              if x not in page: raise SystemExit('BUILD ERROR: '+x)
+          print('OK: single native fleet CRUD with ERP data bridge')
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload
