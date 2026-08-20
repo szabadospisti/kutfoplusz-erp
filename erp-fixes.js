@@ -1,4 +1,4 @@
-/* Kútfő Plusz ERP – modulbetöltő és alap CRUD javítások. V13
+/* Kútfő Plusz ERP – modulbetöltő és alap CRUD javítások. V14
  *
  * A központi mentést az index.html saját save() útvonala kezeli:
  * localStorage + Supabase erp_state.
@@ -20,13 +20,15 @@
   function loadProjectCrud(){loadScriptOnce('Projekt CRUD','project-crud-fix.js?v=2','__projectCrudLoaded')}
   function loadProjectSync(){loadScriptOnce('Projekt Supabase sync','project-sync-fix.js?v=1','__projectSyncLoaded')}
   function loadProjectSaveFinal(){loadScriptOnce('Projekt végleges Supabase mentés','project-save-final.js?v=1','__projectSaveFinalLoaded')}
-  function loadFleetFinal(){loadScriptOnce('Géppark végleges CRUD','machine-fleet-bridge.js?v=final2','__fleetFinalLoaded')}
+  function loadFleetFinal(){loadScriptOnce('Géppark végleges CRUD','machine-fleet-bridge.js?v=final3','__fleetFinalLoaded')}
+  function loadFleetForce(){loadScriptOnce('Géppark végső render kényszerítő','machine-fleet-force.js?v=1','__fleetForceLoaded')}
 
   function loadAll(){
     loadProjectCrud();
     loadProjectSync();
     loadProjectSaveFinal();
     loadFleetFinal();
+    loadFleetForce();
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAll,{once:true});
@@ -35,11 +37,12 @@
   let mc=0;
   const mt=setInterval(()=>{
     loadAll();
-    if(++mc>40||(
+    if(++mc>60||(
       window.__projectCrudLoaded&&
       window.__projectSyncLoaded&&
       window.__projectSaveFinalLoaded&&
-      window.__fleetFinalLoaded
+      window.__fleetFinalLoaded&&
+      window.__fleetForceLoaded
     ))clearInterval(mt);
   },250);
 })();
