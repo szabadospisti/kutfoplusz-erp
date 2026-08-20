@@ -55,13 +55,23 @@ jobs:
 
           version=os.environ.get('GITHUB_SHA','dev')
 
+          # Hide the app from first paint so no legacy Géppark render can flash.
+          fleet_boot_css='''<style id="fleet-boot-css">html.fleet-boot-pending .app{visibility:hidden!important}</style>\n<script>document.documentElement.classList.add('fleet-boot-pending');</script>\n'''
+          if '</head>' not in page: raise SystemExit('index.html: closing head tag not found')
+          page=page.replace('</head>',fleet_boot_css+'</head>',1)
+
           machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
           machine_script=f'<script src="machine-fleet-crud.js?v={version}"></script>\n'
           machine_override='''<script>
           (function(){
+            function reveal(){document.documentElement.classList.remove('fleet-boot-pending');}
             function install(){
               if(!window.__kpFleetCRUD || !window.views || typeof window.views.machines!=='function' || typeof window.render!=='function') return false;
-              if(window.__kpFleetRenderGuard) return true;
+              if(window.__kpFleetRenderGuard){
+                if(window.current==='machines' && typeof window.__kpFleetRender==='function') window.__kpFleetRender();
+                reveal();
+                return true;
+              }
               var fleetView=window.views.machines;
               var originalRender=window.render;
               window.__kpFleetRenderGuard=true;
@@ -78,6 +88,7 @@ jobs:
                 return originalRender.apply(this,arguments);
               };
               if(window.current==='machines') window.__kpFleetRender();
+              reveal();
               return true;
             }
             var n=0;
@@ -95,7 +106,7 @@ jobs:
           import re
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
-          required=['machine-fleet-nav-guard.js','machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek','__kpFleetRenderGuard','__kpFleetRender']
+          required=['fleet-boot-css','fleet-boot-pending','machine-fleet-nav-guard.js','machine-fleet-crud.js','kpDeleteCustomer','kpDeleteProject','kpDeleteQuote','kpDeleteWorklog','customer-details-dom-fix','Ajánlatok','Projektek','__kpFleetRenderGuard','__kpFleetRender']
           missing=[x for x in required if x not in page]
           if missing: raise SystemExit('BUILD ERROR: '+', '.join(missing))
           forbidden=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js']
@@ -104,7 +115,7 @@ jobs:
           if present: raise SystemExit('BUILD ERROR: legacy machine script loads present: '+', '.join(present))
           if sum('machine-fleet-nav-guard.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-nav-guard.js is not loaded exactly once')
           if sum('machine-fleet-crud.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-crud.js is not loaded exactly once')
-          print('OK: Géppark uses the authoritative CRUD render guard')
+          print('OK: Géppark first paint is hidden until authoritative CRUD is ready')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
