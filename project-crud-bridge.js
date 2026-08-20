@@ -1,6 +1,6 @@
 /* Kútfő Plusz ERP – egyetlen projekt CRUD + Supabase/workflow bridge.
  * A régi, nem létező Géppark modulbetöltéseket megszüntettük.
- * A Gépparkot a machine-fleet-bridge.js kezeli.
+ * A Gépparkot most ténylegesen a machine-fleet-bridge.js kezeli.
  */
 (function(){
   'use strict';
@@ -60,6 +60,8 @@
     await loadScript('project-worklog-auto-link.js');
     await loadScript('worklog-project-lock.js');
     await loadScript('material-crud-fix.js');
+    await loadScript('machine-fleet-bridge.js');
+    await loadScript('machine-fleet-force.js');
   }).catch(function(err){
     console.error('Supabase project bridge:',err);
   });
