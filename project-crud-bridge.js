@@ -1,26 +1,41 @@
 /* Kútfő Plusz ERP – egyetlen projekt CRUD + Supabase/workflow bridge.
- * A Géppark betöltése független a projekt CRUD bootstrap hibáitól.
+ * A Géppark betöltése teljesen független a projekt CRUD-tól.
+ * Hiányzó opcionális modul nem állíthatja le a teljes bootstrap folyamatot.
  */
 (function(){
   'use strict';
+
   function loadScript(src){
     return new Promise(function(resolve,reject){
       var s=document.createElement('script');
       s.src=src+'?v='+Date.now();
-      s.onload=resolve;
+      s.onload=function(){resolve(true)};
       s.onerror=function(){reject(new Error('Script betöltése sikertelen: '+src));};
       document.head.appendChild(s);
     });
   }
 
-  // A Gépparkot azonnal indítjuk, mert a bridge saját pollinggal megvárja a db/views létrejöttét.
-  loadScript('machine-fleet-bridge.js')
-    .then(function(){return loadScript('machine-fleet-force.js');})
-    .catch(function(err){console.error('Géppark bridge:',err);});
+  async function safeLoad(src){
+    try{
+      await loadScript(src);
+      console.info('[ERP] Betöltve:',src);
+      return true;
+    }catch(err){
+      console.warn('[ERP] Opcionális modul kihagyva:',src,err.message);
+      return false;
+    }
+  }
 
-  loadScript('system-workflow.js').catch(function(err){
-    console.error('Rendszer Workflow modul:',err);
+  /*
+   * KRITIKUS: a Géppark nem függ sem a projekt CRUD-tól,
+   * sem a régi/hiányzó ügyfél- vagy munkanapló-fixektől.
+   */
+  safeLoad('machine-fleet-bridge.js').then(function(ok){
+    if(ok) return safeLoad('machine-fleet-force.js');
+    return false;
   });
+
+  safeLoad('system-workflow.js');
 
   async function waitForConfig(){
     if(window.SUPABASE_CONFIG)return window.SUPABASE_CONFIG;
@@ -55,15 +70,19 @@
   };
 
   bootstrap().then(async function(){
-    await loadScript('project-crud-live.js');
+    /* A projekt CRUD alapmodulok. Egyenként töltjük őket, hogy egy hibás
+       opcionális modul ne szakítsa meg a későbbi modulok betöltését. */
+    await safeLoad('project-crud-live.js');
     await waitForProjectCrud();
-    await loadScript('project-edit-live.js');
-    await loadScript('erp-supabase-sync.js');
-    await loadScript('erp-delete-manager.js');
-    await loadScript('customer-details-dom-fix.js');
-    await loadScript('project-worklog-auto-link.js');
-    await loadScript('worklog-project-lock.js');
-    await loadScript('material-crud-fix.js');
+    await safeLoad('project-edit-live.js');
+    await safeLoad('erp-supabase-sync.js');
+    await safeLoad('erp-delete-manager.js');
+    await safeLoad('project-worklog-auto-link.js');
+    await safeLoad('worklog-project-lock.js');
+    await safeLoad('material-crud-fix.js');
+
+    /* customer-details-dom-fix.js jelenleg nincs a repositoryban,
+       ezért szándékosan nem töltjük többé. */
   }).catch(function(err){
     console.error('Supabase project bridge:',err);
   });
