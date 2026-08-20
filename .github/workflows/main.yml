@@ -30,13 +30,11 @@ jobs:
           for name in legacy:
             pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
             page=re.sub(pattern,'',page,flags=re.I)
-          # Keep critical modules as external scripts. Inlining them into index.html
-          # caused HTML parser/syntax-gate corruption and could hide CRUD controls.
           for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js']:
             page=re.sub(r'<script[^>]+src=["\'][^"\']*'+re.escape(src)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*','',page,flags=re.I)
           scripts=''.join(f'<script src="{src}"></script>\n' for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js'])
           page=page.replace('</body>',scripts+'</body>',1)
-          guard='''<script>\n(function(){\n  function fleetActive(){\n    var a=document.querySelector('.nav.active');\n    return !!(a && /Géppark/i.test(a.textContent||''));\n  }\n  function forceFleet(){\n    try{\n      if(!fleetActive()) return;\n      var c=document.getElementById('content')||document.querySelector('.content');\n      if(!c) return;\n      if(typeof window.__gfView==='function'){ c.innerHTML=window.__gfView(); return; }\n      if(typeof window.views!=='undefined' && window.views && typeof window.views.machines==='function') c.innerHTML=window.views.machines();\n    }catch(e){ console.error('Géppark render guard:',e); }\n  }\n  document.addEventListener('click',function(e){\n    var n=e.target && e.target.closest ? e.target.closest('.nav') : null;\n    if(n && /Géppark/i.test(n.textContent||'')){\n      setTimeout(forceFleet,0);setTimeout(forceFleet,80);setTimeout(forceFleet,250);setTimeout(forceFleet,600);\n    }\n  },true);\n  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);});\n  else {setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);}\n})();\n</script>\n'''
+          guard='''<script>\n(function(){\n  function fleetActive(){var a=document.querySelector('.nav.active');return !!(a&&/Géppark/i.test(a.textContent||''));}\n  function forceFleet(){try{if(!fleetActive())return;var c=document.getElementById('content')||document.querySelector('.content');if(!c)return;if(typeof window.__gfView==='function'){c.innerHTML=window.__gfView();return;}if(typeof window.views!=='undefined'&&window.views&&typeof window.views.machines==='function')c.innerHTML=window.views.machines();}catch(e){console.error('Géppark render guard:',e);}}\n  document.addEventListener('click',function(e){var n=e.target&&e.target.closest?e.target.closest('.nav'):null;if(n&&/Géppark/i.test(n.textContent||'')){setTimeout(forceFleet,0);setTimeout(forceFleet,80);setTimeout(forceFleet,250);setTimeout(forceFleet,600);}},true);\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);});else{setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);}\n})();\n</script>\n'''
           page=page.replace('</body>',guard+'</body>',1)
           if 'id="system-workflow-nav"' not in page:
             btn='<button class="nav" id="system-workflow-nav" type="button" onclick="window.openSystemWorkflow&&window.openSystemWorkflow()"><i>⚙</i> Rendszer</button>'
@@ -53,7 +51,7 @@ jobs:
           if 'function save(' not in page: raise SystemExit('BUILD ERROR: central save() is missing from index.html')
           if 'async function supabaseCloudSave' not in page: raise SystemExit('BUILD ERROR: central Supabase save is missing from index.html')
           if 'window.save=' in fixes or 'window.save =' in fixes: raise SystemExit('BUILD ERROR: erp-fixes.js still overrides window.save')
-          if '/rest/v1/erp_state' in fixes or 'from(\'erp_state\')' in fixes or 'from("erp_state")' in fixes: raise SystemExit('BUILD ERROR: erp-fixes.js still contains a duplicate erp_state writer')
+          if '/rest/v1/erp_state' in fixes or "from('erp_state')" in fixes or 'from("erp_state")' in fixes: raise SystemExit('BUILD ERROR: erp-fixes.js still contains a duplicate erp_state writer')
           print('OK: exactly one central save path; erp-fixes is loader-only')
       - name: Verify build
         shell: python
@@ -61,15 +59,16 @@ jobs:
           from pathlib import Path
           page=Path('index.html').read_text(encoding='utf-8')
           fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
+          bridge=Path('machine-fleet-bridge.js').read_text(encoding='utf-8')
           workflow=Path('system-workflow.js').read_text(encoding='utf-8')
-          combined=page+'\n'+fleet+'\n'+workflow
+          combined='\n'.join([page,fleet,bridge,workflow])
           forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
           for x in forbidden:
             if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
           required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view','forceFleet','__gfCreate','__gfProfile']
           for x in required:
             if x not in combined: raise SystemExit('BUILD ERROR: missing component: '+x)
-          print('OK: static Rendszer nav + final Géppark bridge + runtime guard')
+          print('OK: static Rendszer nav + Géppark bridge + runtime guard')
       - name: JavaScript syntax gate
         shell: python
         run: |
