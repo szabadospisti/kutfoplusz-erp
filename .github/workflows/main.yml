@@ -60,7 +60,14 @@ jobs:
           if '</head>' not in page: raise SystemExit('index.html: closing head tag not found')
           page=page.replace('</head>',fleet_boot_css+'</head>',1)
 
+          # IMPORTANT: the navigation guard must be loaded BEFORE the original
+          # inline ERP navigation listeners are registered. Loading it at the
+          # end of <body> is too late because the old click listener can run first.
           machine_boot=f'<script src="machine-fleet-nav-guard.js?v={version}"></script>\n'
+          body_match=re.search(r'<body\b[^>]*>',page,re.IGNORECASE)
+          if not body_match: raise SystemExit('index.html: body tag not found')
+          page=page[:body_match.end()]+'\n'+machine_boot+page[body_match.end():]
+
           machine_script=f'<script src="machine-fleet-crud.js?v={version}"></script>\n'
           machine_override='''<script>
           (function(){
@@ -97,7 +104,7 @@ jobs:
           })();
           </script>
           '''
-          page=page.replace('</body>',machine_boot+machine_script+machine_override+'</body>',1)
+          page=page.replace('</body>',machine_script+machine_override+'</body>',1)
           Path('index.html').write_text(page,encoding='utf-8')
 
       - name: Verify generated page
@@ -115,7 +122,12 @@ jobs:
           if present: raise SystemExit('BUILD ERROR: legacy machine script loads present: '+', '.join(present))
           if sum('machine-fleet-nav-guard.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-nav-guard.js is not loaded exactly once')
           if sum('machine-fleet-crud.js' in src for src in script_srcs)!=1: raise SystemExit('BUILD ERROR: machine-fleet-crud.js is not loaded exactly once')
-          print('OK: Géppark first paint is hidden until authoritative CRUD is ready')
+          # The guard must occur before the original inline application scripts.
+          guard_pos=page.find('machine-fleet-nav-guard.js')
+          crud_pos=page.find('machine-fleet-crud.js')
+          body_pos=re.search(r'<body\b[^>]*>',page,re.IGNORECASE).end()
+          if not (body_pos < guard_pos < crud_pos): raise SystemExit('BUILD ERROR: Géppark guard is not loaded before CRUD/application code')
+          print('OK: Géppark navigation guard is loaded before legacy navigation listeners')
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
