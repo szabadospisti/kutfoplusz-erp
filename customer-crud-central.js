@@ -100,9 +100,17 @@
   }
   async function remove(id){
     const c=get(id);if(!c)return;if(!confirm('Biztosan törlöd ezt az ügyfelet?\n\n'+(field(c,'name','company_name')||id)))return;
-    const d=getDB();const linked=(d.projects||[]).filter(p=>String(field(p,'customerId','customer_id','clientId','client_id'))===String(id));
-    if(linked.length){alert('Az ügyfél nem törölhető: kapcsolódó projekt tartozik hozzá.');return}
-    try{setDB(customers().filter(x=>idOf(x)!==String(id)));await persist();overlay().classList.add('hidden');render();toast('Ügyfél törölve')}catch(e){console.error(e);alert(e.message||'A törlés nem sikerült.');}
+    try{
+      const next=customers().filter(x=>idOf(x)!==String(id));
+      setDB(next);
+      await persist();
+      overlay().classList.add('hidden');
+      render();
+      toast('Ügyfél törölve');
+    }catch(e){
+      console.error(e);
+      alert(e.message||'A törlés nem sikerült.');
+    }
   }
   function install(){
     if(window.__KP_CUSTOMER_CENTRAL__)return;
