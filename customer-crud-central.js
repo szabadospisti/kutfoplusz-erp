@@ -80,9 +80,10 @@
       <div class="field"><label>E-mail</label><input class="input" data-f="email" value="${esc(c.email)}"></div>
       <div class="field"><label>Státusz</label><select class="select" data-f="status"><option value="active" ${c.status==='active'?'selected':''}>Aktív</option><option value="inactive" ${c.status==='inactive'?'selected':''}>Inaktív</option></select></div>
       <div class="field full"><label>Cím</label><input class="input" data-f="address" value="${esc(c.address)}"></div>
-    </div></div><div class="modalfoot"><button class="btn secondary" data-close>Mégse</button><button class="btn" data-save>Mentés</button></div></div>`;
+    </div></div><div class="modalfoot">${existing?'<button class="btn danger" data-delete-edit>Törlés</button>':''}<button class="btn secondary" data-close>Mégse</button><button class="btn" data-save>Mentés</button></div></div>`;
     m.classList.remove('hidden');
     m.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>m.classList.add('hidden')));
+    m.querySelector('[data-delete-edit]')?.addEventListener('click',()=>remove(id));
     m.querySelector('[data-save]').addEventListener('click',async()=>{
       const values={...c};m.querySelectorAll('[data-f]').forEach(el=>values[el.dataset.f]=el.value);
       values.name=String(values.name||'').trim();if(!values.name){alert('Az ügyfél neve kötelező.');return}
