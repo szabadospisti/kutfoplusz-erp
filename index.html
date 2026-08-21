@@ -392,7 +392,7 @@ let db=load();
  if(!db.customers.some(c=>c.id==="C-003")) db.customers.push({id:"C-003",name:"Kovács Balázs",tax:"",contact:"",phone:"",email:"",address:"Porcsalma",notes:"Munkanapló minta ügyfél"});
  localSaveOnly();
 })();
-let current=location.hash.replace("#/","")||"dashboard";
+var current=location.hash.replace("#/","")||"dashboard";
 const titles={dashboard:"Dashboard",customers:"Ügyfelek",quotes:"Ajánlatok",projects:"Projektek",worklogs:"Munkanapló",materials:"Anyag / Raktár",machines:"Géppark",reports:"Riportok"};
 function load(){try{return JSON.parse(localStorage.getItem(STORE))||structuredClone(initial)}catch{return structuredClone(initial)}}
 function localSaveOnly(){localStorage.setItem(STORE,JSON.stringify(db))}
