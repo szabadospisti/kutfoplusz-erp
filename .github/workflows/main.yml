@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -19,6 +19,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Repair ERP startup initialization
+        if: ${{ !contains(github.event.head_commit.message, 'Auto repair: initialize ERP arrays') }}
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='''let db=load();
+(function ensureWorklogTemplate(){'''
+          new='''let db=load();
+if(!db || typeof db !== 'object') db={};
+if(!Array.isArray(db.worklogs)) db.worklogs=[];
+if(!Array.isArray(db.customers)) db.customers=[];
+if(!Array.isArray(db.projects)) db.projects=[];
+(function ensureWorklogTemplate(){'''
+          if old in s:
+              s=s.replace(old,new,1)
+              p.write_text(s,encoding='utf-8')
+              print('Startup initialization repaired')
+          else:
+              print('Startup initialization already repaired')
+
+      - name: Commit startup repair
+        if: ${{ !contains(github.event.head_commit.message, 'Auto repair: initialize ERP arrays') }}
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No startup repair changes.'
+          else
+            git commit -m 'Auto repair: initialize ERP arrays'
+            git push
+          fi
+
       - name: Build clean Géppark + Rendszer Workflow
         shell: python
         run: |
