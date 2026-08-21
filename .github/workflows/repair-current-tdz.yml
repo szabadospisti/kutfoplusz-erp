@@ -1,0 +1,41 @@
+name: Repair ERP current TDZ
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: "!contains(github.event.head_commit.message, 'Repair ERP current TDZ')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Repair current initialization
+        shell: bash
+        run: |
+          set -e
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='let current=location.hash.replace("#/","")||"dashboard";'
+          new='var current=location.hash.replace("#/","")||"dashboard";'
+          if old not in s:
+              raise SystemExit('Expected current declaration not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          print('Repaired current TDZ: let -> var')
+          PY
+      - name: Commit repair and remove one-time workflow
+        shell: bash
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/repair-current-tdz.yml
+          git add index.html .github/workflows/repair-current-tdz.yml
+          git commit -m 'Repair ERP current TDZ'
+          git push
