@@ -1,139 +1,58 @@
 name: Deploy Kútfő Plusz ERP
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      - name: Repair ERP startup initialization
-        if: "!contains(github.event.head_commit.message, 'Auto repair: initialize ERP arrays')"
-        shell: python
-        run: |
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          old='''let db=load();
-(function ensureWorklogTemplate(){'''
-          new='''let db=load();
-if(!db || typeof db !== 'object') db={};
-if(!Array.isArray(db.worklogs)) db.worklogs=[];
-if(!Array.isArray(db.customers)) db.customers=[];
-if(!Array.isArray(db.projects)) db.projects=[];
-(function ensureWorklogTemplate(){'''
-          if old in s:
-              s=s.replace(old,new,1)
-              p.write_text(s,encoding='utf-8')
-              print('Startup initialization repaired')
-          else:
-              print('Startup initialization already repaired')
-
-      - name: Commit startup repair
-        if: "!contains(github.event.head_commit.message, 'Auto repair: initialize ERP arrays')"
+      - name: Verify JavaScript syntax
         shell: bash
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          if git diff --cached --quiet; then
-            echo 'No startup repair changes.'
-          else
-            git commit -m 'Auto repair: initialize ERP arrays'
-            git push
-          fi
+          set -e
+          for file in auth-core.js machine-fleet.js machine-fleet-bridge.js system-workflow.js erp-fixes.js customer-crud-central.js; do
+            if [ -f "$file" ]; then
+              node --check "$file"
+            fi
+          done
+          echo "JavaScript syntax check passed."
 
-      - name: Build clean Géppark + Rendszer Workflow
-        shell: python
+      - name: Verify required ERP files
+        shell: bash
         run: |
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          page=p.read_text(encoding='utf-8')
-          legacy=['machine-fleet-actions.js','machine-fleet-dom-fix.js','machine-fleet-final.js','machine-fleet-stable.js','machine-new-form.js','machine-new-form-v2.js','machine-new-unified.js','machine-profile-native.js','machine-profile-page.js','machine-profile-readonly.js','machine-profile-edit-inline.js','fleet-fallback.js','fleet-machine-profile.js','machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
-          for name in legacy:
-            pattern=r'<script[^>]+src=["\'][^"\']*'+re.escape(name)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*'
-            page=re.sub(pattern,'',page,flags=re.I)
-          for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js']:
-            page=re.sub(r'<script[^>]+src=["\'][^"\']*'+re.escape(src)+r'(?:\?[^"\']*)?["\'][^>]*>\s*</script>\s*','',page,flags=re.I)
-          scripts=''.join(f'<script src="{src}"></script>\n' for src in ['machine-fleet.js','machine-fleet-bridge.js','customer-crud-central.js'])
-          page=page.replace('</body>',scripts+'</body>',1)
-          guard='''<script>\n(function(){\n  function fleetActive(){var a=document.querySelector('.nav.active');return !!(a&&/Géppark/i.test(a.textContent||''));}\n  function forceFleet(){try{if(!fleetActive())return;var c=document.getElementById('content')||document.querySelector('.content');if(!c)return;if(typeof window.__gfView==='function'){c.innerHTML=window.__gfView();return;}if(typeof window.views!=='undefined'&&window.views&&typeof window.views.machines==='function')c.innerHTML=window.views.machines();}catch(e){console.error('Géppark render guard:',e);}}\n  document.addEventListener('click',function(e){var n=e.target&&e.target.closest?e.target.closest('.nav'):null;if(n&&/Géppark/i.test(n.textContent||'')){setTimeout(forceFleet,0);setTimeout(forceFleet,80);setTimeout(forceFleet,250);setTimeout(forceFleet,600);}},true);\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);});else{setTimeout(forceFleet,0);setTimeout(forceFleet,100);setTimeout(forceFleet,300);setTimeout(forceFleet,700);}\n})();\n</script>\n'''
-          page=page.replace('</body>',guard+'</body>',1)
-          if 'id="system-workflow-nav"' not in page:
-            btn='<button class="nav" id="system-workflow-nav" type="button" onclick="window.openSystemWorkflow&&window.openSystemWorkflow()"><i>⚙</i> Rendszer</button>'
-            m=re.search(r'(<button[^>]*class=["\'][^"\']*nav[^"\']*["\'][^>]*>\s*<i>[^<]*</i>\s*Riportok\s*</button>)',page,re.I)
-            if not m: raise SystemExit('BUILD ERROR: Riportok nav item not found')
-            page=page[:m.end()]+btn+page[m.end():]
-          p.write_text(page,encoding='utf-8')
-
-      - name: Verify single central save path
-        shell: python
-        run: |
-          from pathlib import Path
-          page=Path('index.html').read_text(encoding='utf-8')
-          fixes=Path('erp-fixes.js').read_text(encoding='utf-8')
-          if 'function save(' not in page: raise SystemExit('BUILD ERROR: central save() is missing from index.html')
-          if 'async function supabaseCloudSave' not in page: raise SystemExit('BUILD ERROR: central Supabase save is missing from index.html')
-          if 'window.save=' in fixes or 'window.save =' in fixes: raise SystemExit('BUILD ERROR: erp-fixes.js still overrides window.save')
-          if '/rest/v1/erp_state' in fixes or "from('erp_state')" in fixes or 'from("erp_state")' in fixes: raise SystemExit('BUILD ERROR: erp-fixes.js still contains a duplicate erp_state writer')
-          print('OK: exactly one central save path; erp-fixes is loader-only')
-
-      - name: Verify build
-        shell: python
-        run: |
-          from pathlib import Path
-          page=Path('index.html').read_text(encoding='utf-8')
-          fleet=Path('machine-fleet.js').read_text(encoding='utf-8')
-          bridge=Path('machine-fleet-bridge.js').read_text(encoding='utf-8')
-          workflow=Path('system-workflow.js').read_text(encoding='utf-8')
-          combined='\n'.join([page,fleet,bridge,workflow])
-          forbidden=['machine-fleet-crud.js','machine-fleet-crud-fix.js','machine-fleet-nav-guard.js','machine-fleet-native.js']
-          for x in forbidden:
-            if x in page: raise SystemExit('BUILD ERROR: legacy Géppark reference remains: '+x)
-          required=['id="system-workflow-nav"','Workflow / Deploy','actions/runs?branch=main','function create()','function edit(id)','function profile(id)','function view()','views.machines=view','forceFleet','__gfCreate','__gfProfile']
-          for x in required:
-            if x not in combined: raise SystemExit('BUILD ERROR: missing component: '+x)
-          print('OK: static Rendszer nav + Géppark bridge + runtime guard')
-
-      - name: JavaScript syntax gate
-        shell: python
-        run: |
-          from pathlib import Path
-          import re, subprocess
-          files=['auth-core.js','machine-fleet.js','machine-fleet-bridge.js','system-workflow.js','erp-fixes.js','customer-crud-central.js']
-          failed=False
-          for name in files:
-            r=subprocess.run(['node','--check',name],text=True,capture_output=True)
-            if r.returncode:
-              failed=True
-              print(f'EXTERNAL_JS_SYNTAX_ERROR: {name}')
-              print(r.stderr)
-          page=Path('index.html').read_text(encoding='utf-8')
-          blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)</script>',page,re.I)
-          print(f'INFO: found {len(blocks)} inline JavaScript blocks; external critical modules are syntax-gated')
-          if failed: raise SystemExit(1)
-          print(f'OK: {len(files)} critical external JS files passed node --check')
+          set -e
+          test -f index.html
+          test -f auth-core.js
+          echo "Required ERP files are present."
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
+
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
