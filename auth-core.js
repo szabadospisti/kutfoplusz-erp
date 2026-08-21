@@ -1,13 +1,35 @@
-/* Kútfő Plusz ERP – isolated authentication core v2 */
+/* Kútfő Plusz ERP – isolated authentication core v3 */
 (function(){
   'use strict';
-  if(window.__KP_AUTH_CORE_V2__) return;
-  window.__KP_AUTH_CORE_V2__=true;
+  if(window.__KP_AUTH_CORE_V3__) return;
+  window.__KP_AUTH_CORE_V3__=true;
 
   var SESSION_KEY='kutfoplusz_supabase_session_v1';
   var cfg=window.SUPABASE_CONFIG||{};
   var SB_URL=String(cfg.url||'').replace(/\/$/,'');
   var SB_KEY=cfg.publishableKey||'';
+
+  /* Legacy localStorage can contain an older ERP object without worklogs/customers/projects.
+     Normalize it on read so the inline boot code never crashes before render(). */
+  try{
+    var nativeGetItem=window.localStorage.getItem.bind(window.localStorage);
+    window.localStorage.getItem=function(key){
+      var value=nativeGetItem(key);
+      if(key!==SESSION_KEY&&value){
+        try{
+          var obj=JSON.parse(value);
+          if(obj&&typeof obj==='object'&&!Array.isArray(obj)){
+            var changed=false;
+            if(!Array.isArray(obj.worklogs)){obj.worklogs=[];changed=true;}
+            if(!Array.isArray(obj.customers)){obj.customers=[];changed=true;}
+            if(!Array.isArray(obj.projects)){obj.projects=[];changed=true;}
+            if(changed)return JSON.stringify(obj);
+          }
+        }catch(ignore){}
+      }
+      return value;
+    };
+  }catch(ignoreStorage){}
 
   function session(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch(e){return null;}}
   function setSession(x){localStorage.setItem(SESSION_KEY,JSON.stringify(x));}
@@ -17,28 +39,18 @@
   function showLogin(){var app=document.getElementById('erpApp');var overlay=document.getElementById('authOverlay');if(app)app.classList.add('auth-hidden');if(overlay)overlay.classList.remove('auth-hidden');}
 
   function renderWhenReady(){
-    if(typeof window.render!=='function'){
-      setTimeout(renderWhenReady,50);
-      return;
-    }
-    try{
-      window.render();
-    }catch(e){
-      /* A top-level const such as titles may still be initializing. Retry after the current script turn. */
-      if(e&&e.name==='ReferenceError'&&/initialization|before initialization/i.test(String(e.message||''))){
-        setTimeout(renderWhenReady,50);
-        return;
-      }
+    if(typeof window.render!=='function'){setTimeout(renderWhenReady,50);return;}
+    try{window.render();}
+    catch(e){
+      if(e&&e.name==='ReferenceError'&&/initialization|before initialization/i.test(String(e.message||''))){setTimeout(renderWhenReady,50);return;}
       console.error('[ERP] Initial render:',e);
     }
   }
-
   function showERP(user){
     var overlay=document.getElementById('authOverlay');var app=document.getElementById('erpApp');
     if(overlay)overlay.classList.add('auth-hidden');
     if(app)app.classList.remove('auth-hidden');
-    var el=document.getElementById('cloudStatus');
-    if(el)el.textContent='☁️ '+((user&&user.email)||'Supabase');
+    var el=document.getElementById('cloudStatus');if(el)el.textContent='☁️ '+((user&&user.email)||'Supabase');
     setTimeout(renderWhenReady,0);
   }
 
@@ -46,15 +58,13 @@
     var ss=session();if(!ss||!ss.refresh_token)return null;
     try{
       var r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:ss.refresh_token})});
-      var j=await r.json();
-      if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Session lejárt');
+      var j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Session lejárt');
       setSession(j);return j;
     }catch(e){clearSession();return null;}
   }
-
   async function request(path,options,retry){
     var ss=session();if(!ss||!ss.access_token)throw new Error('Nincs bejelentkezve');
-    var opts=Object.assign({},options||{}, {headers:headers(ss.access_token,(options&&options.headers)||{})});
+    var opts=Object.assign({},options||{},{headers:headers(ss.access_token,(options&&options.headers)||{})});
     var r=await fetch(SB_URL+path,opts);
     if(r.status===401&&retry!==false){var next=await refresh();if(next)return request(path,options,false);}
     return r;
@@ -91,12 +101,9 @@
   };
 
   window.__KP_AUTH_BOOT__=async function(){
-    showLogin();
-    var ss=session();
-    if(!ss||!ss.access_token)return;
+    showLogin();var ss=session();if(!ss||!ss.access_token)return;
     try{
       var active=ss;
-      /* If the saved session already contains a user, don't block the ERP on /auth/v1/user. */
       if(!active.user){
         var test=await fetch(SB_URL+'/auth/v1/user',{headers:headers(ss.access_token)});
         if(test.status===401){active=await refresh();if(!active)throw new Error('Session lejárt');}
@@ -112,6 +119,5 @@
       showERP(current.user||{});
     }
   };
-
   setTimeout(function(){window.__KP_AUTH_BOOT__();},0);
 })();
