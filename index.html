@@ -393,7 +393,7 @@ let db=load();
  localSaveOnly();
 })();
 var current=location.hash.replace("#/","")||"dashboard";
-const titles={dashboard:"Dashboard",customers:"Ügyfelek",quotes:"Ajánlatok",projects:"Projektek",worklogs:"Munkanapló",materials:"Anyag / Raktár",machines:"Géppark",reports:"Riportok"};
+var titles={dashboard:"Dashboard",customers:"Ügyfelek",quotes:"Ajánlatok",projects:"Projektek",worklogs:"Munkanapló",materials:"Anyag / Raktár",machines:"Géppark",reports:"Riportok"};
 function load(){try{return JSON.parse(localStorage.getItem(STORE))||structuredClone(initial)}catch{return structuredClone(initial)}}
 function localSaveOnly(){localStorage.setItem(STORE,JSON.stringify(db))}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
