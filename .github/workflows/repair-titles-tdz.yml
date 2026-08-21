@@ -1,0 +1,41 @@
+name: Repair ERP titles TDZ
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: "!contains(github.event.head_commit.message, 'Repair ERP titles TDZ')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Repair titles initialization
+        shell: bash
+        run: |
+          set -e
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = 'const titles={dashboard:'
+          new = 'var titles={dashboard:'
+          if old not in s:
+              raise SystemExit('Expected titles declaration not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          print('Repaired titles TDZ: const -> var')
+          PY
+      - name: Commit repair and remove one-time workflow
+        shell: bash
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/repair-titles-tdz.yml
+          git add index.html .github/workflows/repair-titles-tdz.yml
+          git commit -m 'Repair ERP titles TDZ'
+          git push
