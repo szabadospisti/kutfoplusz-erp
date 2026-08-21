@@ -1,0 +1,40 @@
+name: One-time frontend repair
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, 'Auto repair: initialize ERP arrays') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair index initialization
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '''let db=load();
+(function ensureWorklogTemplate(){'''
+          new = '''let db=load();
+if(!db || typeof db !== 'object') db={};
+if(!Array.isArray(db.worklogs)) db.worklogs=[];
+if(!Array.isArray(db.customers)) db.customers=[];
+if(!Array.isArray(db.projects)) db.projects=[];
+(function ensureWorklogTemplate(){'''
+          if old not in s:
+              raise SystemExit('Expected index initialization block not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+      - name: Commit repair and remove one-time workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github/workflows/one-time-repair.yml
+          git commit -m 'Auto repair: initialize ERP arrays' || exit 0
+          git rm .github/workflows/one-time-repair.yml
+          git commit --amend --no-edit
+          git push
