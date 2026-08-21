@@ -32,6 +32,7 @@
     loadScript('project-fleet-bridge.js').catch(function(err){console.error('[ERP] Project central bridge:',err);});
     loadScript('system-workflow.js').catch(function(err){console.warn('[ERP] System workflow:',err);});
     loadScript('worklog-relational-bridge-v1.js').catch(function(err){console.error('[ERP] Worklog relational bridge:',err);});
+    loadScript('ui-boot-guard.js').catch(function(err){console.error('[ERP] UI boot guard:',err);});
     var n=0,t=setInterval(function(){if(install()||++n>200)clearInterval(t)},50);
   }
   boot();
