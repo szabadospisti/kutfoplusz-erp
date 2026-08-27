@@ -1,12 +1,19 @@
 from pathlib import Path
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
-old='''function quoteCustomerChanged(){
+changes=[]
+
+def replace_once(old,new,label):
+    global s
+    if old in s:
+        s=s.replace(old,new,1); changes.append(label); return
+    print(label+': already applied or source differs')
+
+replace_once('''function quoteCustomerChanged(){
  const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
- ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||"");
 }
-'''
-new='''function quoteCustomerChanged(){
+''','''function quoteCustomerChanged(){
  const ce=document.getElementById("q_customer");
  const id=ce?.value||"";
  const c=(db.customers||[]).find(x=>String(x.id)===String(id));
@@ -21,12 +28,12 @@ new='''function quoteCustomerChanged(){
    pe.disabled=false;
  }
 }
-'''
-old2='''function quoteProjectChanged(){
+''','customer filter')
+
+replace_once('''function quoteProjectChanged(){
  const id=document.getElementById("q_project")?.value,p=(db.projects||[]).find(x=>x.id===id);if(!p)return;
  if(p.customerId){const ce=document.getElementById("q_customer");if(ce)ce.value=p.customerId;quoteCustomerChanged()}
-'''
-new2='''function quoteProjectChanged(){
+''','''function quoteProjectChanged(){
  const pe=document.getElementById("q_project");
  const id=pe?.value||"";
  const p=(db.projects||[]).find(x=>String(x.id)===String(id));
@@ -50,24 +57,24 @@ new2='''function quoteProjectChanged(){
  }
  quoteCustomerChanged();
  if(pe)pe.value=id;
-'''
-old3=''' const meterRate=drillingPriceForDiameter(diameter);
+''','project/customer invariant')
+
+replace_once(''' const meterRate=drillingPriceForDiameter(diameter);
  if(!Array.isArray(quoteItems)) quoteItems=[];
-'''
-new3=''' const projectId=document.getElementById("q_project")?.value||"";
+''',''' const projectId=document.getElementById("q_project")?.value||"";
  const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
  const meterRate=quoteMeterRateForProject(diameter,project);
  if(!Array.isArray(quoteItems)) quoteItems=[];
-'''
-old4=''' const current=String(quoteItems[0].desc||"");
+''','project-aware price')
+
+replace_once(''' const current=String(quoteItems[0].desc||"");
  const projectId=document.getElementById("q_project")?.value||"";
  const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
- const purpose='''
-new4=''' const current=String(quoteItems[0].desc||"");
- const purpose='''
-marker='''function saveQuoteFromTemplate(){
- const o=collectQuoteTemplate();db.quotes=db.quotes||[];'''
-replacement='''function saveQuoteFromTemplate(){
+ const purpose='''',''' const current=String(quoteItems[0].desc||"");
+ const purpose='''','duplicate project declaration removal')
+
+replace_once('''function saveQuoteFromTemplate(){
+ const o=collectQuoteTemplate();db.quotes=db.quotes||[];''','''function saveQuoteFromTemplate(){
  const customerId=String(document.getElementById("q_customer")?.value||"");
  const projectId=String(document.getElementById("q_project")?.value||"");
  const selectedProject=(db.projects||[]).find(x=>String(x.id)===projectId);
@@ -75,10 +82,7 @@ replacement='''function saveQuoteFromTemplate(){
    toast("Az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető.");
    return false;
  }
- const o=collectQuoteTemplate();db.quotes=db.quotes||[];'''
-for a,b in [(old,new),(old2,new2),(old3,new3),(old4,new4),(marker,replacement)]:
-    if a not in s:
-        raise SystemExit('expected source block not found')
-    s=s.replace(a,b,1)
+ const o=collectQuoteTemplate();db.quotes=db.quotes||[];''','save invariant')
+
 p.write_text(s,encoding='utf-8')
-print('quote patch applied')
+print('applied:',', '.join(changes) if changes else 'none')
