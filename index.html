@@ -14433,12 +14433,12 @@ function editProject(pid){
       </div>
       <div class="field full"><label>Projekt neve</label><input required class="input" name="name" value="${esc(p.name||"")}"></div>
       <div class="field"><label>Helyszín</label><input class="input" name="location" value="${esc(p.location||"")}"></div>
-      <div class="field"><label>Szerződéses érték / munkadíj (Ft)</label><div style="position:relative"><input class="input project-money-input" type="text" inputmode="numeric" autocomplete="off" name="value" value="${new Intl.NumberFormat("hu-HU",{maximumFractionDigits:0}).format(Number(p.value)||0)}" style="padding-right:58px"><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:700;color:#64748b">Ft</span></div></div>
+      <div class="field"><label>${type==="undocumented"?"Tervezett munkadíj (Ft)":"Szerződéses érték (Ft)"}</label><div style="position:relative"><input class="input project-money-input" type="text" inputmode="numeric" autocomplete="off" name="value" value="${new Intl.NumberFormat("hu-HU",{maximumFractionDigits:0}).format(Number(p.value)||0)}" style="padding-right:58px"><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:700;color:#64748b">Ft</span></div></div>
       <div class="field"><label>Tervezett kezdés</label><input class="input" type="date" name="plannedStart" value="${esc(p.plannedStart||"")}"></div>
       <div class="field"><label>Tervezett befejezés</label><input class="input" type="date" name="plannedEnd" value="${esc(p.plannedEnd||"")}"></div>
       <div id="undocumented-tech-fields" class="field full" style="display:${type==="undocumented"?"block":"none"}">
         <div class="license-import-box" style="margin:0"><h4 style="margin:0 0 10px">🛠️ Alapvető műszaki adatok</h4><div class="formgrid">
-          <div class="field"><label>Átmérő (mm)</label><select class="input" name="wellDiameter"><option value="">Válassz átmérőt...</option>${projectDiameterOptions}</select></div>
+          <div class="field"><label>Átmérő (mm)</label><select class="input" name="wellDiameter"><option value="">Válassz átmérőt...</option>${projectDiameterOptions}</select></div><div class="field"><label>Dokumentáció nélküli folyóméter ár (Ft/m)</label><input class="input" type="number" min="0" step="1" name="agreedMeterPrice" value="${Number(p.agreedMeterPrice||0)||Number(undocumentedDrillingPriceForDiameter(well.wellDiameter||p.wellDiameter||0))||0}"></div>
           <div class="field"><label>Tervezett talpmélység (m)</label><input class="input" type="number" min="0" step="0.1" name="plannedDepth" value="${esc(String(p.plannedDepth??well.plannedDepth??""))}"></div>
           <div class="field"><label>Szükséges vízhozam (l/perc)</label><input class="input" type="number" min="0" step="0.01" name="requiredFlow" value="${esc(String(p.requiredFlow??well.requiredFlow??p.permittedFlow??""))}"></div>
         </div></div>
@@ -14505,7 +14505,7 @@ function saveProjectEdit(e,pid){
   p.plannedStart=o.plannedStart||"";
   p.plannedEnd=o.plannedEnd||"";
   p.notes=o.notes||"";
-  p.value=Number(String(o.value||"").replace(/\s/g,""))||0;
+  p.value=Number(String(o.value||"").replace(/\s/g,"").replace(/[^0-9.-]/g,""))||0;
   p.well=p.well||{};
   if(undocumented){
     const diameter=o.wellDiameter||"";
@@ -14522,6 +14522,14 @@ function saveProjectEdit(e,pid){
     p.requiredFlow=flow;
     p.designFlow=flow;
     p.permittedFlow=flow;
+    const meterPrice=Number(o.agreedMeterPrice||0);
+    const plannedDepth=Number(depth||0);
+    p.agreedMeterPrice=meterPrice;
+    p.calculatedMeterPrice=meterPrice;
+    p.pricingMode="meter";
+    p.priceBaseDepth=plannedDepth;
+    p.value=Math.round(meterPrice*plannedDepth);
+    p.agreedTotal=p.value;
   }
   p.updatedAt=new Date().toISOString();
   save();
