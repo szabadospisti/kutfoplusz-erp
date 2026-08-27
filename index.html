@@ -13333,8 +13333,19 @@ Az ajánlatomat 180 napig fenntartom.</textarea></section>
  renderQuoteEditor();
 }
 function quoteCustomerChanged(){
- const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
+ const ce=document.getElementById("q_customer");
+ const id=ce?.value||"";
+ const c=(db.customers||[]).find(x=>String(x.id)===String(id));
+ if(!c)return;
  ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+ const pe=document.getElementById("q_project");
+ if(pe){
+   const selected=String(pe.value||"");
+   const projects=(db.projects||[]).filter(p=>String(p.customerId||"")===String(id));
+   pe.innerHTML='<option value="">— Válassz projektet —</option>'+projects.map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+   pe.value=projects.some(p=>String(p.id)===selected)?selected:"";
+   pe.disabled=false;
+ }
 }
 function quoteMeterRateForProject(diameter, project){
   const p=project||{};
@@ -13344,9 +13355,27 @@ function quoteMeterRateForProject(diameter, project){
     : drillingPriceForDiameter(diameter);
 }
 function quoteProjectChanged(){
- const id=document.getElementById("q_project")?.value,p=(db.projects||[]).find(x=>x.id===id);if(!p)return;
- if(p.customerId){const ce=document.getElementById("q_customer");if(ce)ce.value=p.customerId;quoteCustomerChanged()}
-
+ const pe=document.getElementById("q_project");
+ const id=pe?.value||"";
+ const p=(db.projects||[]).find(x=>String(x.id)===String(id));
+ if(!p){
+   if(pe)pe.value="";
+   recalculateQuoteMainItem(false);
+   renderQuoteEditor();
+   return;
+ }
+ const ce=document.getElementById("q_customer");
+ const selectedCustomerId=ce?.value||"";
+ if(selectedCustomerId && String(p.customerId||"")!==String(selectedCustomerId)){
+   if(pe)pe.value="";
+   toast("Ez a projekt nem tartozik a kiválasztott ügyfélhez.");
+   recalculateQuoteMainItem(false);
+   renderQuoteEditor();
+   return;
+ }
+ if(p.customerId && !selectedCustomerId && ce) ce.value=p.customerId;
+ quoteCustomerChanged();
+ if(pe)pe.value=id;
  const w=p.well||{};
  const depth=w.permittedDepth??p.permittedDepth??p.plannedDepth??"";
  const flow=w.permittedFlow??w.designFlow??p.permittedFlow??p.designFlow??"";
@@ -13464,6 +13493,13 @@ function collectQuoteTemplate(){
   net,vat,gross:net+vat};
 }
 function saveQuoteFromTemplate(){
+ const customerId=String(document.getElementById("q_customer")?.value||"");
+ const projectId=String(document.getElementById("q_project")?.value||"");
+ const selectedProject=(db.projects||[]).find(x=>String(x.id)===projectId);
+ if(!customerId || !projectId || !selectedProject || String(selectedProject.customerId||"")!==customerId){
+   toast("Az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető.");
+   return false;
+ }
  const o=collectQuoteTemplate();db.quotes=db.quotes||[];
  if(window.editingQuoteId){
   const index=db.quotes.findIndex(x=>String(x.id)===String(window.editingQuoteId));
