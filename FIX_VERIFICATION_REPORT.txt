@@ -1,0 +1,31 @@
+KÚTFŐ PLUSZ ERP 2.0 – FIX / VERIFICATION REPORT
+============================================================
+
+Forrás:
+kutfoplusz-erp-v2.0.0-DEBUG-2.0(1).zip
+
+Javított fő hibák:
+1. Munkanapló mintaadat nem ír felül meglévő MN-2026-001 rekordot.
+2. Aktuális munkanapló kiválasztása központi getCurrentWorklogForProject() függvényre került.
+3. Az aktuális munkanapló időbélyeggel (updatedAt) követhető.
+4. A Munkanapló tényleges mélysége a wl_finalDepth mezőből származik.
+5. Rétegsor mentésénél ellenőrzés van: 0 m kezdés, pozitív szakaszok, hézag/átfedés, végmélység-egyezés.
+6. Csövezési szakaszoknál ugyanez a folytonossági ellenőrzés érvényes.
+7. Engedélyezett mélység túllépése lezáráskor tiltott.
+8. Nyugalmi/üzemi vízszint fordított sorrendje tiltott.
+9. Elkészült / Lezárva státusz csak validált munkanaplóval engedélyezett.
+10. Munkanapló státuszhoz bekerült a Lezárva állapot.
+11. Elkészült/Lezárva munkanapló végleges adatai szinkronizálódnak a projekthez.
+12. A pumpateszt a munkanapló mérési adataiból egyszer, worklogId alapján kapcsolódik.
+13. A projekt aktuális kútadataihoz bekerül a finalWorklogId.
+14. all.js-ben is javítva a mintaadat-felülírás és aktuális munkanapló kiválasztás.
+
+Statikus ellenőrzés:
+- index.html inline JavaScript syntax: PASS
+- all.js syntax: PASS
+- duplicate function names az index inline JS-ben: 0
+- fő alkalmazás közvetlenül inline JS-t használ; all.js külön állományként megmarad
+- ZIP újracsomagolás: PASS
+
+Fontos:
+A böngészős IndexedDB/localStorage valódi UI E2E tesztje ebben a futtatókörnyezetben nem hajtható végre. A kód szintaktikai és célzott logikai tesztje megtörtént.

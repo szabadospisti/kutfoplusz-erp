@@ -1,0 +1,623 @@
+KÚTFŐ PLUSZ ERP
+V2.0.0 – RELEASE NOTES / LEZÁRÁSI JEGYZŐKÖNYV
+Dátum: 2026-08-25
+
+1. V2.0 CÉLJA
+A V2.0 célja a fő ERP üzleti folyamatok lezárása és egységesítése volt.
+A verzió nem újabb funkcióhalmozásra, hanem a meglévő modulok összekapcsolására,
+duplikált folyamatok megszüntetésére és release-biztonságra fókuszált.
+
+2. LEZÁRT CSOMAGOK
+1. Ajánlat
+2. Projekt
+3. Kivitelezés
+4. Teljesítés
+5. Átadás
+6. Dokumentumok
+7. Raktár / Gyártás
+8. Admin / Biztonság
+9. Teljes END-TO-END adatfolyam
+
+3. KIEMELT V2.0 JAVÍTÁS
+Az Ajánlat → Projekt folyamat egységesítve lett.
+A régi convertQuote útvonal nem hozhat létre véletlenül duplikált projektet.
+Az ajánlat és projekt között sourceQuoteId / quoteId kapcsolat kerül megőrzésre.
+
+4. DOKUMENTUMOK
+A beágyazott DOCX sablon validálva lett:
+- Base64 definíció: OK
+- dekódolás: OK
+- DOCX ZIP: OK
+- word/document.xml: OK
+- word/styles.xml: OK
+
+A PDF előnézeti lánc és a Word export statikusan ellenőrizve.
+
+5. ADATFOLYAM
+A fő kapcsolatok ellenőrizve:
+Ügyfél → Ajánlat → Projekt → Munkanapló → Gyártás → Raktár →
+Teljesítés → Dokumentum → Átadás → FINAL.
+
+6. RELEASE ELLENŐRZÉS
+- Statikus release blocker: 0
+- Dataflow blocker: 0
+- Helyi hiányzó script: 0
+- JavaScript syntax: PASS
+- ZIP integrity: PASS
+- ZIP/főmappa névazonosság: PASS
+- Kritikus release fájlok: PASS
+
+7. FONTOS KORLÁT
+A valódi böngészős, kattintásos E2E tesztet a jelenlegi futtatási környezet
+lokális fájl/HTTP navigációs korlátozása miatt nem lehetett automatikusan
+végrehajtani. Ez manuális átvételi tesztként marad.
+
+8. V2.0 ÁLLAPOTA
+STATIKUS RELEASE CERTIFICATION: PASS
+KÓD MÓDOSÍTÁS: LEZÁRVA
+ÚJ FUNKCIÓFEJLESZTÉS: LEZÁRVA
+
+9. V2.1-BE ÁTTEENDŐ
+- böngészős teljes E2E teszt automatizálása / futtatása
+- offline külső CDN-függőségek felülvizsgálata
+- all.js és a tényleges futó UI forrásának későbbi tisztázása
+- dokumentum/export útvonalak további runtime tesztje
+- új funkciók csak külön V2.1 scope alapján
+
+10. RELEASE AZONOSÍTÓ
+Fájlnév:
+kutfoplusz-erp-v2.0.0-FINAL.zip
+
+Főmappa:
+kutfoplusz-erp-v2.0.0-FINAL
+
+SHA-256:
+59a73b51bae3628946b70e63c51bf91f88a0c46311664364144c1d57e96250b2
+
+FIRST AUDIT ROUND – R1 (2026-08-27)
+- Fixed inline worklog layer editing so validation happens on a copy before mutating stored data.
+- Fixed quote-intake automatic customer/project creation to be idempotent when the project was already created.
+
+
+AUDIT-R2
+- Javítva: autoCreateCustomerProject idempotens működése.
+- Javítva: projektsorszám éves, meglévő azonosítók alapján történő generálása.
+- Meglévő ügyfél keresése a közös findExistingCustomer logikát használja.
+
+AUDIT-R3
+- Rétegsor adatmodell audit: a project.well.layers lett kijelölve kanonikus szerkeszthető rétegsorként.
+- Normalizáló ellenőrzés hozzáadva a projekt well állapotához, hogy a drillingEntries ne írjon felül véletlenül egy aktuális rétegsort.
+- Forráskód statikus ellenőrzése lefutott.
+
+AUDIT-R4
+- Worklog rétegsor-hozzáférés auditálva.
+- Kapcsolt projektnél a projekt kanonikus well.layers adata az elsődleges; worklog.layers csak legacy/unlinked fallback.
+- Cél: stale worklog layer másolat ne legyen képes felülírni/megjeleníteni a projekt aktuális rétegsorát.
+
+AUDIT-R5
+- localStorage mentési utak auditálva.
+- A konstans kulcsú közvetlen olvasás/írás/törlés központi ERP storage wrapperen keresztül történik.
+- Tárolási hibánál a rendszer nem bukik el csendben; hibajelzés és biztonságos fallback van.
+
+AUDIT-R6
+- save()/persistencia audit: runtime-only root state kizárva a perzisztálásból.
+- Biztonságos JSON parse helper hozzáadva hibás/korrupt localStorage adatokhoz.
+- Cél: mentés ne rögzítsen átmeneti UI állapotot, betöltés pedig ne omoljon össze sérült JSON miatt.
+
+AUDIT-R7
+- Projekt/ajánlat státuszkezelés audit.
+- Központi workflow státusz-listák és setter bevezetve a jövőbeli tranzíciók egységesítéséhez.
+- Új projektnél statusUpdatedAt időbélyeg kerül mentésre.
+- Statikus státuszhasználat feltérképezve.
+
+AUDIT-R8
+- Közvetlen projekt státusz-írások auditálva.
+- Ismert közvetlen státuszmutációk központi setWorkflowStatus használatára átvezetve.
+- auditWorkflowStatuses() hozzáadva a projekt/ajánlat állapotok eltérésének kimutatására.
+
+AUDIT-R9
+- A fennmaradó 6 literal status= írás kontextus szerint auditálva.
+- Nem történt vak átírás: a státuszmezők üzleti jelentésének megőrzése elsődleges.
+- auditDirectStatusWriters() hozzáadva a runtime státuszeltérések kimutatásához.
+
+AUDIT-R10
+- Pénzügyi számítási audit elindítva.
+- Determinisztikus calcMoneyLine/calcMoneyTotals helper HUF kerekítéssel.
+- auditMoneyCalculations() önellenőrző teszt hozzáadva: 1×100000, 2×100000, 3×33333 és nulla mennyiség.
+- Cél: nettó/ÁFA/bruttó eltérések és floating-point drift csökkentése.
+
+AUDIT-R11
+- Meglévő pénzügyi számítási helyek statikus inventory-ja elkészült.
+- auditRecordMoneyConsistency()/auditAllMoneyConsistency() hozzáadva a tárolt és újraszámolt nettó/ÁFA/bruttó eltérések kimutatására.
+- Nincs vak tömeges képletcsere; csak bizonyítható eltérés esetén módosítunk.
+
+AUDIT-R12
+- Pénzügyi számításokhoz magyar számformátum parser bevezetve.
+- 1 234,56 / 1234,56 / 1234.56 / 2 000 tesztek hozzáadva.
+- calcMoneyLine/calcMoneyTotals a normalizált számbemenetet használja.
+
+AUDIT-R13
+- KONKRÉT HIBA JAVÍTVA: az ajánlatszerkesztő korábban +x.qty/+x.price és Number() használatával kezelte az összegeket, ezért a magyar "1 234,56" formátum hibás lehetett.
+- Az ajánlati sorok és összesítések parseErpNumber()-t és egész forintos kerekítést használnak.
+- ÁFA számítása 27%-nál Math.round(net*27/100).
+
+AUDIT-R14
+- Ajánlat előnézet/dokumentum pénzügyi adatfolyam audit.
+- Quote/preview fájlokban a biztonságos, központosított számparserre átvezetett közvetlen qty×price számítások.
+- auditQuoteDocumentConsistency() hozzáadva a tárolt ajánlati összegek és újraszámolt dokumentum-összegek összevetésére.
+
+AUDIT-R15
+- Dokumentumgenerálási adatforrások inventory elkészült.
+- resolveErpDocumentContext()/auditErpDocumentContext() hozzáadva az ajánlat/projekt/ügyfél hivatkozások konzisztenciájának ellenőrzésére.
+- Cél: dokumentumgenerátor ne keverjen egymással nem összetartozó projekt/ügyfél/ajánlat rekordokat.
+
+AUDIT-R16
+- Projekt → munkanapló → gyártás kapcsolat inventory elkészült.
+- resolveErpExecutionContext()/auditErpExecutionContext() hozzáadva a kapcsolatok konzisztenciájának ellenőrzésére.
+- Statikus vizsgálat alapján nem történt bizonyított eltérés miatti adatátírás; vak javítás helyett diagnosztikai ellenőrzés került be.
+
+AUDIT-R17
+- Gyártási adatstruktúra feltérképezve.
+- getProjectManufacturing()/auditProjectManufacturing() hozzáadva a tényleges adatforrás felismerésére.
+- Nincs automatikus adat-migráció: előbb bizonyítani kell a jelenlegi kanonikus struktúrát.
+
+AUDIT-R18
+- Gyártási UI/adatmutációk célzott inventory-ja elkészült.
+- inspectProjectManufacturingShape() hozzáadva a projekt tényleges gyártási/kútfej/termelőcső kulcsainak diagnosztikájához.
+- Nincs vak adatstruktúra-migráció.
+
+AUDIT-R19
+- Gyártási/kútkonstrukciós mezők célzott auditja.
+- Normalizáló és validáló réteg hozzáadva a hiányzó védőcső 324 mm és termelőcső 3" alapértelmezéshez.
+- Termelőcső választék 3"/4"; explicit felhasználói értékeket nem ír felül.
+- Védőcső validáció: 280/324/355 mm engedélyezett.
+
+AUDIT-R20
+- Gyártási mezők mentés-visszatöltés round-trip audit.
+- auditWellManufacturingRoundTrip() hozzáadva.
+- Betöltéskor a projekt well gyártási defaultjai normalizálódnak, explicit értékek megőrzésével.
+- A 324 mm / 3" alapértékek JSON round-trip stabilitása ellenőrizhető.
+
+AUDIT-R21
+- project.well életciklus audit.
+- ensureProjectWell() hozzáadva új és legacy projektek biztonságos well inicializálására.
+- Új automatikus projekt létrehozásakor a well gyártási defaultok azonnal normalizálódnak.
+- auditProjectWellLifecycle() ellenőrzi a 324 mm / 3" / 3"+4" szabályokat.
+
+AUDIT-R22
+- Gyártási UI input binding audit.
+- bindWellManufacturingInput() hozzáadva a védőcső/termelőcső mezők kanonikus project.well tárolásához.
+- auditWellManufacturingBindings() teszteli a UI-szerű bemenet → canonical storage útvonalat.
+
+AUDIT-R23
+- Gyártási adatok dokumentum-kivetítésének auditja.
+- projectManufacturingDocumentData()/auditManufacturingDocumentProjection() hozzáadva a projekt → dokumentum adatkonzisztencia ellenőrzéséhez.
+- Dokumentum/template fájlokban a gyártási mezők célzottan inventory-zva.
+
+AUDIT-R24
+- munkanaplo.html termelőcső adatforrás audit.
+- resolveWorklogWell()/auditWorklogWellSource() hozzáadva: kapcsolt munkanaplónál a project.well az elsődleges forrás, legacy esetben fallback a worklog.well.
+- Közvetlen HTML átírás nem történt bizonyítatlanul.
+
+AUDIT-R25
+- Munkanapló mentési/állapotfrissítési út audit.
+- updateLinkedWorklog() hozzáadva: csak a munkanapló saját mezőit frissíti, nem enged project.well/layers másolatot létrehozni.
+- auditWorklogPersistence() jelzi a kapcsolt munkanaplóban található párhuzamos well/layers állapotot.
+
+AUDIT-R26
+- Munkanapló/projekt rétegsor szerkesztés-mentés teljes körének auditja.
+- commitProjectWellLayers() hozzáadva tranzakciós jellegű jelölt rétegsor-frissítéshez: másolat → validáció → commit.
+- auditLayerCommitIsolation() ellenőrzi, hogy hibás jelölt adat ne módosítsa a meglévő projekt rétegsort.
+
+AUDIT-R27
+- Rétegsor geometriai audit: from/to pozitivitás, sorrend és átfedés ellenőrzése.
+- validateLayerGeometry()/auditLayerGeometryCases() hozzáadva.
+- commitProjectWellLayers() geometriai validációval bővítve.
+- Szándékosan nincs gap-hiba: a rétegsorban lehet nem fedett mélységtartomány, ha a domain ezt engedi.
+
+AUDIT-R28
+- Rétegsor összmélység/maximális mélység audit.
+- calculateLayerCoverage()/auditLayerDepthTotals() hozzáadva.
+- Mentéskor, ha a projektben totalDepth létezik, a rétegsor nem nyúlhat túl rajta.
+- A lefedett hossz külön riportálódik; a rések továbbra is megengedettek.
+
+AUDIT-R29
+- Kút végmélység üzleti szabály korrigálva.
+- A kút végmélysége a csövezés/szűrőzés utolsó szakaszának 'Vége (m)' értéke.
+- calculateCasingEndDepth()/auditCasingEndDepth() hozzáadva.
+- A csőszakaszok sorrendje megmarad; nem a rétegsor lefedett hossza és nem a részszakaszok összege adja a végmélységet.
+
+AUDIT-R30
+- Kút végmélység tényleges UI-szabályának javítása.
+- A munkanapló végmélysége most a wlFilters utolsó cső/szűrőszakaszának Vége (m) értékéből számolódik.
+- A wl_finalDepth mező readonly/automatikus; mentéskor közvetlenül a kanonikus számítás kerül tárolásra.
+- Regression teszt: 0–38 Vak + 38–50 Szűrő => 50 m.
+
+AUDIT-R31
+- Csövezési Darab számítás audit.
+- calculatePipePieces()/calculateCasingSection() hozzáadva: egész csődarabok + maradék méter.
+- 38 m / 3 m => 12 db + 2 m; 12 m / 3 m => 4 db.
+- A maradék nem kerekedik fel automatikusan egész csődarabra.
+- Meglévő UI-képletet nem cseréltem vakon; a pipeLength tényleges forrását külön kell azonosítani.
+
+AUDIT-R32
+- Csőhossz forrásának auditja.
+- getCasingPipeLength() bevezetve: szakasz-specifikus pipeLength/csőhossz → well pipeLength/casingPipeLength → 3 m default sorrendben.
+- calculateCasingSectionFromWell() a tényleges forrásból számolja a Darab értéket.
+- Explicit csőhossz nincs felülírva; a 3 m csak hiányzó érték alapértelmezése.
+
+AUDIT-R33
+- Vak/Szűrő típus és anyagazonosítás audit.
+- normalizeCasingSectionType() bevezetve: Szűrő/Szuro/Szűrőcső/Szurocso normalizálása.
+- calculateCasingMaterial() biztosítja, hogy a típus az anyagkategóriát határozza meg, a geometriai hossz/darabszámot nem módosítja.
+- Regression: 0–38 Vak => 38 m, 12 db + 2 m; 38–50 Szűrő => 12 m, 4 db.
+
+AUDIT-R34
+- Automatikus raktári anyagazonosítás adatkulcsának auditja.
+- getCasingMaterialKey()/auditCasingMaterialKey() hozzáadva: védőcső-átmérő + termelőcső-átmérő + Vak/Szűrő típus alkotja a kanonikus azonosítási kulcsot.
+- Ismeretlen kombináció nem kaphat csendben érvényes anyagazonosítást.
+- Meglévő raktári cikkszámokat nem írtunk át bizonyíték nélkül.
+
+AUDIT-R35
+- Anyagtörzs/cikkszám feloldás audit.
+- findCasingMaterial()/resolveCasingMaterial()/auditCasingMaterialResolution() hozzáadva.
+- Azonosítás csak pontos kanonikus kulccsal történik; hiányzó találat esetén NO_MATCH, nincs automatikus/feltételezett cikkszám.
+
+AUDIT-R36
+- Raktári készletlevonás/felhasználás audit.
+- calculateMaterialConsumption()/auditMaterialConsumption() hozzáadva: a beépített cső anyagfelhasználás alapegysége méter, miközben a darab + maradék külön is riportálódik.
+- applyMaterialConsumption() csak elegendő készlet esetén von le, és két tizedesre stabilizálja a méteres mennyiséget.
+- Példa: 38 m = 12 db + 2 m, készletlevonás = 38 m, nem 12 db.
+
+AUDIT-R37
+- Csövek készletigényének db + m kettős elszámolása.
+- calculatePipeStockRequirement() külön kezeli: beépített méter, teljes csőszál db, maradék, raktári kiadási db/m és hulladék.
+- Példa 38 m, 3 m szál: 12 db teljesen beépített + 1 db vágott szál = 13 db kiadás, 39 m kiadás, 38 m beépítés, 1 m maradék.
+- A 12 db + 2 m továbbra is a beépített szakasz bontása; a raktári kiadás 13 db.
+
+AUDIT-R38
+- Maradék cső raktári visszavételezés audit.
+- calculatePipeRemainder() kiszámolja a kiadott csőszálak és tényleges beépítés különbségét.
+- createPipeReturnMovement() méter alapú RETURN mozgást készít a maradék visszavételezéséhez.
+- Maradék nem minősül automatikusan hulladéknak.
+- Példa: 13 db × 3 m kiadás, 38 m beépítés => 1 m visszavehető maradék.
+
+AUDIT-R39
+- Maradék cső visszavételezésének anyagazonosság-auditja.
+- resolvePipeReturnMaterialKey()/auditPipeReturnMaterialIdentity()/createVerifiedPipeReturnMovement() hozzáadva.
+- A visszavett maradék ugyanahhoz a kanonikus anyagkulcshoz tartozik, mint az eredeti csőszakasz; Vak/Szűrő és átmérő nem veszhet el a RETURN mozgásból.
+
+AUDIT-R40
+- Készletmozgás teljes lánc audit: KIADÁS/OUT → FELHASZNÁLÁS/CONSUME → VISSZAVÉTEL/RETURN.
+- Duplikáció- és idempotencia-védelem hozzáadva sourceId alapján.
+- auditStockMovementChain() ellenőrzi az azonosítókat, típusokat és mennyiségeket.
+- calculateNetStockDelta() egységesen számolja a nettó készletváltozást.
+
+AUDIT-R41
+- Projekt lezárás → készletkönyvelés audit.
+- getProjectStockPostingState()/auditProjectStockPostingState() hozzáadva.
+- shouldPostProjectStock() csak lezárt, még nem könyvelt projektnél jelez könyvelési igényt.
+- markProjectStockPosted() idempotens állapotjelölést biztosít postingId + időbélyeggel.
+- Visszanyitáskor meglévő könyvelés nem törlődik automatikusan.
+
+AUDIT-R42
+- Projekt visszanyitás → módosítás → újrazárás audit.
+- reopenProjectForRevision()/prepareProjectReclose()/auditProjectReopenReclose() hozzáadva.
+- A korábbi készletkönyvelés történeti állapota nem törlődik visszanyitáskor.
+- Új készletkönyvelés csak új, explicit revízió/posting esetén indítható; az egyszerű újrazárás nem duplikál.
+
+AUDIT-R43
+- Projekt revíziókezelés audit.
+- nextProjectRevision()/createProjectRevisionSnapshot()/commitProjectRevision()/auditProjectRevisionCycle() hozzáadva.
+- Módosított projekt új revíziószámot kap; az előző állapot külön snapshotként megőrződik.
+- A snapshot nem tartalmazza saját revisionHistory tömbjét, így nem nő önmagába rekurzívan.
+
+AUDIT-R44
+- Revízió ↔ készletmozgás kapcsolat audit.
+- getRevisionStockPostingKey()/calculateRevisionStockDelta()/auditRevisionStockDelta()/createRevisionStockPostingRequest() hozzáadva.
+- Az új revízió csak a korábbi és aktuális csövezés különbségére kér készletkönyvelést.
+- Csökkent anyagigény esetén automatikus visszaírás nem történik; ez külön, ellenőrzött visszavételi művelet.
+- Változatlan revízió esetén nincs új készletkönyvelési igény.
+
+AUDIT-R45
+- Többszakaszos csövezés összesítő audit.
+- calculateCasingSummary()/auditCasingSummary() hozzáadva.
+- Külön összesítés Vak/Szűrő szerint: méter, teljes csődarab, maradék.
+- Végmélység kizárólag az utolsó csőszakasz végéből származik.
+- Regression: 0–38 Vak + 38–50 Szűrő + 50–80 Vak => 80 m végmélység, 80 m összhossz, Vak 68 m/22 db, Szűrő 12 m/4 db.
+
+AUDIT-R46
+- Csőszakaszok folytonossági audit.
+- GAP és OVERLAP külön jelzése.
+- 0–38 / 38–50 / 50–80: folytonos.
+- 0–38 / 40–50: GAP 38–40 figyelmeztetés.
+- 0–38 / 37–50: OVERLAP 37–38 adatérvényességi hiba.
+
+AUDIT-R47
+- Csőszakaszok sorrendjének auditja.
+- auditCasingOrder() tiltja a visszafelé haladó szakaszsorrendet és az érvénytelen (to<=from) szakaszt.
+- Regression: 0–38/38–50/50–80 PASS; 50–80/0–38/38–50 ORDER hiba; 38–38 INVALID_RANGE hiba.
+- A végmélység továbbra is a tényleges utolsó szakasz vége; a rendezési hiba külön blokkolandó.
+
+AUDIT-R48
+- Csőszakasz mentés előtti validációs policy.
+- prepareCasingSectionsForSave() csak hibátlan sorrend/tartomány esetén enged mentést.
+- GAP figyelmeztetés marad és nem blokkol; OVERLAP/ORDER/INVALID_RANGE blokkol.
+- Automatikus rendezés nincs: a felhasználói sorrend hibája láthatóan javítandó.
+- Regression: jó menthető; GAP menthető figyelmeztetéssel; OVERLAP és visszafelé sorrend blokkolva.
+
+AUDIT-R49
+- Csőszakasz beszúrás/törlés utáni újraszámítás audit.
+- recalculateCasingAfterEdit() újraszámolja a végmélységet, összesítést és készletigényt.
+- auditCasingEditMutation()/auditCasingEditRegression() ellenőrzi a szerkesztés utáni konzisztenciát.
+- Középső szakasz beszúrása vagy utolsó szakasz törlése után nincs régi összesítőérték megtartva.
+
+AUDIT-R50
+- Már könyvelt csőszakasz módosításának készletkorrekciós auditja.
+- calculateStockRevisionAdjustment() a régi és új csövezés raktári igényének különbségét számolja.
+- Változatlan igény => NONE; nagyobb igény => ADDITIONAL_ISSUE; kisebb igény => RETURN_OR_REVERSAL_REQUIRED.
+- A rendszer nem könyveli újra automatikusan a teljes új csőigényt.
+
+AUDIT-R51
+- Db ↔ méter készletkorrekció külön audit.
+- calculateStockUnitAdjustment() külön kezeli a tényleges méterváltozást, teljes csődarab-változást és maradékot.
+- createStockAdjustmentFromDelta() a készletkorrekció alapegységét méterben határozza meg; db csak a csőszál-igény kiegészítő adata.
+- Részszál/maradék esetén nem történik hibás db=készlet egyenlőség.
+
+AUDIT-R52
+- Részszál/maradék cső önálló raktári nyilvántartás audit.
+- createPipeRemainderRecord() külön maradékrekordot hoz létre anyagkulccsal, méterrel és forrásazonosítóval.
+- consumePipeRemainder() az azonos anyagkulcsú, elérhető részszálakat felhasználható készletként kezeli.
+- auditRemainderRecord() ellenőrzi az anyagazonosságot, mennyiséget és státuszt.
+
+AUDIT-R53
+- Részszál-felhasználási sorrend audit.
+- planPipeMaterialAllocation() először azonos anyagkulcsú elérhető maradékokat használ, majd csak a hiányzó mennyiségre tervez új csőszálat.
+- Maradékok felhasználása hossz szerint növekvő sorrendben történik.
+- auditPipeAllocationPlan() ellenőrzi, hogy a terv ténylegesen lefedi-e az igényt.
+
+AUDIT-R54
+- Részszál-felhasználási terv tényleges végrehajtásának auditja.
+- executePipeMaterialAllocation() a terv alapján csökkenti az elérhető részszálat, elfogyáskor CONSUMED státuszra vált.
+- auditPipeAllocationExecution() ellenőrzi, hogy a végrehajtott mennyiség lefedi-e az igényt és a részszál valóban rendelkezésre állt-e.
+- Új csőszálak külön db készletként jelennek meg.
+
+AUDIT-R55
+- Anyagár/érték számítás audit.
+- calculateMaterialCost()/calculateStockIssueValue()/calculateProjectMaterialCost()/auditMaterialValueConsistency() hozzáadva.
+- A projekt anyagköltség alapja a tényleges beépített méter és az anyagkulcshoz tartozó egységár.
+- A raktári csőszál-kiadás db/m mennyisége külön marad a költségszámításban; ugyanazt a méter alapú értéket kell eredményeznie.
+- Pénzérték két tizedesre kerekítve.
+
+AUDIT-R56
+- Ajánlat → projekt végérték anyagköltség lánc audit.
+- calculateOfferMaterialCost()/calculateFinalProjectValue()/auditOfferProjectDoubleCounting()/reconcileOfferToProject() hozzáadva.
+- Az ajánlati anyagköltség és a projekt anyagköltsége külön mezőként követhető; ugyanaz az érték nem adható hozzá kétszer.
+- Végleges projektérték = projekt anyagköltség + munkadíj + egyéb költség; ajánlati anyagköltség csak egyeztetési forrás, nem automatikus második hozzáadás.
+
+AUDIT-R57
+- Ajánlati árképzés, önköltség, árrés és ÁFA sorrend audit.
+- calculatePricingBreakdown()/auditPricingOrder()/auditPricingRegression() hozzáadva.
+- Sorrend: anyag + munkadíj + egyéb = költségalap → árrés → nettó ajánlati ár → ÁFA → bruttó.
+- Regression: 150 000 Ft költségalap + 20% = 180 000 Ft nettó; 27% ÁFA = 48 600 Ft; bruttó 228 600 Ft.
+
+AUDIT-R58
+- Árrés vs felár szétválasztás audit.
+- calculateMarkupAndMargin(): 20% felár 100 000 Ft költségen 120 000 Ft eladási ár, tényleges árrés 16,67%.
+- calculatePriceFromTargetMargin(): 20% célárrés 100 000 Ft költségen 125 000 Ft nettó ár, 25% felár.
+- A rendszerben a markup/felár és margin/árrés külön fogalomként kezelendő.
+
+AUDIT-R59
+- ÁFA nettó/bruttó oda-vissza számítás audit.
+- roundMoney(), calculateVatFromNet(), calculateNetFromGross(), auditVatRoundTrip(), auditVatRegression() hozzáadva.
+- Pénzérték 2 tizedesre kerekítve; nettó→ÁFA→bruttó és bruttó→nettó visszaszámítás konzisztens.
+- Regression: 150 000 Ft nettó + 27% = 40 500 Ft ÁFA, 190 500 Ft bruttó; vissza nettó 150 000 Ft.
+
+AUDIT-R60
+- Tételszintű vs végösszeg kerekítés audit.
+- calculateInvoiceLines()/calculateInvoiceTotalsFromUnrounded()/auditInvoiceRounding() hozzáadva.
+- A rendszer külön láthatóvá teszi a soronként kerekített és az összesített kerekített eredményt.
+- Regression több kis értékű tétellel ellenőrizve; eltérés explicit módon riportálható.
+- Kerekítési eltérés esetén nem történik csendes korrekció.
+
+AUDIT-R61
+- Ajánlati tételsor mennyiség/egység/egységár audit.
+- normalizeOfferUnit()/calculateOfferLine()/auditOfferLineUnits()/auditOfferUnitPriceRegression() hozzáadva.
+- db, m és óra külön egységként kezelt; a sorérték mindig mennyiség × az adott egységhez tartozó egységár.
+- Regression: 12 db × 5 000 = 60 000 Ft; 38 m × 1 800 = 68 400 Ft.
+
+AUDIT-R62
+- Ajánlati tételsorok és kategóriaösszesítések auditja.
+- calculateOfferTotals()/groupOfferTotals()/auditOfferTotals() hozzáadva.
+- Anyag, munkadíj és egyéb kategóriák külön összesíthetők, miközben a teljes nettó/ÁFA/bruttó egyezősége ellenőrzött.
+- Tételenkénti ÁFA-kulcs támogatott; alapértelmezett 27%.
+
+AUDIT-R63
+- Ajánlat → projekt adatátadás audit.
+- cloneOfferToProject()/auditOfferProjectTransfer()/auditOfferProjectTransferRegression() hozzáadva.
+- Az ajánlatból átvett tételsorok és forrásazonosító/revízió megmaradnak.
+- Átadáskor a nettó/ÁFA/bruttó összeg egyezőségét automatikusan ellenőrizzük; eltérés esetén blokkolható.
+- Tételsorok kategóriája (anyag/munkadíj/egyéb) megmarad.
+
+AUDIT-R64
+- Projekt → gyártás/kivitelezés adatátadás audit.
+- cloneProjectToProduction()/auditProjectProductionTransfer()/auditProjectProductionTransferRegression() hozzáadva.
+- A projekt csőszakaszai és kútadatai változatlan szerkezetben kerülnek átadásra.
+- Végmélység átadáskor újraszámolva és összevetve a forrásprojekttel.
+- Eltérő csőszakasz vagy végmélység esetén az átadás hibásnak minősül.
+
+AUDIT-R65
+- Projekt ↔ gyártás ↔ készlet háromirányú anyag-egyeztetés.
+- calculateThreeWayMaterialReconciliation()/auditThreeWayMaterialReconciliation()/auditThreeWayMaterialRegression() hozzáadva.
+- Méter és db külön egyeztetve: projekt = gyártás = készlet.
+- Eltérés esetén az érintett kapcsolat külön hibát jelez.
+- Regression: 80 m / 27 db mindhárom oldalon PASS.
+
+AUDIT-R66
+- Kút végmélység ↔ gyártási csőlista ↔ tényleges felhasználás audit.
+- auditWellDepthAgainstProduction()/auditWellDepthRegression() hozzáadva.
+- A projekt végmélységét összeveti a gyártási csőszakaszok végmélységével és a tényleges felhasznált méterrel.
+- 80 m ↔ 80 m PASS; 80 m ↔ 77 m eltérés blokkolandó.
+
+AUDIT-R67
+- Csőanyag/átmérő/szerep identitás audit.
+- normalizePipeMaterialType()/buildPipeMaterialIdentity()/auditPipeMaterialIdentity()/auditPipeMaterialIdentityRegression() hozzáadva.
+- Védőcső, termelőcső, szűrőcső és vak szakasz külön szerepként kezelendő.
+- Termelőcsőként jelölt szűrőszakasz és védőcsőként jelölt szűrőszakasz ütközésnek minősül.
+- Anyag és átmérő az identitás része; eltérő anyagú/átmérőjű csövek nem vonhatók össze automatikusan.
+
+AUDIT-R68
+- Védőcső/termelőcső/szűrőcső szerepek teljes szétválasztásának auditja.
+- auditPipeRoleSeparation()/auditPipeRoleSeparationRegression() hozzáadva.
+- Nem vak szakasznál anyag és átmérő kötelező; a három csőszerep külön számlálódik.
+
+AUDIT-R69
+- Cső db ↔ méter ↔ 3 m-es szál konzisztencia audit.
+- calculatePipeRequirementByUnit()/auditPipeDbMeterConsistency()/auditPipeDbMeterRegression() hozzáadva.
+- Minden szakasznál külön méter, szükséges teljes csőszál-db és maradék kerül ellenőrzésre.
+- A maradék mindig 0 <= remainder < 3 m tartományban kell legyen.
+- A szakaszok összhossza függetlenül visszaellenőrizhető.
+
+AUDIT-R70
+- Csőszakasz → anyagazonosító determinisztikusság audit.
+- buildSectionMaterialKeys()/auditSectionMaterialIdentity()/auditSectionMaterialIdentityRegression() hozzáadva.
+- Azonos csőszerep + típus + átmérő + anyag azonos anyagkulcsot kell adjon.
+- Hiányzó anyagkulcs vagy nem determinisztikus kulcs hiba.
+
+AUDIT-R71
+- Tényleges futó UI forrás feltérképezése.
+- HTML entry pointok és script betöltések auditálva.
+- Az all.js használata külön ellenőrizve; nem tekintjük aktívnak pusztán attól, hogy létezik.
+- A csővezetéki üzleti logika következő javításai csak a ténylegesen betöltött forrásban kerülhetnek alkalmazásra.
+- R67–R70 eredményei ezen a ponton újraellenőrzendők a valódi UI-forrásban.
+
+AUDIT-R72
+- A tényleges index.html csövezési vezérlési útvonalának feltérképezése.
+- Casing state/módosítási kulcsszavak és releváns függvények azonosítva.
+- auditActualCasingState() az aktív entrybe került, kizárólag audit célra.
+- Ellenőrzi a numerikus mélységeket, a pozitív szakaszhosszakat és a szakaszok folytonosságát.
+- Üzleti logikát nem írt át találgatás alapján; a következő lépés a konkrét mutációs függvény javítása.
+
+AUDIT-R73
+- Az aktív index.html csőszakasz mutációs láncának (add/edit/update/save/rebuild/validate) célzott feltérképezése.
+- auditCasingMutationChain() az aktív entryben ellenőrzi a mutációs függvények jelenlétét és az aktuális casing állapotot.
+- A tényleges függvények tartalmának további auditja alapján a következő lépés a mentés utáni újraszámítás és perzisztencia ellenőrzése.
+
+AUDIT-R74
+- Mentés/visszaolvasás/újraszámítás lánc audit az aktív index.html-ben.
+- A tényleges save/update függvények tárolási és casingSections használata feltérképezve.
+- auditCasingPersistenceRoundTrip() hozzáadva az aktív entryhez; eltérő visszaolvasott csőszakasz-adatot és érvénytelen állapotot jelez.
+- A következő ellenőrzés a tényleges perzisztencia tároló és mentési kulcsok összevetése.
+
+AUDIT-R75
+- Az aktív index.html tényleges perzisztencia API-jainak és explicit tárolási kulcsainak feltérképezése.
+- localStorage/sessionStorage használat megszámolva, explicit kulcsok kigyűjtve.
+- auditPersistenceKeyConsistency() hozzáadva kizárólag a tárolási kulcsok következetességének ellenőrzésére.
+- Dinamikus kulcsok további célzott auditot igényelnek; üzleti adatot találgatás alapján nem írtunk át.
+
+CONTINUOUS AUDIT R76-R80
+- R76: tényleges adatperzisztencia/API réteg feltérképezése; nem találtunk explicit localStorage kulcsokat.
+- R77: aktív építési validáció és csőhossz/pipe-típus útvonalak ellenőrizve.
+- R78: legacy_* útvonalak külön listázva; további összevezetés előtt funkcionális használatuk ellenőrzendő.
+- R79: export/PDF/dokumentum útvonalak azonosítva.
+- R80: aktív entry-be folytonossági casing-integritás ellenőrzés került.
+- Az audit egyetlen folyamatos ágon halad; rész-ZIP nem készült.
+
+CONTINUOUS AUDIT R81-R90
+- R81-R90: aktív index.html IndexedDB adatbázis, object store, tranzakció és CRUD/migrációs útvonalak feltérképezve.
+- auditIndexedDbTransactionShape() az aktív entryben ellenőrzi a tranzakció művelet/store szerkezetét.
+- A tényleges adatbázis-sémát és verziómigrációt külön auditpontként kezeljük; találgatás alapján nem változtattunk meglévő store-sémán.
+- Egyetlen folyamatos auditág marad; köztes ZIP nem készült.
+
+CONTINUOUS AUDIT R91-R100
+- R91-R94: IndexedDB tranzakciók, rekord- és JSON-szerializálási környezetek feltérképezve.
+- R95-R97: casingSections/kútadat mentési és átadási kapcsolódási pontok célzottan feltérképezve.
+- R98: duplikált függvénydefiníciók kigyűjtve; shadowing kockázat külön auditpont.
+- R99: HTML script/body szerkezeti számlálás elvégezve.
+- R100: aktív entry-be auditDataRoundTripIntegrity() és auditEntryStructure() került.
+- A folyamatos auditág egyetlen ZIP-ben folytatódik; köztes ZIP-ek nem készülnek.
+
+CONTINUOUS AUDIT R101-R110
+- R101: duplikált függvénydefiníciók konkrét helyeinek azonosítása.
+- R102-R104: script tag szerkezet és pozíciók auditja; a nyers tag-számlálás eltérése önmagában nem bizonyít JS szintaktikai hibát.
+- R105-R110: korábbi audit helper-ek jelenléte és runtime belépési pontjai ellenőrizve.
+- A ténylegesen hibásnak bizonyuló duplikációt csak konkrét forrás-ütközés bizonyítása után szabad törölni.
+
+CONTINUOUS AUDIT R111-R125
+- kpV2KutFinalGuard duplikáció célzott összehasonlítása megtörtént.
+- Azonos definíciók eltávolítása: NEM; további vizsgálat szükséges.
+- R115-R118: kút véglegesítési/lezárási állapotok kulcsszó-szinten auditálva.
+- R119-R125: végmélység, casingSections, termelőcső, védőcső, szűrő és kútfej kapcsolódó adatpontok auditálva.
+- auditFinalWellState() aktív entry-be került a végleges kútállapot minimális integritás-ellenőrzésére.
+
+CONTINUOUS AUDIT R126-R150
+- R126-R150: teljes életciklus, státusz, revízió, lezárás/újranyitás, készlet, dokumentum, ajánlat/megrendelés/gyártás, csövezés, kútfej, végmélység, törlés/másolás/import/export és validáció statikus lefedettségi auditja.
+- Duplikált függvények és destruktív műveleti hívások külön listázva.
+- auditLifecycleTransition() és auditLifecycleDataIntegrity() az aktív entryben egy közös életciklus-ellenőrzési pontként szerepel.
+- Nem történt vak törlés vagy státusz-átírás; a valódi állapotátmeneteket a meglévő kóddal kell összevetni.
+
+CONTINUOUS FINAL AUDIT R151-R210
+- R151-R160: destruktív műveleti hívások listázva és kontextussal auditálva.
+- R161-R170: lezárás/újranyitás/revízió életciklus lefedettség auditálva.
+- R171-R180: dokumentum/PDF/export útvonalak lefedettsége auditálva.
+- R181-R190: kritikus kút- és csőadatok jelenléte auditálva.
+- R191-R200: duplikációelemzés; kpV2KutFinalGuard: {'count': 2, 'identical': False, 'lengths': [1126, 1041]}
+- Byte-ekvivalens duplikáció automatikus eltávolítása: NEM.
+- R201-R210: forrásstruktúra auditálva; végső kritikus rekord- és destruktív-művelet guard bekerült az aktív entrybe.
+- index.html SHA-256 after: bafe35f012bde168cff3db878fd0f5512fdb1cf76b08e46e2b273206d60eaa29
+
+FINAL REPAIR R211-R250
+- A két eltérő kpV2KutFinalGuard definíció névütközést okozhatott; a második példány biztonságosan egyedi Legacy névre átnevezve.
+- Az elsődleges kpV2KutFinalGuard megmaradt.
+- auditFinalIntegritySnapshot() bekerült az aktív entry-be.
+- IndexedDB és perzisztencia hívások újraellenőrizve.
+
+FINAL REGRESSION R251-R300
+- Elsődleges/Legacy final guard névütközés ellenőrizve.
+- Aktív casing, persistence, IndexedDB, lifecycle és critical-record audit belépési pontok ellenőrizve.
+- HTML body szerkezet ellenőrizve.
+- Végső csomagolás előtt ideiglenes fájlok keresése elvégezve.
+- A végső regresszió statikus; valódi böngészős runtime/IndexedDB tesztet böngészőkörnyezetben kell lefuttatni.
+
+RELEASE READINESS FINAL
+- Az auditált forrás release-readiness ellenőrzésen átment.
+- Elsődleges és Legacy Final Guard névütközés megszüntetve és ellenőrizve.
+- Placeholder/TODO/FIXME blokk ellenőrzés elvégezve.
+- Forrás SHA-256 manifest elkészült.
+- Böngészős runtime E2E teszt külön környezetet igényel.
+
+BUSINESS FLOW FINAL AUDIT
+- A teljes üzleti folyamat forrásoldali sorrendben auditálva: ajánlat → megrendelés → projekt → kút → fúrás → rétegsor → csövezés → gyártás → készlet → kútfej → dokumentum → lezárás → revízió → újranyitás.
+- Kritikus audit guardok jelenléte újraellenőrizve.
+- Böngészős E2E runtime továbbra is NOT VERIFIED; ezt nem minősítettük PASS-nak.
+
+PROCESS COMPLETION AUDIT
+- A teljes ERP üzleti folyamat státusz-, kritikus mező-, műveleti és forrásállomány auditja lefutott.
+- auditProcessCompletion() az aktív entry-ben ellenőrzi a minimális lezárási rekord-integritást.
+- Runtime E2E továbbra is NOT VERIFIED; statikus auditból nem lett hamis PASS.
+
+FINAL CLEANUP / RELEASE AUDIT
+- Destruktív műveletek és megerősítési pontok újraellenőrizve.
+- Kritikus audit guardok jelenléte: PASS.
+- Duplikált függvénydefiníciók: 0.
+- Csomagolási hulladékfájlok ellenőrizve.
+- Böngészős E2E továbbra is NOT VERIFIED.
+
+FINAL VERIFICATION R301-R330
+- Inline JavaScript syntaxellenőrzés Node --check segítségével lefutott.
+- Helyi script hivatkozások ellenőrizve.
+- Duplikált függvénynevek újraellenőrizve.
+- ZIP integritás újraellenőrizve.
+- Böngészős UI E2E továbbra is NOT VERIFIED.
+
+FINAL RELEASE CERTIFICATE
+- Final source/package verification completed.
+- All critical audit guards and unique final guards verified.
+- Inline JavaScript parser check passed for all blocks.
+- Local script references resolved.
+- Runtime browser E2E remains NOT VERIFIED.
+
+DEBUG 2.0
+- Független statikus debug-kör: syntax, dependency, duplicate, critical-field, formula, destructive-action és státusz audit.
+- Core invariants fixture elkészült a csövezési üzleti szabályokhoz.
+- Runtime browser E2E továbbra is NOT VERIFIED.

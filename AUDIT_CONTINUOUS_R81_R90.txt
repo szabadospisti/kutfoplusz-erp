@@ -1,0 +1,199 @@
+FOLYAMATOS AUDIT R81-R90 – INDEXEDDB ÉS ADATÉLETCIKLUS
+================================================================================
+
+R81 – IndexedDB API használat
+indexedDB.open: 3
+onupgradeneeded: 3
+objectStore: 16
+createObjectStore: 3
+transaction(: 10
+put(: 132
+add(: 18
+get(: 13
+delete(: 2
+clear(: 3
+getAll(: 1
+
+R82 – adatbázis név/verzió
+- KutfoPluszERPFiles / version 1
+
+R83 – object store nevek
+- files
+
+R84 – perzisztencia jellegű függvények
+- _idbOpen
+- _readBackupFiles
+- auditAndSave
+- clearData
+- customerDeleteItems
+- customerDeleteListRow
+- customerHistoryData
+- documentFileDB
+- drillingDataPanel
+- editWellFinalData
+- exportData
+- formatDrillingPriceInput
+- formatProjectMoneyInput
+- getFilteredProductionReportData
+- hasStoredProjectFile
+- huFormatInput
+- huFormatMoneyInput
+- huFormatMoneyInputValue
+- importData
+- irrigationAIInput
+- legacySaveWorklog
+- legacy_addQuoteItem
+- legacy_deleteProjectDocument
+- legacy_deletePurchaseRequest
+- legacy_saveHandover
+- legacy_saveProjectDocument
+- legacy_savePurchaseRequest
+- legacy_saveServiceCase
+- legacy_saveWarranty
+- legacy_saveWellLayer
+- licenseInput
+- loadData
+- machineDocumentDB
+- machineInput
+- machineServiceDateAdd
+- mapPermitData
+- openCustomerDeleteManager
+- openProjectDataDocument
+- openProjectDataService
+- plannedSectionInput
+- prepareWellDataService
+- refreshCustomerDeleteManager
+- resetData
+- restoreMaterial
+- saveData
+- saveGeneratedBuildEdits
+- saveWellFinalData
+- showWellDataSummary
+- syncGeneratedBuildEditsFromDom
+- toggleMachineDocumentUpload
+- updateProjectEditMoneyInput
+- uploadMachineDocument
+- uploadProjectDocument
+- wellDataServicePanel
+- wlAddFilter
+- wlAddLayer
+- wlApplyImportedData
+- wlLoadDraft
+- wlRemoveAutoMaterialUsage
+- wlSave
+- wlSaveDraft
+- wlSyncProjectData
+- worklogDocumentDataFromStored
+- zipStore
+
+R85-R90 – releváns kódkörnyezetek
+
+[indexedDB.open] "button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Dokumentum hozzáadása</button></div></form>`); } function documentFileDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("files"))db.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.ob
+
+[indexedDB.open] owerCase()===type; const okText=!q||(row.dataset.docName||"").includes(q); row.style.display=okType&&okText?"":"none"; }); } function machineDocumentDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains("files"))idb.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStor
+
+[indexedDB.open] ut={}; for(let i=0;i<ERPStorage.length;i++){ const k=ERPStorage.key(i); if(k!=null) out[k]=ERPStorage.getItem(k); } return out; } function _idbOpen(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains("files"))d.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error||new Error("IndexedDB megnyitási hiba")); }); } async function _readBackupFiles(){ const idb=await _idbOpen(); try{ return await new Promise((resolve,reject)=>{ const tx=idb.tran
+
+[onupgradeneeded] al()">Mégse</button><button class="btn">Dokumentum hozzáadása</button></div></form>`); } function documentFileDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("files"))db.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomp
+
+[onupgradeneeded] aset.docName||"").includes(q); row.style.display=okType&&okText?"":"none"; }); } function machineDocumentDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains("files"))idb.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomple
+
+[onupgradeneeded]  const k=ERPStorage.key(i); if(k!=null) out[k]=ERPStorage.getItem(k); } return out; } function _idbOpen(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains("files"))d.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error||new Error("IndexedDB megnyitási hiba")); }); } async function _readBackupFiles(){ const idb=await _idbOpen(); try{ return await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"),store=tx.objectStore(
+
+[objectStore] um hozzáadása</button></div></form>`); } function documentFileDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("files"))db.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error
+
+[objectStore] nction documentFileDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("files"))db.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); } async function get
+
+[objectStore] q.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); } async function getProjectFile(docId){ const idb=await documentFileDB(); const value=await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"); const req=tx.objectStore("files").get(docId); req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); 
+
+[objectStore] r); }); idb.close(); } async function getProjectFile(docId){ const idb=await documentFileDB(); const value=await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"); const req=tx.objectStore("files").get(docId); req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); idb.close(); return value||null; } async function hasStoredProjectFile(docId){ if(!docId)return false; try{return !!(await getProjectFile(docId));} catch(e){console.warn("Dokumentumfájl ellenőrzése:",e);return false;} } async function deleteProjectFile(docId){ if(!docId)return; try{ const idb=awa
+
+[objectStore] false;} } async function deleteProjectFile(docId){ if(!docId)return; try{ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").delete(docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); }catch(e){console.warn("Dokumentumfájl törlése:",e)} } async function openProjectDocumentFile(d){ if(!d){toast("A dokumentum nem található");return;} try{ const file=await getProjectFile(d.id); if(!file){ openModal("Dokumentum",`<div class="formgrid"> <div class="field full"><div
+
+[objectStore] ay=okType&&okText?"":"none"; }); } function machineDocumentDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains("files"))idb.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); 
+
+[objectStore]  machineDocumentDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains("files"))idb.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function getMachineFil
+
+[objectStore] lt); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function getMachineFile(docId){ const idb=await machineDocumentDB(); const value=await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readonly");const req=tx.objectStore("files").get("machine:"+docId);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)}); idb
+
+[createObjectStore]  } function documentFileDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("files"))db.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); } async function get
+
+[createObjectStore] nction machineDocumentDB(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains("files"))idb.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function getMachineFil
+
+[createObjectStore] eturn out; } function _idbOpen(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open("KutfoPluszERPFiles",1); req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains("files"))d.createObjectStore("files")}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error||new Error("IndexedDB megnyitási hiba")); }); } async function _readBackupFiles(){ const idb=await _idbOpen(); try{ return await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"),store=tx.objectStore("files"); const keysReq=store.getAllKeys(),valsReq=store.getAll(); tx.one
+
+[transaction(] onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeProjectFile(docId,file){ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").put(file,docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); } async function getProjectFile(docId){ const idb=await documentFileDB(); const value=await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"); const req=tx.objectStore("files").get(docId); req.onsuccess=()=>resolve(req.result); r
+
+[transaction(] .oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); } async function getProjectFile(docId){ const idb=await documentFileDB(); const value=await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"); const req=tx.objectStore("files").get(docId); req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); idb.close(); return value||null; } async function hasStoredProjectFile(docId){ if(!docId)return false; try{return !!(await getProjectFile(docId));} catch(e){console.warn("Dokumentumfájl ellenőrzése:",e);return false;} } async function deleteProjectFile(doc
+
+[transaction(] rn("Dokumentumfájl ellenőrzése:",e);return false;} } async function deleteProjectFile(docId){ if(!docId)return; try{ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").delete(docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); }catch(e){console.warn("Dokumentumfájl törlése:",e)} } async function openProjectDocumentFile(d){ if(!d){toast("A dokumentum nem található");return;} try{ const file=await getProjectFile(d.id); if(!file){ openModal("Dokumentum",`<div class="formg
+
+[transaction(]  req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); } async function storeMachineFile(docId,file){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").put(file,"machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function getMachineFile(docId){ const idb=await machineDocumentDB(); const value=await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readonly");const req=tx.objectStore("files").get("machine:"+docId);req.onsuccess=()=>resolve(req.result);req.one
+
+[transaction(] cId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function getMachineFile(docId){ const idb=await machineDocumentDB(); const value=await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readonly");const req=tx.objectStore("files").get("machine:"+docId);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)}); idb.close(); return value||null; } async function deleteMachineFile(docId){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").delete("machine:"+docId);tx.oncomplete=reso
+
+[transaction(] e(req.result);req.onerror=()=>reject(req.error)}); idb.close(); return value||null; } async function deleteMachineFile(docId){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").delete("machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function uploadMachineDocument(id){ const m=db.machines.find(x=>String(x.id)===String(id)); if(!m)return; const input=document.getElementById(`machine-file-${id}`); const file=input?.files?.[0]; if(!file){toast("Válassz ki egy fájlt.");return;} try{ const do
+
+[transaction(] .onerror=()=>reject(req.error||new Error("IndexedDB megnyitási hiba")); }); } async function _readBackupFiles(){ const idb=await _idbOpen(); try{ return await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"),store=tx.objectStore("files"); const keysReq=store.getAllKeys(),valsReq=store.getAll(); tx.onerror=()=>reject(tx.error||new Error("Fájltár olvasási hiba")); tx.oncomplete=async()=>{ try{ const keys=keysReq.result||[], vals=valsReq.result||[], rows=[]; for(let i=0;i<Math.min(keys.length,vals.length);i++){ const key=String(keys[i]); 
+
+[transaction(] ach(([k,v])=>ERPStorage.setItem(k,v)); db=importedDb; // IndexedDB fájlok törlése és a mentett fájlok visszaírása. const idb=await _idbOpen(); try{ await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite"),store=tx.objectStore("files");store.clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Fájltár törlési hiba"))}); if(zip && Array.isArray(manifest.files)){ for(const f of manifest.files){ const entry=zip.file(f.path);if(!entry)continue; const bytes=await entry.async("uint8array"); const blob=new Blob([bytes],{type:f.type||"applicat
+
+[put(] '; })(); </script> <script id="worklog-portable-v104"> (function(){ const KEY='kutfoplusz_worklog_drafts_v1'; function drafts(){try{return JSON.parse(ERPStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}} function put(v){ERPStorage.setItem(KEY,JSON.stringify(v));} window.worklogAutoSave=function(data){if(!data||!data.id)return;const d=drafts();d[String(data.id)]=Object.assign({},data,{_localSavedAt:new Date().toISOString()});put(d);}; window.worklogLocalDraft=function(id){return id?drafts()[String(id)]||null:null;}; window.clearWorklogLocalDraft=function(id){if(!id)return;const d=drafts();delete d[String(id)];put(d);}; win
+
+[put(] on put(v){ERPStorage.setItem(KEY,JSON.stringify(v));} window.worklogAutoSave=function(data){if(!data||!data.id)return;const d=drafts();d[String(data.id)]=Object.assign({},data,{_localSavedAt:new Date().toISOString()});put(d);}; window.worklogLocalDraft=function(id){return id?drafts()[String(id)]||null:null;}; window.clearWorklogLocalDraft=function(id){if(!id)return;const d=drafts();delete d[String(id)];put(d);}; window.exportCurrentWorklog=function(){ const id=window.__activeWorklogId; if(!id)return typeof toast==='function'?toast('Előbb nyiss meg vagy hozz létre egy munkanaplót.'):alert('Előbb nyiss meg vagy hozz létre 
+
+[put(] :new Date().toISOString()});put(d);}; window.worklogLocalDraft=function(id){return id?drafts()[String(id)]||null:null;}; window.clearWorklogLocalDraft=function(id){if(!id)return;const d=drafts();delete d[String(id)];put(d);}; window.exportCurrentWorklog=function(){ const id=window.__activeWorklogId; if(!id)return typeof toast==='function'?toast('Előbb nyiss meg vagy hozz létre egy munkanaplót.'):alert('Előbb nyiss meg vagy hozz létre egy munkanaplót.'); let data=null; try{if(typeof getWorklogById==='function')data=getWorklogById(id);}catch(e){} if(!data)data=window.worklogLocalDraft(id); if(!data)return typ
+
+[put(] {try{ const data=JSON.parse(r.result); if(!data||data._exportType!=='kutfoplusz-worklog'||!data.id)throw new Error('Nem érvényes Kútfő Plusz munkanapló fájl.'); const d=drafts();d[String(data.id)]=data;put(d);window.__activeWorklogId=data.id; if(typeof saveWorklogData==='function')saveWorklogData(data); if(typeof render==='function')render(); if(typeof toast==='function')toast('Munkanapló betöltve.'); }catch(e){if(typeof toast==='function')toast('Nem sikerült betölteni: '+e.message);else alert('Nem sikerült betölteni: '+e.message);}}; r.readAsText(file);input.value=''; }; })(); </script> </h
+
+[put(]  if(!raw) return ""; const n=huNumber(raw); if(!Number.isFinite(n)) return raw.replace(/\./g,","); return n.toLocaleString("hu-HU",{minimumFractionDigits:0,maximumFractionDigits:maxDecimals}); } function huFormatInput(el,decimals=1){ if(!el) return; const raw=String(el.value??""); if(!raw.trim()){el.value="";return;} const n=huNumber(raw); if(!Number.isFinite(n)) return; el.value=n.toLocaleString("hu-HU",{minimumFractionDigits:decimals,maximumFractionDigits:decimals}); } function huFormatMoneyInputValue(v){ const n=huNumber(v); return n? n.toLocaleString("hu-HU",{minimumFractionDigits:0,maximumFractionDigits:0}):"0"; }
+
+[put(] decimals,maximumFractionDigits:decimals}); } function huFormatMoneyInputValue(v){ const n=huNumber(v); return n? n.toLocaleString("hu-HU",{minimumFractionDigits:0,maximumFractionDigits:0}):"0"; } function huFormatMoneyInput(el){ if(!el) return; const raw=String(el.value??""); if(!raw.trim()){el.value="";return;} const n=huNumber(raw); if(!Number.isFinite(n)) return; el.value=n.toLocaleString("hu-HU",{minimumFractionDigits:0,maximumFractionDigits:0}); } function money(v){return new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(v)||0)} function cust(id){return db.customers.f
+
+[put(] ` <div class="license-import-box"> <div class="label">Forrás: ${esc(data.fileName)}</div> <div class="license-import-grid"> <div class="license-import-card"><h4>👤 Ügyfél</h4> ${licenseInput("customer_name","Név / cégnév",data.customer.name)} ${licenseInput("customer_address","Cím",data.customer.address)} ${licenseInput("customer_contact","Kapcsolattartó",data.customer.contact)} ${licenseInput("customer_phone","Telefon",data.customer.phone)} ${licenseInput("customer_email","E-mail",data.customer.email)} ${licenseInput("customer_tax","Adószám",data.custome
+
+[put(] (data.fileName)}</div> <div class="license-import-grid"> <div class="license-import-card"><h4>👤 Ügyfél</h4> ${licenseInput("customer_name","Név / cégnév",data.customer.name)} ${licenseInput("customer_address","Cím",data.customer.address)} ${licenseInput("customer_contact","Kapcsolattartó",data.customer.contact)} ${licenseInput("customer_phone","Telefon",data.customer.phone)} ${licenseInput("customer_email","E-mail",data.customer.email)} ${licenseInput("customer_tax","Adószám",data.customer.taxNumber)} ${licenseInput("customer_billing","Számlázási adatok"
+
+[add(] 0)} function cust(id){return db.customers.find(x=>x.id===id)?.name||"—"} function uid(p){return p+"-"+Date.now().toString().slice(-7)} function toast(s){let e=document.getElementById("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2200)} function openModal(t,b){document.getElementById("mtitle").textContent=t;document.getElementById("mbody").innerHTML=b;document.getElementById("modal").classList.remove("hidden")} function closeModal(){document.getElementById("modal").classList.add("hidden")} function openDrawer(t,b){document.getElementById("dtitle").textContent=t;document.getElementById("dbody")
+
+[add(] {document.getElementById("mtitle").textContent=t;document.getElementById("mbody").innerHTML=b;document.getElementById("modal").classList.remove("hidden")} function closeModal(){document.getElementById("modal").classList.add("hidden")} function openDrawer(t,b){document.getElementById("dtitle").textContent=t;document.getElementById("dbody").innerHTML=b;document.getElementById("drawer").classList.add("open")} function closeDrawer(){document.getElementById("drawer").classList.remove("open")} function nav(p){ projectPageId=null; current=p; location.hash="#/"+p; render(); document.getElementById("sidebar").classList.remove("open") }
+
+[add(] document.getElementById("modal").classList.add("hidden")} function openDrawer(t,b){document.getElementById("dtitle").textContent=t;document.getElementById("dbody").innerHTML=b;document.getElementById("drawer").classList.add("open")} function closeDrawer(){document.getElementById("drawer").classList.remove("open")} function nav(p){ projectPageId=null; current=p; location.hash="#/"+p; render(); document.getElementById("sidebar").classList.remove("open") } function legacy_openProjectPage(id){ const key=String(id); const p=(db.projects||[]).find(x=>String(x.id)===key); if(!p){toast("A projekt nem található");return false;} 
+
+[add(] t already extracted in the fast pass. for(const p of pageResults){ if(selectedPages.has(p.page)) continue; if(waterNeedle.test(p.text||"")){ info.selected.push(p); selectedPages.add(p.page); } } // If a scanned page did not expose the phrase in the fast OCR, perform // a targeted high-resolution OCR on the remaining pages. This is the // important difference from v1.218: water extraction no longer depends // on the page classifier succeeding first. const rescueCandidates=pageResults.filter(p=>!selectedPages.has(p.page) && p.source==="ocr"); if(re
+
+[add(] as(page,2.2); const result=await worker.recognize(canvas); p.text=(result?.data?.text||"").trim(); if(waterNeedle.test(p.text)){ info.selected.push(p); selectedPages.add(p.page); } } await worker.terminate(); } info.selected.sort((a,b)=>a.page-b.page); } // 5. Build the extraction corpus only from relevant pages. const corpus=info.selected.map(x=>x.text||"").filter(Boolean).join("\n\n"); if(corpus.trim().length<40){ set(permitPageSummaryHtml(info)+`<div class="license-review" style="margin-top:8px"><b>⚠️ Nem sikerült elegen
+
+[add(] er.isFinite(x)||x<=0)){ toast("Minden átmérőnek érvényes pozitív számnak vagy pl. 315/290 formátumnak kell lennie"); return; } if(used.has(diameter)){ toast("Az átmérők nem lehetnek duplikáltak"); return; } used.add(diameter); const value=fd.get("price_"+row.id); const undocumentedValue=fd.get("undocumentedPrice_"+row.id); const note=fd.get("note_"+row.id); row.diameter=diameter; row.price=Number(String(value??"").replace(/\s/g,"").replace(",","."))||0; row.undocumentedPrice=Number(String(undocumentedValue??"").replace(/\s/g,"").replace(",","."))||0; row.note=String(note??""); row.updatedAt=new Da
+
+[add(] tába (pl. "315/290 KM-PVC" nem önálló csőtípus). const allowed=["KM-PVC","KM-PVC Szűrőcső","Acél","KPE","KG"]; const found=new Set(); const add=v=>{ const n=normalizePipeType(v); if(n && allowed.includes(n)) found.add(n); }; (db.pipeTypes||[]).forEach(add); (db.materials||[]).forEach(m=>add(m.pipeType)); (db.stock||[]).forEach(m=>add(m.pipeType)); (db.quotes||[]).forEach(q=>add(q.pipeMaterial)); // A jelenlegi alap csőtípusok mindig legyenek választhatók. allowed.forEach(add); db.pipeTypes=allowed.filter(x=>found.has(x)); if(!db.pipeTypes.length) db.pipeTypes=[...allowed]; (db.materials||[]).forEach(m=>{ if(m.pip
+
+[add(] -PVC Szűrőcső","Acél","KPE","KG"]; const found=new Set(); const add=v=>{ const n=normalizePipeType(v); if(n && allowed.includes(n)) found.add(n); }; (db.pipeTypes||[]).forEach(add); (db.materials||[]).forEach(m=>add(m.pipeType)); (db.stock||[]).forEach(m=>add(m.pipeType)); (db.quotes||[]).forEach(q=>add(q.pipeMaterial)); // A jelenlegi alap csőtípusok mindig legyenek választhatók. allowed.forEach(add); db.pipeTypes=allowed.filter(x=>found.has(x)); if(!db.pipeTypes.length) db.pipeTypes=[...allowed]; (db.materials||[]).forEach(m=>{ if(m.pipeType) m.pipeType=normalizePipeType(m.pipeType); }); (db.stock||[]).forEach(
+
+[get(] ; if(!p)return; const f=new FormData(e.target), file=e.target.elements.file?.files?.[0]; p.documents=Array.isArray(p.documents)?p.documents:[]; const docId="DOC-"+Date.now(); const doc={ id:docId, name:f.get("name")||"Dokumentum", type:f.get("type")||"Egyéb", status:f.get("status")||"Feldolgozásra vár", note:f.get("note")||"", fileName:file?.name||"", size:file?formatFileSize(file.size):"", date:new Date().toISOString().slice(0,10), projectId:p.id, customerId:p.customerId }; p.documents.push(doc); db.documents=Array.isArray(db.documents)?db.documents:[]; db.documents.push(doc); p.nextTask=p.nextTask==="
+
+[get(] Data(e.target), file=e.target.elements.file?.files?.[0]; p.documents=Array.isArray(p.documents)?p.documents:[]; const docId="DOC-"+Date.now(); const doc={ id:docId, name:f.get("name")||"Dokumentum", type:f.get("type")||"Egyéb", status:f.get("status")||"Feldolgozásra vár", note:f.get("note")||"", fileName:file?.name||"", size:file?formatFileSize(file.size):"", date:new Date().toISOString().slice(0,10), projectId:p.id, customerId:p.customerId }; p.documents.push(doc); db.documents=Array.isArray(db.documents)?db.documents:[]; db.documents.push(doc); p.nextTask=p.nextTask==="Létesítési engedély feltöltése"?"D
+
+[get(] lements.file?.files?.[0]; p.documents=Array.isArray(p.documents)?p.documents:[]; const docId="DOC-"+Date.now(); const doc={ id:docId, name:f.get("name")||"Dokumentum", type:f.get("type")||"Egyéb", status:f.get("status")||"Feldolgozásra vár", note:f.get("note")||"", fileName:file?.name||"", size:file?formatFileSize(file.size):"", date:new Date().toISOString().slice(0,10), projectId:p.id, customerId:p.customerId }; p.documents.push(doc); db.documents=Array.isArray(db.documents)?db.documents:[]; db.documents.push(doc); p.nextTask=p.nextTask==="Létesítési engedély feltöltése"?"Dokumentumok feldolgozása":(p.ne
+
+[get(] sArray(p.documents)?p.documents:[]; const docId="DOC-"+Date.now(); const doc={ id:docId, name:f.get("name")||"Dokumentum", type:f.get("type")||"Egyéb", status:f.get("status")||"Feldolgozásra vár", note:f.get("note")||"", fileName:file?.name||"", size:file?formatFileSize(file.size):"", date:new Date().toISOString().slice(0,10), projectId:p.id, customerId:p.customerId }; p.documents.push(doc); db.documents=Array.isArray(db.documents)?db.documents:[]; db.documents.push(doc); p.nextTask=p.nextTask==="Létesítési engedély feltöltése"?"Dokumentumok feldolgozása":(p.nextTask||""); if(p.status==="Új megkeresés")p.
+
+[get(]  function saveDrillingPriceList(e){ e.preventDefault(); ensureDrillingPriceList(); const fd=new FormData(e.target); const used=new Set(); for(const row of db.drillingPriceList){ const diameterRaw=String(fd.get("diameter_"+row.id)??row.diameter).trim(); const diameter=diameterRaw.replace(/\s+/g,""); const parts=diameter.split("/").map(x=>Number(x.replace(",","."))); if(!diameter||parts.some(x=>!Number.isFinite(x)||x<=0)){ toast("Minden átmérőnek érvényes pozitív számnak vagy pl. 315/290 formátumnak kell lennie"); return; } if(used.has(diameter)){ toast("Az átmérők nem lehetnek duplikáltak"); return; } us
+
+[get(] den átmérőnek érvényes pozitív számnak vagy pl. 315/290 formátumnak kell lennie"); return; } if(used.has(diameter)){ toast("Az átmérők nem lehetnek duplikáltak"); return; } used.add(diameter); const value=fd.get("price_"+row.id); const undocumentedValue=fd.get("undocumentedPrice_"+row.id); const note=fd.get("note_"+row.id); row.diameter=diameter; row.price=Number(String(value??"").replace(/\s/g,"").replace(",","."))||0; row.undocumentedPrice=Number(String(undocumentedValue??"").replace(/\s/g,"").replace(",","."))||0; row.note=String(note??""); row.updatedAt=new Date().toISOString(); } db.drill
+
+[get(] 90 formátumnak kell lennie"); return; } if(used.has(diameter)){ toast("Az átmérők nem lehetnek duplikáltak"); return; } used.add(diameter); const value=fd.get("price_"+row.id); const undocumentedValue=fd.get("undocumentedPrice_"+row.id); const note=fd.get("note_"+row.id); row.diameter=diameter; row.price=Number(String(value??"").replace(/\s/g,"").replace(",","."))||0; row.undocumentedPrice=Number(String(undocumentedValue??"").replace(/\s/g,"").replace(",","."))||0; row.note=String(note??""); row.updatedAt=new Date().toISOString(); } db.drillingPriceList.sort((a,b)=>Number(String(a.diameter).sp
+
+[get(] has(diameter)){ toast("Az átmérők nem lehetnek duplikáltak"); return; } used.add(diameter); const value=fd.get("price_"+row.id); const undocumentedValue=fd.get("undocumentedPrice_"+row.id); const note=fd.get("note_"+row.id); row.diameter=diameter; row.price=Number(String(value??"").replace(/\s/g,"").replace(",","."))||0; row.undocumentedPrice=Number(String(undocumentedValue??"").replace(/\s/g,"").replace(",","."))||0; row.note=String(note??""); row.updatedAt=new Date().toISOString(); } db.drillingPriceList.sort((a,b)=>Number(String(a.diameter).split("/")[0].replace(",","."))-Number(String(b.diamet
+
+[delete(] ion deleteProjectFile(docId){ if(!docId)return; try{ const idb=await documentFileDB(); await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readwrite"); tx.objectStore("files").delete(docId); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); }); idb.close(); }catch(e){console.warn("Dokumentumfájl törlése:",e)} } async function openProjectDocumentFile(d){ if(!d){toast("A dokumentum nem található");return;} try{ const file=await getProjectFile(d.id); if(!file){ openModal("Dokumentum",`<div class="formgrid"> <div class="field full"><div class="input">A 
+
+[delete(] close(); return value||null; } async function deleteMachineFile(docId){ const idb=await machineDocumentDB(); await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite");tx.objectStore("files").delete("machine:"+docId);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}); idb.close(); } async function uploadMachineDocument(id){ const m=db.machines.find(x=>String(x.id)===String(id)); if(!m)return; const input=document.getElementById(`machine-file-${id}`); const file=input?.files?.[0]; if(!file){toast("Válassz ki egy fájlt.");return;} try{ const docId="MDOC-"+Date.now()+"-"+Math.random().toString(36
+
+[clear(] em(k,v);return;} }catch(e){ native=null; } memory[k]=v; }, removeItem(k){ k=String(k); try{ if(native){native.removeItem(k);return;} }catch(e){ native=null; } delete memory[k]; }, clear(){ try{ if(native){native.clear();return;} }catch(e){ native=null; } Object.keys(memory).forEach(k=>delete memory[k]); } }; window.__KUTFOPLUSZ_STORAGE_MODE__=native?'ERPStorage':'memory'; })(); </script> <script id="worklog-portable-v104"> (function(){ const KEY='kutfoplusz_worklog_drafts_v1'; function drafts(){try{return JSON.parse(ERPStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}} fun
+
+[clear(] l; } memory[k]=v; }, removeItem(k){ k=String(k); try{ if(native){native.removeItem(k);return;} }catch(e){ native=null; } delete memory[k]; }, clear(){ try{ if(native){native.clear();return;} }catch(e){ native=null; } Object.keys(memory).forEach(k=>delete memory[k]); } }; window.__KUTFOPLUSZ_STORAGE_MODE__=native?'ERPStorage':'memory'; })(); </script> <script id="worklog-portable-v104"> (function(){ const KEY='kutfoplusz_worklog_drafts_v1'; function drafts(){try{return JSON.parse(ERPStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}} function put(v){ERPStorage.setItem(KEY,JS
+
+[clear(] xedDB fájlok törlése és a mentett fájlok visszaírása. const idb=await _idbOpen(); try{ await new Promise((resolve,reject)=>{const tx=idb.transaction("files","readwrite"),store=tx.objectStore("files");store.clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Fájltár törlési hiba"))}); if(zip && Array.isArray(manifest.files)){ for(const f of manifest.files){ const entry=zip.file(f.path);if(!entry)continue; const bytes=await entry.async("uint8array"); const blob=new Blob([bytes],{type:f.type||"application/octet-stream"}); if(f.name || f.lastModified){ 
+
+[getAll(]  const idb=await _idbOpen(); try{ return await new Promise((resolve,reject)=>{ const tx=idb.transaction("files","readonly"),store=tx.objectStore("files"); const keysReq=store.getAllKeys(),valsReq=store.getAll(); tx.onerror=()=>reject(tx.error||new Error("Fájltár olvasási hiba")); tx.oncomplete=async()=>{ try{ const keys=keysReq.result||[], vals=valsReq.result||[], rows=[]; for(let i=0;i<Math.min(keys.length,vals.length);i++){ const key=String(keys[i]); const value=vals[i]; if(value==null) continue; const blob=value instanceof Blob?valu

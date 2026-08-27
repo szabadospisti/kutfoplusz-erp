@@ -1,0 +1,31 @@
+FOLYAMATOS AUDIT R111-R125
+================================================================================
+
+R111-R114 – kpV2KutFinalGuard duplikáció
+Definíciók száma: 2
+A két definíció eltér.
+  #1 hossz: 1126 karakter
+  #1 hívások: []
+  #2 hossz: 1041 karakter
+  #2 hívások: []
+
+R115-R118 – véglegesítés/lezárás kulcsszavak
+Final: 144
+final: 144
+lezár: 158
+lock: 229
+locked: 9
+complete: 15
+completed: 5
+status: 763
+revision: 0
+
+R119-R125 – kritikus kútadatok előfordulása
+finalDepth: 25
+endDepth: 2
+casingSections: 37
+productionPipe: 2
+casingDiameter: 55
+filter: 780
+wellHead: 39
+kútfej: 29

@@ -1,0 +1,23 @@
+AUDIT – TÉNYLEGES FUTÓ UI FORRÁS
+==================================================
+
+ENTRY: munkanaplo.html
+INLINE SCRIPT BLOKKOK: 2
+KÜLSŐ SCRIPT:
+
+ENTRY: index.html
+INLINE SCRIPT BLOKKOK: 11
+KÜLSŐ SCRIPT:
+  - https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js
+  - quote_template.js
+  - quote_preview_pages.js?v=60
+  - jszip.min.js
+  - quote_preview_vectors.js
+
+all.js fájlok száma: 1
+all.js betöltve valamelyik HTML entryből: False
+
+HTML-ben talált releváns cső/casing előfordulások:
+  munkanaplo.html: [('pipe', 4)]
+  index.html: [('casingSections', 37), ('casing', 257), ('csőszakasz', 5), ('csovezes', 9), ('csövezés', 62), ('pipe', 281)]

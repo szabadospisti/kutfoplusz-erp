@@ -1,0 +1,13 @@
+{
+  "casing_end_depth_rule": "well final depth equals last casing section end depth",
+  "section_continuity": "each section start equals previous section end",
+  "positive_length": "end depth > start depth",
+  "pipe_stock_rule": "required 3m pieces = ceil(section meters / 3)",
+  "separation": [
+    "védőcső",
+    "termelőcső",
+    "szűrőcső"
+  ],
+  "production_pipe_default": "3\" horganyzott",
+  "casing_diameter_default_mm": 324
+}

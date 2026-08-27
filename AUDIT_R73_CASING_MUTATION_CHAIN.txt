@@ -1,0 +1,52 @@
+AUDIT-R73 – AKTÍV CSŐSZAKASZ MUTÁCIÓS LÁNC
+=================================================================
+
+
+### addCasingSection
+FOUND
+Relevant identifiers: saveCasingSection
+Length: 962 chars
+save: 1 occurrence(s)
+
+### editCasingSection
+FOUND
+Relevant identifiers: casingSections, updateCasingSection
+Length: 1176 chars
+casingSections: 1 occurrence(s)
+update: 1 occurrence(s)
+
+### updateCasingSection
+FOUND
+Relevant identifiers: casingSections, render, save, updateCasingSection
+Length: 347 chars
+casingSections: 2 occurrence(s)
+save: 1 occurrence(s)
+update: 1 occurrence(s)
+
+### saveCasingSection
+FOUND
+Relevant identifiers: casingSections, render, save, saveCasingSection
+Length: 609 chars
+casingSections: 6 occurrence(s)
+save: 2 occurrence(s)
+
+### rebuildWellLayers
+FOUND
+Relevant identifiers: rebuildWellLayers, render, save
+Length: 447 chars
+rebuildWellLayers: 1 occurrence(s)
+save: 1 occurrence(s)
+
+### saveProjectWellInline
+FOUND
+Relevant identifiers: casingSections, render, save, saveProjectWellInline
+Length: 2800 chars
+casingSections: 5 occurrence(s)
+save: 2 occurrence(s)
+
+### validateWellConstruction
+FOUND
+Relevant identifiers: casingSections, validateWellConstruction
+Length: 913 chars
+casingSections: 1 occurrence(s)
+validateWellConstruction: 1 occurrence(s)

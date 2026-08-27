@@ -1,0 +1,16 @@
+AUDIT-R75 – TÉNYLEGES PERZISZTENCIA ÉS MENTÉSI KULCSOK
+========================================================================
+
+localStorage: 7
+sessionStorage: 0
+indexedDB: 11
+localStorage.setItem: 0
+localStorage.getItem: 0
+sessionStorage.setItem: 0
+sessionStorage.getItem: 0
+setItem(: 9
+getItem(: 16
+
+Explicit storage keys found:
+
+Megjegyzés: dinamikusan képzett kulcsok külön kódszintű ellenőrzést igényelnek.

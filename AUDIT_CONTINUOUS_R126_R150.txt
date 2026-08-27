@@ -1,0 +1,151 @@
+FOLYAMATOS AUDIT R126-R150
+==========================================================================================
+
+R126_status: status=763; állapot=54; locked=9; completed=5; final=147
+R127_revision: revision=0; revíz=0; verzió=6
+R128_project_close: closeProject=4; projectClosed=0; lezár=158; projekt=416
+R129_well_close: finalWell=1; finalizeWell=0; wellFinal=4; kút=285
+R130_reopen: reopen=0; reOpen=0; újranyit=0; visszanyit=1
+R131_stock: stock=742; készlet=188; inventory=5; material=700
+R132_stock_issue: issueStock=2; stockOut=0; consume=12; felhasznál=96
+R133_stock_return: returnStock=0; stockIn=10; visszavét=19; vissza=82
+R134_documents: docx=78; pdf=121; document=973; export=55
+R135_offer: offer=93; ajánlat=213; quote=729
+R136_order: order=1282; megrendel=35
+R137_production: production=1105; gyártás=259; manufact=47
+R138_casing: casingSections=41; csőszakasz=8; csövezés=62
+R139_filter: filter=780; szűrő=177; szuro=4
+R140_wellhead: wellHead=39; kútfej=29
+R141_depth: finalDepth=27; endDepth=3; végmélység=15
+R142_customer: customer=715; ügyfél=91; vevő=4
+R143_numbering: A-26-=0; offerNumber=0; ajánlatszám=0
+R144_delete: delete=110; remove=43; töröl=34
+R145_duplicate: duplicate=3; copy=2; másolat=1
+R146_import: import=715; betölt=9
+R147_export: export=55; letölt=1
+R148_error: catch=78; throw=33; error=94; hiba=13
+R149_validation: validate=10; validation=0; ellenőrz=59
+R150_audit: audit=105; regression=0; guard=33
+
+Duplikált függvények:
+- kpV2KutFinalGuard: 2 db
+
+Destruktív műveleti hívások (első 100):
+- line~2736: removeItem(
+- line~2822: removeItem(
+- line~2824: removeItem(
+- line~2827: clear(
+- line~2828: clear(
+- line~2855: remove(
+- line~3147: remove(
+- line~3148: remove(
+- line~3151: remove(
+- line~3157: remove(
+- line~3515: deleteCustomer(
+- line~3659: deleteQuote(
+- line~3712: deleteWorklog(
+- line~6039: deleteProjectDocument(
+- line~7473: deleteProductionBom(
+- line~7509: remove(
+- line~7535: deleteProductionBom(
+- line~7875: deletePurchaseRequest(
+- line~7915: deletePurchaseRequest(
+- line~8790: removeQuoteItem(
+- line~8812: removeQuoteItem(
+- line~9213: deleteProjectDocument(
+- line~9277: deleteProjectDocument(
+- line~9306: deleteProjectFile(
+- line~9943: deleteDrillingPriceRow(
+- line~10022: deleteDrillingPriceRow(
+- line~10232: removeQuoteCalcItem(
+- line~10275: removeQuoteCalcItem(
+- line~10659: deleteProjectDocument(
+- line~10714: deleteProjectDocument(
+- line~10761: deleteProjectFile(
+- line~10767: delete(
+- line~11242: deleteProject(
+- line~11256: deleteQuote(
+- line~11432: deleteProductionOrder(
+- line~11478: deleteProductionOrder(
+- line~11541: removeProjectMachineUsage(
+- line~11566: removeProjectMachine(
+- line~11605: removeProjectMachineUsage(
+- line~11609: remove(
+- line~11634: removeProjectMachine(
+- line~11690: deleteProject(
+- line~12523: deleteProductionOrder(
+- line~12591: deletePurchaseRequestInline(
+- line~12639: deletePurchaseRequestInline(
+- line~12757: remove(
+- line~12878: remove(
+- line~12883: remove(
+- line~12928: clearData(
+- line~12928: removeItem(
+- line~12948: deleteCustomer(
+- line~12952: deleteWorklog(
+- line~13078: deleteCustomerQuoteAndRefresh(
+- line~13082: deleteCustomerProjectAndRefresh(
+- line~13086: deleteCustomerWorklogAndRefresh(
+- line~13090: deleteCustomerDocumentAndRefresh(
+- line~13114: deleteCustomerAfterCleanup(
+- line~13124: deleteCustomerQuoteAndRefresh(
+- line~13125: deleteQuote(
+- line~13127: deleteCustomerWorklogAndRefresh(
+- line~13128: deleteWorklog(
+- line~13130: deleteCustomerProjectAndRefresh(
+- line~13131: deleteProject(
+- line~13133: deleteCustomerDocumentAndRefresh(
+- line~13150: deleteCustomerAfterCleanup(
+- line~13162: deleteCustomer(
+- line~13169: deleteCustomerAfterCleanup(
+- line~13749: remove(
+- line~14612: deleteWorklog(
+- line~14757: removeWorklogMaterial(
+- line~15034: removeItem(
+- line~15156: remove(
+- line~16221: removeChild(
+- line~16575: deleteMaterial(
+- line~16637: deleteMaterial(
+- line~16890: deleteMachineDocument(
+- line~16956: deleteMachineFile(
+- line~16958: delete(
+- line~16988: deleteMachineDocument(
+- line~16991: deleteMachineFile(
+- line~17001: deleteMachineMeter(
+- line~17082: deleteMachineMeter(
+- line~17118: deleteMachineService(
+- line~17186: deleteMachineService(
+- line~17228: deleteMachineCost(
+- line~17288: deleteMachineCost(
+- line~17462: removeMachineProject(
+- line~17603: deleteMachine(
+- line~17605: deleteMachine(
+- line~17732: deleteMachine(
+- line~17745: deleteMachineFile(
+- line~17814: remove(
+- line~17846: removeItem(
+- line~17853: clear(
+- line~17897: clearTimeout(
+- line~17904: clearTimeout(
+
+confirm/window.confirm előfordulás: 40
+
+Fájl-inventár SHA-256-tal:
+AUDIT_CONTINUOUS_R101_R110.txt	1985	1eb428232435e3431a232150c0dfa981aa43528402a242d29fd5b9d14d780657
+AUDIT_CONTINUOUS_R111_R125.txt	621	665eeb5b22559266620d3cd97e835a563219342278e6f1d4635071068a92fec1
+AUDIT_CONTINUOUS_R76_R80.txt	4273	235d0dd445996090e77f04dff505ba5e4748f34bd737caa11537d3387587e0ed
+AUDIT_CONTINUOUS_R81_R90.txt	36251	774b6f3228585a5ec7a50882716d31c8979d3b6ff877bb665bc82abe9f051b17
+AUDIT_CONTINUOUS_R91_R100.txt	40483	0747a9fc73e16424ca3feaf9a223f00797bb54d5f928c3f2c2ed6246ad29f438
+AUDIT_CURRENT_SOURCE_REPORT.txt	758	6739a0f54e443afa58a47a46c08aa94453a5d27ae519bf8c2f57058eb47cca3a
+AUDIT_R72_ACTUAL_CASING_FLOW.txt	19213	8868c065ba7ee29ff4b0d0d218c9dbe1dbce7a11b62da30608d38d8ca6d887e5
+AUDIT_R73_CASING_MUTATION_CHAIN.txt	1286	fe503324c3e7cbc809dc974903b366ce86727050a52813ac8a78f580b49023ee
+AUDIT_R74_SAVE_RELOAD.txt	826	4b4d7ea4a9fa679b931cf4229e7e3f413c4521217c575b3ad8224332f1522c77
+AUDIT_R75_PERSISTENCE_KEYS.txt	427	93777b4ed007f744e7e13042b14547f0e1b54c5aec861d5da93720ed53d2b058
+V2.0.0_RELEASE_NOTES.txt	31700	3e1ed70bbb161eb77467ac81d107ad1962ac2d356764b71276ae6e262145c10a
+all.js	533293	a157d2ee7e2f02b2f867c40210cde1af6ae4dbf12ba18af6d5c87f075decffa5
+index.html	1553948	b06c59dadd610946824c9ea73462dac9114d444e2e82dac6c2ba0c5e24827178
+jszip.min.js	98330	9a071e80079d173400bd011f19fd93639b32e52dde7b37de5f64a1c7407eb9e8
+munkanaplo.html	38151	b0ebaf5882e7cd30d37ab73fe11c65c54abffeb3e861e757f6839529b7c189f6
+quote_preview_pages.js	357961	9329982d092b1da0bed2e10ed298f1cce50e6f868dc2eb96415c340229ae650b
+quote_preview_vectors.js	735351	1d971637baef1ac5d34c8d3f97a925b1094a88e2b35efd470ef52a0e2ef66a12
+quote_template.js	679985	4be9b484346253581773e839bd5bfc8833876344bdb6b0f6ef57fb25871cccb8

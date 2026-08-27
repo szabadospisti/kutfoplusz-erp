@@ -1,0 +1,527 @@
+KÚTFŐ PLUSZ ERP 2.0 – DEBUG 2.0
+==========================================================================================
+
+PASS A – forrásinventár
+- files: 28
+- html: 2
+- js: 5
+
+PASS B – JavaScript syntax
+- block 1: PASS 
+- block 2: PASS 
+- block 3: PASS 
+- block 4: PASS 
+- block 5: PASS 
+- block 6: PASS 
+- block 7: PASS 
+- block 8: PASS 
+- block 9: PASS 
+- block 10: PASS 
+- block 11: PASS 
+- block 12: PASS 
+- block 13: PASS 
+- block 14: PASS 
+- block 15: PASS 
+- block 16: PASS 
+- block 17: PASS 
+- block 18: PASS 
+- block 19: PASS 
+- block 20: PASS 
+
+PASS C – local dependencies
+- missing scripts: 0
+
+PASS D – duplicate functions
+- duplicates: 0
+
+PASS E – critical fields
+- casingSections: 45
+- finalDepth: 27
+- endDepth: 3
+- productionPipe: 0
+- casingDiameter: 55
+- wellHead: 30
+- revision: 10
+- status: 646
+
+PASS E2 – formula candidates
+- Math\.ceil\s*\([^)]*\/\s*3: 1
+- \/\s*3\s*\): 7
+- \*\s*3\b: 6
+- finalDepth\s*[:=]: 7
+- endDepth\s*[:=]: 2
+
+PASS F – destructive operations
+- relevant calls: 27
+- confirm calls: 40
+  - line~6054: legacy_deleteProjectDocument()
+  - line~7850: legacy_deletePurchaseRequest()
+  - line~8487: legacyFinalizeProject()
+  - line~12996: wlClearDraft()
+  - line~13006: customerDeleteItems()
+  - line~13057: customerDeleteListRow()
+  - line~13073: openCustomerDeleteManager()
+  - line~13074: customerDeleteItems()
+  - line~13077: customerDeleteListRow()
+  - line~13081: customerDeleteListRow()
+  - line~13085: customerDeleteListRow()
+  - line~13089: customerDeleteListRow()
+  - line~13119: refreshCustomerDeleteManager()
+  - line~13121: openCustomerDeleteManager()
+  - line~13125: openCustomerDeleteManager()
+  - line~13128: openCustomerDeleteManager()
+  - line~13131: openCustomerDeleteManager()
+  - line~13134: customerDeleteItems()
+  - line~13146: openCustomerDeleteManager()
+  - line~13151: customerDeleteItems()
+  - line~13163: customerDeleteItems()
+  - line~13166: openCustomerDeleteManager()
+  - line~15033: wlClearDraft()
+  - line~15067: wlRemoveAutoMaterialUsage()
+  - line~15091: wlRemoveAutoMaterialUsage()
+  - line~15138: wlClearDraft()
+  - line~15139: wlClearDraft()
+
+PASS H – status candidates
+-  ${showArchived?
+-  – előzetes ajánlat
+- ${w.number}: a gyártás véglegesen lezárva.
+- ${w.number}: gyártás elindítva.
+- ${w.number}: gyártás lezárva.
+- )} · készlet: ${esc(String(x.qty||0))} ${esc(x.unit||
+- )} · készlet: ${huFormat(Number(x.qty||0),0)} ${esc(x.unit||
+- )}</b> ${archived?
+- )}</b> · Ajánlat: <b>${esc(q.current.quote?.status||
+- )}</b>${archived?
+- >
+        <div><h2>💰 Ajánlat</h2><div class=
+- >
+        <h3>💰 Ajánlat</h3>
+        ${relatedQuotes.map(x=>
+- >
+      <div>
+        <h2>💰 Ajánlat</h2>
+        <div class=
+- >
+      <div><h2>🔧 Kivitelezés</h2><div class=
+- >
+   <div><h2>Ajánlatok</h2><div class=
+- > Archiváltak</label>
+   </div>
+   <div class=
+- >${archived?
+- >+ Fúrási bejegyzés</button></div>
+    <div class=
+- >+ Új ajánlat</button>
+      </div>
+      <div class=
+- >+ Új anyag</button>
+    </div>
+    <div class=
+- >+ Új munkanapló</button>
+</div>
+<div class=
+- ><b>Gyártási recept</b><span class=
+- ><b>✓ Minden alapfeladat elkészült.</b></div>
+- ><b>🔴 Nincs elegendő készlet</b><span>${insufficient.join(
+- ><div><h2>☑️ Kivitelezési checklist</h2><div class=
+- ><div><h2>🏁 Kész kút és projekt lezárása</h2><div class=
+- ><div><h2>🏭 Gyártás</h2><div class=
+- ><div><h2>📨 Új ajánlatkérés</h2><div class=
+- ><div><h2>🔧 Kivitelezés és napi munkalap</h2><div class=
+- ><div><h2>🛠️ Fúrási adatok</h2><div class=
+- ><div><h2>🧭 Projekt munkafolyamat</h2><div class=
+- ><div><h3>Automatikus gyártási számítás</h3><div class=
+- ><h3>Ajánlati tételek</h3></div>
+      <div class=
+- ><h3>Fúrási szakaszok</h3></div>
+    <div class=
+- ><h4>📦 Késztermék</h4><div>${finished?
+- ><label>Ajánlatkérés tárgya</label><input class=
+- ><label>Aktuális készlet</label><div class=
+- ><label>Fúrási díj / m</label><input class=
+- ><label>Fúrási mód / tevékenység</label><input class=
+- ><label>Gyártási mennyiség</label><input class=
+- ><label>Gyártási mennyiség</label><input id=
+- ><label>Gyártási mód</label><select class=
+- ><label>Gyártási tétel / termék</label><input class=
+- ><label>Kezdőkészlet</label><input class=
+- ><label>Minimumkészlet</label><input class=
+- ><label>Napi fúrás (m)</label><input class=
+- ><label>Napi fúrás</label><div class=
+- ><label>Nettó ajánlat</label><div class=
+- ><label>Réteg / fúrási megfigyelés</label><textarea class=
+- ><label>Tervezett kezdés</label><input class=
+- ><label>Tervezési vízigény (l/min)</label><input class=
+- ><span>Tervezett mélység</span><b>${esc(q.depth||
+- ><span>Tervezési munkapont</span><b>${esc(p.designDuty||
+- ><span>🔧 Kivitelezés</span><b><span class=
+- >A megadott időszakban nincs lezárt gyártás.</td></tr>
+- >AJÁNLAT</div><h2>${esc(q.id)}</h2><div class=
+- >Adatok elfogadása és projekt frissítése</button>
+    </div>
+- >Adatszolgáltatás előkészítése</button>
+      <button class=
+- >Ajánlat létrehozása →</button>
+- >Ajánlat megnyitása</button>
+    </div>
+    <div class=
+- >Ajánlati kalkuláció</h3><div class=
+- >Ajánlatok összesen</div><div class=
+- >Ajánlatok</div><b>${qs.length} db</b></div><div class=
+- >Dokumentumcsomag készítése</button>
+      <button class=
+- >Elfogadott</div><div class=
+- >Elkészült dokumentumok</button>
+    </div>
+  </div>
+- >Folyamatba</button>
+- >Fájl újrafeltöltése</button></div>
+- >Karima: egyedi gyártás</span>
+    </div>
+  </div>
+- >Kivitelezés indítása →</button>
+- >Kivitelezési összesítő</button>
+    </div>
+    <div class=
+- >KÉSZLETKEZELÉS</div><h2>📦 Raktár</h2><div class=
+- >KÉSZLETKEZELÉS</div><h3>Raktár állapota</h3><div class=
+- >Kész kút ellenőrzése</button></div>
+    <div class=
+- >Kész kút összesítő</button>
+    </div>
+  </div>
+- >Készlet</span><b>${esc(String(x.qty||0))} ${esc(x.unit||
+- >Mégis új ügyfél</button>
+      </div>
+    </div>
+- >Nincs ellenőrizhető gyártási adat.</td></tr>
+- >Nincs gyártási munkalap.</td></tr>
+- >Nincs lezárt gyártás.</td></tr>
+- >Nincs lezárt gyártási adat.</td></tr>
+- >Nincs lezárt gyártási napló.</td></tr>
+- >Nincs lezárásra váró gyártás.</td></tr>
+- >Nincs még gyártási munkalap.</td></tr>
+- >Nincs még gyártási recept.</td></tr>
+- >Nincs még lezárt gyártás.</td></tr>
+- >Nincs még rögzített gyártási tétel.</td></tr>
+- >Nincs nyomtatható lezárt gyártás.</td></tr>
+- >Nincs rögzített ajánlati tétel.</td></tr>
+- >Nincs rögzített fúrási rétegsor.</div>
+- >Nyitott ajánlatok</div><div class=
+- >Projekt lezárva</span>
+- >Projekt lezárása</button>
+    </div>
+  </div>
+- >Számla előkészítése</button>
+      <button class=
+- >Tervezett</span></td>
+      <td><button class=
+- >Tervezési vízigény</div><b>${esc(String(designFlow||
+- >tervezés + folyamatban</div></div><div class=
+- >Átadás előkészítése</button></div>
+    <div class=
+- >← Ajánlatok</button>
+        <button class=
+- >← Ajánlatok</button>
+      ${id?
+- >← Ajánlatok</button></div>
+- >▶ Kivitelezés indítása</button>
+- >▶ Kivitelezés indítása</button>
+      <button class=
+- >▶ Kivitelezés indítása</button></b></div>
+- >✓ Ajánlat elfogadása</button>
+- >✓ Kész kút – projekt lezárása</button>
+- >✓ Készletre véve</span>
+- >✓ Lezárás</button>
+- >✓ Végleges lezárás</button>
+- >✓ Új ügyfélként lesz létrehozva.</div>
+- >💰 Számla előkészítése</button>
+      <button class=
+- >📅 Tervezés: ${p.plannedStart?new Date(p.plannedStart+
+- >📑 Ajánlat státusz és megrendelés</h3><div class=
+- >📦 Készletre vétel</button>
+- >📦 Késztermék készletre vétele</button>
+- >📦 Késztermék raktárra</button>
+- >📦 Raktárra gyártás</span>
+- >🗑️ Törlés / archiválás</button></div>
+    <div class=
+- A PDF / nyomtatás előkészítése nem sikerült: 
+- A böngésző blokkolta az új dokumentumablakot.
+- A dokumentum fájlja újra feltöltve.
+- A fájl sikeresen újra feltöltve.
+- A gyártás még nincs Gyártás alatt állapotban.
+- A gyártás nem indítható ebben az állapotban.
+- A gyártás nincs folyamatban.
+- A gyártási anyagok lefoglalva.
+- A gyártási munkalap nem található.
+- A gyártási terv nem található.
+- A kapcsolódó gyártási munkalap törölve lett.
+- A késztermék raktári cikke nem található: ${w.productSku}.
+- A lezárt gyártásnak nincs késztermék mennyisége.
+- A létrehozott gyártások innen indíthatók és zárhatók le.
+- A projekt még nem teljesíti a lezárási feltételeket
+- A projekthez tartozó ajánlat nem található
+- A teljesítés a beszerzés bevételezésével zárható le.
+- A teljesítést a beszerzés bevételezésével kell lezárni.
+- A tervezett befejezés nem lehet korábbi a kezdésnél.
+- AI adatok elfogadva
+- AI adatok elfogadva – ügyfél és projekt létrehozható
+- ARCHIVE
+- ARCHIVE_INVALID_RECORD
+- Adj meg érvényes gyártási tételt és mennyiséget.
+- Ajánlat
+- Ajánlat elfogadva
+- Ajánlat elküldve
+- Ajánlat elküldve – elfogadásra vár
+- Ajánlat ellenőrzése és árazása
+- Ajánlat elutasítva
+- Ajánlat létrehozása
+- Ajánlat megnevezése
+- Ajánlat státusz módosítása
+- Ajánlat szerkesztése
+- Ajánlat szerkesztése – ${esc(id)}
+- Ajánlat törölve.
+- Ajánlat véglegesítése
+- Ajánlat árazva
+- Ajánlat árazása előkészítve
+- Ajánlat árazása mentve
+- Ajánlat összeállítva
+- Ajánlat – árazás
+- Ajánlatból projekt létrehozása
+- Ajánlati kalkuláció mentve
+- Ajánlati piszkozat létrehozva
+- Ajánlatkérés
+- Ajánlatok
+- Aktuális készlet: 
+- Alacsony készlet
+- Anyag hozzárendelve az ajánlati tételhez
+- Archivált
+- Archiválva
+- Automatikusan létrehozva a gyártási terv késztermékeként.
+- Az adatszolgáltatás még nem készíthető elő: hiányzó adat van
+- Az ajánlat a Piszkozatok között található: 
+- Az ajánlat lezárt vagy érvénytelen állapotú.
+- Az ajánlat nem található
+- Az ajánlat összege 0 Ft
+- Az ajánlathoz tartozó projekt nem található.
+- Az anyag archiválva. Az előzmények megmaradtak.
+- Az anyagfelhasználás és elkészült mennyiség szükséges.
+- Az elkészült mennyiség nem megfelelő.
+- Bemeneti teljesítmény (kW)
+- Csak lezárt gyártás vehető készletre.
+- Csak lezárt gyártási terv vehető készletre.
+- Csak lezárt gyártásról készíthető bizonylat.
+- DOCX export kész – eredeti Word-sablon
+- Dokumentumcsomag előkészítve
+- Dokumentumcsomag készítése
+- Ebben a csoportban nincs aktív vagy archivált anyag.
+- Ehhez a gyártáshoz nincs létrehozható anyagjegyzék.
+- Ehhez az ajánlatkéréshez már létrejött a projekt.
+- Elfogadva
+- Elfogadásra vár
+- Elkészítve
+- Elkészült
+- Elkészült dokumentumok
+- Elutasítva
+- Előbb indítsd el a gyártást.
+- Előkészítve – ellenőrzésre vár
+- Előkészítés
+- Előkészítés alatt
+- Engedélyezett / tervezett talpmélység (m)
+- Ez a gyártási tétel már készletre lett véve.
+- Ez a késztermék már készletre lett véve.
+- FINAL_REKORD_NEM_ARCHIVALHATO
+- Feladat kész
+- Felhasználói archiválás
+- Folyamatban
+- Folyamatos
+- FÚRÁSI RÉTEGSOR
+- Fúrás
+- Fúrási adat mentve
+- Fúrási adatok és rétegsor rögzítése
+- Fúrási rétegsor
+- Fúrási rétegsor mentve
+- Fúrási szakasz mentve
+- Fúrási szakasz rögzítése
+- Fúrási szakasz szerkesztése
+- Gyártott alkatrész
+- Gyártott késztermék
+- Gyártva
+- Gyártás
+- Gyártás alatt
+- Gyártás → Anyagfelhasználás
+- Gyártás → Késztermék készletre vétel
+- Gyártás → Plusz karimás késztermék
+- Gyártás → Raktár
+- Gyártási anyagfoglalás miatt bevételezve.
+- Gyártási recept mentve.
+- Gyártási recept törölve.
+- Gyártási terv
+- Gyártási terv létrehozva a projekthez.
+- Gyártási terv létrehozva – raktárra gyártás.
+- Gyártási terv mentve.
+- Gyártási tétel rögzítve.
+- Gyártási tétel, anyag, minőség, megjegyzés...
+- Gyártási állapot frissítve.
+- Gyártó
+- Inline új munkanapló inicializálás:
+- Kapacitás / teljesítmény
+- Kapcsolt ajánlat elfogadása
+- Kivitelezés
+- Kivitelezés alatt
+- Kivitelezés elindítva
+- Kivitelezés elkészült
+- Kivitelezés folyamatban
+- Kivitelezés indítása
+- Kivitelezés lezárva
+- Kivitelezés lezárása
+- Kivitelezés – szerkesztés
+- Kivitelezési munkaterv
+- Kivitelezési munkaterv és munkanapló előkészítése
+- Kivitelezési összesítő
+- Kész
+- Kész kút
+- Kész kút adatlap
+- Kész kút dokumentumcsomag ellenőrzése
+- Kész kút dokumentáció
+- Kész kút ellenőrzés
+- Kész kút összesítő
+- Kész kút – projekt FINAL állapotban lezárva
+- Kész kút – projekt lezárása
+- Készletmozgás
+- Készletmozgás mentve
+- Készletre véve
+- Késztermék
+- Következő teendő → Ajánlat létrehozása
+- Kút kivitelezés
+- Kút-adatszolgáltatás előkészítése
+- Kútfúrás
+- Kútfúrás / kút kivitelezés
+- Kútfúrás Ø ${drillingPriceLabel(diameter)} mm
+- Kútfúrás – aktuális folyóméter árlista
+- LEZÁRT
+- Lezárt
+- Lezárva
+- Lezárás
+- Lezárás előtt hiányzik: 
+- Létesítési engedélyből előkészítve
+- Maximális fúrási mélység (m)
+- Maximális fúrási átmérő (mm)
+- Megrendelve
+- Megrendelés
+- Minimumkészlet alatt
+- Motor gyártója
+- Motor teljesítmény (kW)
+- Motor teljesítménye (kW)
+- Munkanapló betöltve és piszkozatként mentve
+- Munkanapló piszkozat mentése:
+- Még nincs rögzített gyártási feladat.
+- Nincs ajánlatkérés
+- Nincs elegendő készlet. Elérhető: ${item.qty} ${item.unit||
+- Nincs elfogadott ajánlatkérés
+- Nincs elkészítve
+- Nincs előkészített ajánlat
+- Nincs feldolgozható ajánlatkérés
+- Nincs felhasználható készlet a raktárban.
+- Nincs készletre vehető elkészült mennyiség.
+- Nincs készletre véve
+- Nyitókészlet
+- Névleges teljesítmény (kVA)
+- Piszkozat
+- Pl. 2 db 120 m-es öntözőkút kivitelezése
+- Projekt archiválva – adatai megmaradtak.
+- Projekt archiválása végleges törlés helyett
+- Projekt folyamat
+- Projekt lezárva
+- Projekt létrehozva és az ajánlathoz kapcsolva
+- Projektből előkészítve
+- Raktárra gyártás
+- Számla előkészítve
+- Számla előkészítése
+- Teljes ERP mentés kész (${files.length} dokumentumfájl).
+- Teljes ERP mentés készítése…
+- Teljesítmény (LE)
+- Teljesítmény (kW)
+- Teljesítve
+- Tervezett
+- Tervezett acélcső / iránycső
+- Tervezett csövezés
+- Tervezett furat / iránycső átmérő (mm)
+- Tervezett furatátmérő
+- Tervezett furatátmérő (mm)
+- Tervezett munkadíj
+- Tervezett mélység
+- Tervezett szűrőzés / szűrőzött szakasz
+- Tervezett talp:
+- Tervezett vízigény: ${wn}
+- Tervezett átmérő
+- Tervezett öntözőtelep nagysága:
+- Tervezés
+- Tervezési vízhozam (l/min)
+- Tervező
+- Válassz gyártott terméket.
+- ajánlat
+- archive
+- badge ${archived?
+- documentsArchive
+- fúrási bejegyzés
+- kivitelezés
+- készlet
+- material-archived-badge
+- material-archived-row
+- pl. előregyártás raktárra
+- pl. fúráshoz kiadva
+- pl. kész kút adatlap, adatszolgáltatás, garanciajegy
+- pl. minimumkészlet pótlása, projektigény...
+- project_archive
+- tervező
+- tervező neve
+- vízkészlet
+- } készletre véve.
+- } készlettel rendelkezik.\n\nBiztosan törlöd?
+- } késztermék készletre véve.
+- }${wellWord} kivitelezése
+- }, készlet ${huFormat(available,3)} ${x.unit||
+- }>Elkészült</option><option ${w?.status===
+- }>Folyamatban</option><option ${w?.status===
+- }>Folyamatos</option><option ${w.operation===
+- Árajánlat
+- Árajánlat mentve
+- Árajánlat mentve – visszatértem a projekthez
+- Árazásra előkészítve
+- Ø ${drillingPriceLabel(d)} mm kútfúrás
+- Ø ${drillingPriceLabel(diameter)} mm kútfúrás
+- Ø ${drillingPriceLabel(drillingDiameter)} mm kútfúrás
+- Új
+- Új ajánlatkérés
+- Új anyag
+- Új eszköz
+- Új kútfúrási átmérő (mm):
+- Új munkanapló
+- Új projekt
+- Új szervizeset
+- Új tétel
+- Új árajánlat
+- Új öntözési zóna
+- Új ügyfél
+- Ügyfél, projekt és ajánlati piszkozat létrehozva
+- ⚠ Kevés készlet: ${huFormat(effectiveQty,0)} ${item.unit||
+- ⚠ Nincs készlet
+- ⚠️ Nincs elegendő szabad készlet
+- ✓ Elkészült
+- ✓ Készletre véve
+- ✕ Nincs elkészült mennyiség
+- 🏭 Gyártás → Raktár
+- 🏭 Új gyártási munkalap
+- 📋 Gyártási recept szerkesztése
+- 📋 Új gyártási recept
+- 📦 Gyártási anyagfelhasználás
+- 🔒 Új gyártás / anyagfoglalás
+- 🛒 Új beszerzés
+- 🟠 Alacsony készlet
+
+BUG CANDIDATES
+- NONE FOUND BY STATIC DEBUG
+
+Runtime browser E2E: NOT VERIFIED in this environment.

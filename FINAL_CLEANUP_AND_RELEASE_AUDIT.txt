@@ -1,0 +1,47 @@
+ERP v2.0 – FINAL CLEANUP / RELEASE AUDIT
+================================================================================
+
+Destructive function calls:
+- line~6054: legacy_deleteProjectDocument()
+- line~7850: legacy_deletePurchaseRequest()
+- line~8487: legacyFinalizeProject()
+- line~12996: wlClearDraft()
+- line~13006: customerDeleteItems()
+- line~13057: customerDeleteListRow()
+- line~13073: openCustomerDeleteManager()
+- line~13074: customerDeleteItems()
+- line~13077: customerDeleteListRow()
+- line~13081: customerDeleteListRow()
+- line~13085: customerDeleteListRow()
+- line~13089: customerDeleteListRow()
+- line~13119: refreshCustomerDeleteManager()
+- line~13121: openCustomerDeleteManager()
+- line~13125: openCustomerDeleteManager()
+- line~13128: openCustomerDeleteManager()
+- line~13131: openCustomerDeleteManager()
+- line~13134: customerDeleteItems()
+- line~13146: openCustomerDeleteManager()
+- line~13151: customerDeleteItems()
+- line~13163: customerDeleteItems()
+- line~13166: openCustomerDeleteManager()
+- line~15033: wlClearDraft()
+- line~15067: wlRemoveAutoMaterialUsage()
+- line~15091: wlRemoveAutoMaterialUsage()
+- line~15138: wlClearDraft()
+- line~15139: wlClearDraft()
+
+Confirm calls: 40
+
+Critical guards:
+- auditProcessCompletion: PASS
+- auditCriticalWellRecord: PASS
+- auditFinalWellState: PASS
+- auditActualCasingState: PASS
+- auditCasingPersistenceRoundTrip: PASS
+- auditLifecycleTransition: PASS
+
+Duplicate function definitions:
+
+Package junk files: 0
+
+Release status: CLEANUP COMPLETE; browser E2E remains NOT VERIFIED.

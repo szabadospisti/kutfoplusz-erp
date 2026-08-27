@@ -1,0 +1,63 @@
+FOLYAMATOS AUDIT R101-R110
+================================================================================
+
+R101 – duplikált függvény:
+- kpV2KutFinalGuard: 2 db
+  line ~2741
+  line ~2771
+
+R102-R104 – script blokkok pozíciói:
+1: line ~1214: <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js">
+2: line ~1934: </script>
+3: line ~1935: <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js">
+4: line ~1935: </script>
+5: line ~1936: <script>
+6: line ~1944: </script>
+7: line ~2728: <script id="erp-safe-storage-v109">
+8: line ~2834: </script>
+9: line ~2835: <script id="worklog-portable-v104">
+10: line ~2872: </script>
+11: line ~2909: <script>
+12: line ~2917: </script>
+13: line ~2918: <script src="quote_template.js">
+14: line ~2925: </script>
+15: line ~2925: <script src="quote_preview_pages.js?v=60">
+16: line ~2925: </script>
+17: line ~2925: <script src="jszip.min.js">
+18: line ~2925: </script>
+19: line ~2925: <script src="quote_preview_vectors.js">
+20: line ~2925: </script>
+21: line ~2925: <script>
+22: line ~6508: <script>
+23: line ~6681: <script>
+24: line ~14074: <script>
+25: line ~16550: <script>
+26: line ~17909: </script>
+27: line ~17910: <script id="project-process-link-handler">
+28: line ~17954: </script>
+29: line ~17956: <script>
+30: line ~17971: </script>
+31: line ~17973: <script>
+32: line ~17988: </script>
+33: line ~17990: <script>
+34: line ~18001: </script>
+35: line ~18003: <script>
+36: line ~18011: </script>
+37: line ~18013: <script>
+38: line ~18030: </script>
+39: line ~18032: <script>
+40: line ~18043: </script>
+41: line ~18045: <script>
+42: line ~18058: </script>
+43: line ~18178: <script>
+44: line ~18209: </script>
+
+R105-R110 – audit helper marker counts:
+AUDIT-R72-ACTUAL-CASING-FLOW: 1
+AUDIT-R73-CASING-MUTATION: 1
+AUDIT-R74-SAVE-RELOAD: 1
+AUDIT-R75-PERSISTENCE: 1
+CONTINUOUS-AUDIT-R76-R80: 1
+CONTINUOUS-AUDIT-R81-R90: 1
+CONTINUOUS-AUDIT-R91-R100: 1
+CONTINUOUS-AUDIT-R101-R110: 0

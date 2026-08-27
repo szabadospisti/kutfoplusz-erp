@@ -1,0 +1,18 @@
+{
+  "release": "Kútfő Plusz ERP 2.0.0",
+  "status": "RELEASE_CANDIDATE_PASS",
+  "audit": "FINAL_SIGN_OFF",
+  "checks": {
+    "zip_integrity": "PASS",
+    "zip_root_naming": "PASS",
+    "index_html": "PASS",
+    "javascript_syntax": "PASS",
+    "release_metadata": "PASS",
+    "development_markers": "PASS",
+    "required_audit_guards": "PASS",
+    "duplicate_functions": "PASS",
+    "missing_local_assets": "PASS",
+    "critical_handlers_present": "PASS"
+  },
+  "sha256": "b0ce6f61bb25cb0b1df4bf131c80370457d9ebcb5c9f82d1a2cbb97dc596fe88"
+}

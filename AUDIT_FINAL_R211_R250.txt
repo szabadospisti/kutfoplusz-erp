@@ -1,0 +1,82 @@
+FINAL REPAIR / AUDIT R211-R250
+==========================================================================================
+
+R211-R225 – kpV2KutFinalGuard
+Definitions before repair: 2
+- Guard #1: {'len': 1126, 'returns': ['return true;\n    var _wells = null;\n    try{\n      if(typeof ERPStorage !== "undefined" && typeof ERPStorage.getItem === "function")\n        _wells = JSON.parse(ERPStorage.getItem("wells") || "[]");\n    }catch(_e){ _wells=null', 'return true;\n    var _well=_wells.find(function(w){\n      return String(w && (w.id ?? w.wellId))===String(_id);\n    });\n    if(!_well) return true;\n    var _status=String(_well.status ?? _well.state ?? "").toUpperCase();\n    v', 'return false;\n    }\n    return true;\n  }catch(_err){\n    console.error("KP_V2_KUT_FINAL_GUARD_P92 failed",_err);\n    return true;\n  }\n}'], 'calls': ['String', 'catch', 'error', 'find', 'function', 'getItem', 'if', 'isArray', 'kpV2KutFinalGuard', 'parse', 'toUpperCase', 'warn'], 'status_terms': ['CLOSED', 'FINAL', 'closed', 'final', 'finalized', 'status']}
+- Guard #2: {'len': 1041, 'returns': ['return true;\n\n    var _wells = null;\n    if(typeof ERPStorage !== "undefined" && typeof ERPStorage.getItem === "function"){\n      try{ _wells = JSON.parse(ERPStorage.getItem("wells") || "[]"); }catch(_e){ _wells=null; }\n    }\n', 'return true;\n\n    var _well=_wells.find(function(w){\n      return String(w && (w.id ?? w.wellId))===String(_id);\n    });\n    if(!_well) return true;\n\n    var _status=String(_well.status ?? _well.state ?? _well.lifecycleStatus ', 'return false;\n    }\n    return true;\n  }catch(_err){\n    console.error("KP_V2_KUT_FINAL_GUARD_P85 failed",_err);\n    return true;\n  }\n}'], 'calls': ['String', 'catch', 'error', 'find', 'function', 'getItem', 'if', 'isArray', 'kpV2KutFinalGuard', 'parse', 'toUpperCase', 'warn'], 'status_terms': ['CLOSED', 'FINAL', 'status']}
+Repair: SECOND_GUARD_RENAMED_TO_LEGACY
+
+R226-R235 – IndexedDB hívások
+Összes releváns hívás: 55
+- line~2828: .clear(
+- line~3147: .add(
+- line~3149: .add(
+- line~3150: .add(
+- line~5417: .add(
+- line~5435: .add(
+- line~9256: .get(
+- line~9256: .get(
+- line~9256: .get(
+- line~9257: .get(
+- line~9959: .get(
+- line~9964: .add(
+- line~9965: .get(
+- line~9966: .get(
+- line~9967: .get(
+- line~10052: .add(
+- line~10192: .get(
+- line~10731: indexedDB.open(
+- line~10740: .transaction(
+- line~10741: .objectStore(
+- line~10741: .put(
+- line~10749: .transaction(
+- line~10750: .objectStore(
+- line~10750: .get(
+- line~10766: .transaction(
+- line~10767: .objectStore(
+- line~10767: .delete(
+- line~11303: .get(
+- line~11380: .add(
+- line~11609: .add(
+- line~11626: .get(
+- line~16710: .add(
+- line~16941: indexedDB.open(
+- line~16948: .transaction(
+- line~16948: .objectStore(
+- line~16948: .put(
+- line~16953: .transaction(
+- line~16953: .objectStore(
+- line~16953: .get(
+- line~16958: .transaction(
+- line~16958: .objectStore(
+- line~16958: .delete(
+- line~17761: indexedDB.open(
+- line~17771: .transaction(
+- line~17771: .objectStore(
+- line~17772: .getAll(
+- line~17853: .transaction(
+- line~17853: .objectStore(
+- line~17853: .clear(
+- line~17862: .transaction(
+- line~17862: .objectStore(
+- line~17862: .put(
+- line~17864: .transaction(
+- line~17864: .objectStore(
+- line~17864: .put(
+
+R236-R245 – állapot/perzisztencia előfordulások
+- save: 399
+- load: 125
+- persist: 33
+- sync: 85
+- files: 83
+- casingSections: 44
+- project: 2786
+- well: 817
+
+R246-R250 – statikus szerkezet
+- function count: 798
+- brace count: 9638/9637
+- script tags: 28/24
+- ZIP integrity checked after packaging.

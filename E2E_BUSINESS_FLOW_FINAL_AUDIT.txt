@@ -1,0 +1,96 @@
+ERP v2.0 – BUSINESS FLOW FINAL AUDIT
+==========================================================================================
+
+Folyamat sorrend:
+Ajánlat → Megrendelés → Projekt → Kút → Fúrás → Rétegsor → Csövezés → Gyártás → Készlet → Kútfej → Dokumentum → Lezárás → Revízió → Újranyitás
+
+Szakaszonkénti forráslefedettség:
+- AJÁNLAT: 1039 releváns előfordulás
+- MEGRENDELÉS: 1320 releváns előfordulás
+- PROJEKT: 3202 releváns előfordulás
+- KÚT: 1102 releváns előfordulás
+- FÚRÁS: 360 releváns előfordulás
+- RÉTEGSOR: 787 releváns előfordulás
+- CSÖVEZÉS: 396 releváns előfordulás
+- GYÁRTÁS: 1436 releváns előfordulás
+- KÉSZLET: 1635 releváns előfordulás
+- KÚTFEJ: 68 releváns előfordulás
+- DOKUMENTUM: 1285 releváns előfordulás
+- LEZÁRÁS: 375 releváns előfordulás
+- REVIzIÓ: 8 releváns előfordulás
+- ÚJRANYITÁS: 3 releváns előfordulás
+
+Kapcsolódó függvények:
+- AJÁNLAT: 
+- MEGRENDELÉS: 
+- PROJEKT: 
+- KÚT: 
+- FÚRÁS: 
+- RÉTEGSOR: 
+- CSÖVEZÉS: 
+- GYÁRTÁS: 
+- KÉSZLET: 
+- KÚTFEJ: 
+- DOKUMENTUM: 
+- LEZÁRÁS: 
+- REVIzIÓ: 
+- ÚJRANYITÁS: 
+
+Státuszértékek forrásban:
+- AI adatok elfogadva
+- AI feldolgozásra vár
+- Ajánlat elküldve
+- Ajánlat elutasítva
+- Ajánlat előkészítés alatt
+- Ajánlat előkészítése
+- Ajánlat árazva
+- Ajánlat összeállítva
+- Ajánlatkérés
+- Anyag lefoglalva
+- Archivált
+- Beérkezett
+- Dokumentumok feldolgozása
+- Elfogadva
+- Elkészült
+- Elküldve
+- Elutasítva
+- Előkészítve – ellenőrzésre vár
+- Előkészítés
+- Előkészítés alatt
+- Engedély feldolgozásra vár
+- Feldolgozva
+- Felhasználva
+- Feloldva
+- Feltöltve
+- Foglalva
+- Folyamatban
+- Gyártva
+- Gyártás alatt
+- Kivitelezés alatt
+- Kész
+- Készletre véve
+- Lezárva
+- Megrendelve
+- Megrendelés
+- Nincs beállítva
+- Piszkozat
+- Teljesítve
+- Tervezett
+- Tervezés
+- Árazva
+- Árazásra előkészítve
+- Érvénytelen dátum
+- Új
+- Ügyfél + projekt létrehozva
+- Üzemképes
+
+Végső statikus ellenőrzések:
+- index_exists: PASS
+- primary_guard_unique: PASS
+- legacy_guard_unique: PASS
+- casing_audit_present: PASS
+- persistence_audit_present: PASS
+- lifecycle_audit_present: PASS
+- critical_record_audit_present: PASS
+
+Runtime E2E státusz: NOT VERIFIED – a jelenlegi környezet nem biztosít hiteles böngészős UI/IndexedDB interakciót.

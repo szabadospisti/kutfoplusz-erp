@@ -1,0 +1,53 @@
+AUDIT-R74 – MENTÉS / VISSZAOLVASÁS / ÚJRASZÁMÍTÁS
+======================================================================
+
+### saveCasingSection
+FOUND
+localStorage: 0
+setItem: 0
+getItem: 0
+casingSections: 6
+rebuildWellLayers: 0
+JSON.stringify: 0
+JSON.parse: 0
+
+### updateCasingSection
+FOUND
+localStorage: 0
+setItem: 0
+getItem: 0
+casingSections: 2
+rebuildWellLayers: 0
+JSON.stringify: 0
+JSON.parse: 0
+
+### saveProjectWellInline
+FOUND
+localStorage: 0
+setItem: 0
+getItem: 0
+casingSections: 5
+rebuildWellLayers: 0
+JSON.stringify: 0
+JSON.parse: 0
+
+### saveWellFinalData
+FOUND
+localStorage: 0
+setItem: 0
+getItem: 0
+casingSections: 0
+rebuildWellLayers: 0
+JSON.stringify: 0
+JSON.parse: 0
+
+### rebuildWellLayers
+FOUND
+localStorage: 0
+setItem: 0
+getItem: 0
+casingSections: 0
+rebuildWellLayers: 1
+JSON.stringify: 0
+JSON.parse: 0
+

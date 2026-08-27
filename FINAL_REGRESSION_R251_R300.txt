@@ -1,0 +1,34 @@
+FINAL REGRESSION R251-R300
+==========================================================================================
+
+primary_guard: PASS
+legacy_guard: PASS
+audit_helper: PASS
+casing_helper: PASS
+persistence_helper: PASS
+indexeddb_helper: PASS
+lifecycle_helper: PASS
+critical_record_helper: PASS
+html_body_balanced: PASS
+
+Audit markers in active index.html: 16
+- AUDIT
+- AUDIT-R72-ACTUAL-CASING-FLOW
+- AUDIT-R73-CASING-MUTATION
+- AUDIT-R74-SAVE-RELOAD
+- AUDIT-R75-PERSISTENCE
+- AUDIT_ACTOR
+- AUDIT_V44
+- AUDIT_WRITER_MISSING
+- CONTINUOUS-AUDIT-R101-R110
+- CONTINUOUS-AUDIT-R111-R125
+- CONTINUOUS-AUDIT-R126-R150
+- CONTINUOUS-AUDIT-R76-R80
+- CONTINUOUS-AUDIT-R81-R90
+- CONTINUOUS-AUDIT-R91-R100
+- FINAL-AUDIT-R151-R210
+- FINAL-AUDIT-R211-R250
+
+Unexpected temp files: 0
+
+Note: static regression; browser runtime execution requires a browser environment.

@@ -1,0 +1,32 @@
+FINAL VERIFICATION R301-R330
+==========================================================================================
+
+Inline JS blocks: 20
+Node available: True
+- script 1: PASS
+- script 2: PASS
+- script 3: PASS
+- script 4: PASS
+- script 5: PASS
+- script 6: PASS
+- script 7: PASS
+- script 8: PASS
+- script 9: PASS
+- script 10: PASS
+- script 11: PASS
+- script 12: PASS
+- script 13: PASS
+- script 14: PASS
+- script 15: PASS
+- script 16: PASS
+- script 17: PASS
+- script 18: PASS
+- script 19: PASS
+- script 20: PASS
+
+Missing local script references: 0
+
+Duplicate function names: 0
+
+ZIP integrity: PASS
+Browser UI E2E: NOT VERIFIED in this environment.

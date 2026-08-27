@@ -1,0 +1,551 @@
+KÚTFŐ PLUSZ ERP 2.0 – FOLYAMAT LEZÁRÁSI AUDIT
+========================================================================================
+
+Folyamat: Ajánlat → Megrendelés → Projekt → Kút → Fúrás → Rétegsor → Csövezés → Gyártás → Készlet → Kútfej → Dokumentum → Lezárás → Revízió → Újranyitás
+
+1. Státuszok
+-     Kút: 
+-  ${showArchived?
+-  && /km\s*-?\s*pvc|kútcső/i.test(text))return 
+-  · nincs megadott projektérték
+-  – előzetes ajánlat
+- ${db} db kút
+- ${w.number}: a gyártás véglegesen lezárva.
+- ${w.number}: gyártás elindítva.
+- ${w.number}: gyártás lezárva.
+- )} &nbsp; <b>Kút:</b> ${wlDocEsc(o.wellNo||
+- )}</b> ${archived?
+- )}</b>${archived?
+- 1,5 m + karima + kútsapka + patentív + menetvég
+- 1. kút
+- 2 × 120 m öntözőkút
+- 3 m karimás + 1,5 m menetvéges + 1,5 m kútsapkás
+- <b>🟢 Hivatalos projekt</b>
+- <h3>Projektek</h3>${ps.map(p=>
+- >
+        <div><h2>💰 Ajánlat</h2><div class=
+- >
+        <h3>📋 Projekt</h3>
+        <div class=
+- >
+      <div><h2>🕳️ Kút</h2><div class=
+- >
+   <div><h2>Ajánlatok</h2><div class=
+- > Archiváltak</label>
+   </div>
+   <div class=
+- >${archived?
+- >+ Fúrási bejegyzés</button></div>
+    <div class=
+- >+ Projekt</button></div></td>
+    </tr>
+- >+ Új anyag</button>
+    </div>
+    <div class=
+- ><b>Gyártási recept</b><span class=
+- ><b>✓ Minden alapfeladat elkészült.</b></div>
+- ><div><h2>🏭 Gyártás</h2><div class=
+- ><div><h2>💰 Ajánlat összeállítása</h2><div class=
+- ><div><h2>💰 Projekt önköltség</h2><div class=
+- ><div><h2>📋 Kút-adatszolgáltatás</h2><div class=
+- ><div><h2>📨 Új ajánlatkérés</h2><div class=
+- ><div><h2>🛠️ Fúrási adatok</h2><div class=
+- ><div><h2>🧭 Projekt munkafolyamat</h2><div class=
+- ><h2>Projekt nem található</h2><button class=
+- ><h3>Ajánlati tételek</h3></div>
+      <div class=
+- ><h3>Fúrási szakaszok</h3></div>
+    <div class=
+- ><label>Ajánlatkérés tárgya</label><input class=
+- ><label>Aktuális készlet</label><div class=
+- ><label>Fúrási díj / m</label><input class=
+- ><label>Gyártási mód</label><select class=
+- ><label>Kezdőkészlet</label><input class=
+- ><label>Kút végmélysége (m)</label><input id=
+- ><label>Kútazonosító</label><div class=
+- ><label>Kútazonosító</label><input class=
+- ><label>Kútmélység (m)</label><input class=
+- ><label>Minimumkészlet</label><input class=
+- ><label>Napi fúrás</label><div class=
+- ><label>Nettó ajánlat</label><div class=
+- ><label>Projekt</label><div class=
+- ><label>Projekt</label><select class=
+- ><label>Tervezett kezdés</label><input class=
+- >A projekt számlája még nincs rögzítve.</div>
+- >AJÁNLAT</div><h2>${esc(q.id)}</h2><div class=
+- >Ajánlat létrehozása →</button>
+- >Ajánlati kalkuláció</h3><div class=
+- >Ajánlatok összesen</div><div class=
+- >Ajánlattal rendelkező</div><div class=
+- >Aktív projektek</div><div class=
+- >Elfogadott</div><div class=
+- >Fájl újrafeltöltése</button></div>
+- >Karima: egyedi gyártás</span>
+    </div>
+  </div>
+- >KÉSZLETKEZELÉS</div><h2>📦 Raktár</h2><div class=
+- >Kész kút összesítő</button>
+    </div>
+  </div>
+- >Kút mélysége</div><b>${esc(String(depth||
+- >Kút és engedély műszaki adatai</h3><div class=
+- >Kúttalp: ${wlXmlEsc(max)} m</text></svg>
+- >Még nincs dokumentum a projekthez.</div>
+- >Műszaki ellenőrzés</button>
+    </div>
+  </div>
+- >Nincs ellenőrizhető gyártási adat.</td></tr>
+- >Nincs gyártási munkalap.</td></tr>
+- >Nincs lezárt gyártás.</td></tr>
+- >Nincs lezárt gyártási adat.</td></tr>
+- >Nincs lezárt gyártási napló.</td></tr>
+- >Nincs lezárásra váró gyártás.</td></tr>
+- >Nincs még gyártási munkalap.</td></tr>
+- >Nincs még gyártási recept.</td></tr>
+- >Nincs még lezárt gyártás.</td></tr>
+- >Nincs még rögzített gyártási tétel.</td></tr>
+- >Nincs nyomtatható lezárt gyártás.</td></tr>
+- >Nincs projekt.</td></tr>
+- >Nincs rögzített ajánlati tétel.</td></tr>
+- >Nincs rögzített fúrási rétegsor.</div>
+- >Nyitott ajánlatok</div><div class=
+- >Projekt lezárva</span>
+- >Projekt lezárása</button>
+    </div>
+  </div>
+- >Projekt →</button></div>
+  </div>
+- >Projekt: ${esc(q.projectId||
+- >Projekt: ${esc(x.projectId||
+- >Projekt</button></div>
+    </div>
+- >Projekt</div><b>${esc(q.current.subject||
+- >Projektek</div><div class=
+- >Projektérték</div><div class=
+- >Tervezett</span></td>
+      <td><button class=
+- >Válassz projektet</option>${projects.map(p=>
+- >Válassz projektet…</option>${available.map(p=>
+- >Végleges kútadatok</button></div>
+    <div class=
+- >tervezés + folyamatban</div></div><div class=
+- >Ügyfél / projekt</h3><div class=
+- >← Ajánlatok</button>
+        <button class=
+- >← Ajánlatok</button>
+      ${id?
+- >← Ajánlatok</button></div>
+- >← Projektek</button>
+          <button class=
+- >← Vissza a projektekhez</button></div>
+- >→ Projekt</button>
+- >✓ Ajánlat elfogadása</button>
+- >✓ Kész kút – projekt lezárása</button>
+- >✓ Készletre véve</span>
+- >✓ Lezárás</button>
+- >✓ Végleges lezárás</button>
+- >✓ Új ügyfélként lesz létrehozva.</div>
+- >📍 Projektek</button>
+    </div>
+    <div class=
+- >📑 Ajánlat státusz és megrendelés</h3><div class=
+- >📤 Kiadás projektre</button><button class=
+- >📦 Készletre vétel</button>
+- >📦 Késztermék készletre vétele</button>
+- >📦 Raktárra gyártás</span>
+- A böngésző blokkolta az új dokumentumablakot.
+- A cikk vagy a projekt nem található.
+- A dokumentum fájlja újra feltöltve.
+- A fájl sikeresen újra feltöltve.
+- A gyártás még nincs Gyártás alatt állapotban.
+- A gyártás nem indítható ebben az állapotban.
+- A gyártás nincs folyamatban.
+- A gyártási anyagok lefoglalva.
+- A gyártási munkalap nem található.
+- A gyártási terv nem található.
+- A gép nincs hozzárendelve ehhez a projekthez.
+- A gép vagy a projekt nem található.
+- A kapcsolódó gyártási munkalap törölve lett.
+- A lezárt gyártásnak nincs késztermék mennyisége.
+- A projekt már FINAL állapotú.
+- A projekt még nem zárható le: 
+- A projekt nem található
+- A projekt nem található.
+- A projekt típusának magyarázata
+- A projekthez tartozó ajánlat nem található
+- AI adatkinyerés – ellenőrzés
+- AI adatok elfogadva
+- AI feldolgozás – ellenőrzés
+- AI feldolgozás – öntözési terv ellenőrzése
+- ARCHIVE
+- ARCHIVE_INVALID_RECORD
+- Acél kút-fenékszelep
+- Adj meg érvényes gyártási tételt és mennyiséget.
+- Ajánlat
+- Ajánlat elfogadva
+- Ajánlat elküldve
+- Ajánlat elküldve – elfogadásra vár
+- Ajánlat ellenőrzése és árazása
+- Ajánlat elutasítva
+- Ajánlat előkészítés alatt
+- Ajánlat létrehozása
+- Ajánlat megnevezése
+- Ajánlat státusz módosítása
+- Ajánlat szerkesztése
+- Ajánlat szerkesztése – ${esc(id)}
+- Ajánlat törölve.
+- Ajánlat véglegesítése
+- Ajánlat árazva
+- Ajánlat árazása előkészítve
+- Ajánlat árazása mentve
+- Ajánlat összeállítva
+- Ajánlat – árazás
+- Ajánlatból projekt létrehozása
+- Ajánlati kalkuláció mentve
+- Ajánlati piszkozat létrehozva
+- Ajánlatkérés
+- Ajánlatok
+- Aktuális készlet: 
+- Alacsony készlet
+- Anyag hozzárendelve az ajánlati tételhez
+- Anyagfelhasználás – projekt + raktár
+- Archivált
+- Archiválva
+- Az ajánlat a Piszkozatok között található: 
+- Az ajánlat lezárt vagy érvénytelen állapotú.
+- Az ajánlat nem található
+- Az ajánlat összege 0 Ft
+- Az ajánlathoz tartozó projekt nem található.
+- Az anyag archiválva. Az előzmények megmaradtak.
+- Az elkészült mennyiség nem megfelelő.
+- Belső munka lezárva
+- Csak lezárt gyártás vehető készletre.
+- Csak lezárt gyártási terv vehető készletre.
+- Csak lezárt gyártásról készíthető bizonylat.
+- Dokumentumfájl ellenőrzése:
+- Dokumentáció nélküli munka belsőleg lezárva
+- Ehhez az ajánlatkéréshez már létrejött a projekt.
+- Elfogadva
+- Elfogadásra vár
+- Elkészült
+- Elkészült dokumentumok
+- Ellenőrzés
+- Ellenőrzés alatt
+- Elutasítva
+- Előbb hozd létre az ügyfelet és a projektet
+- Előbb indítsd el a gyártást.
+- Előbb rendeld hozzá a gépet a projekthez.
+- Előkészítve – ellenőrzésre vár
+- Engedélyezett / tervezett talpmélység (m)
+- Ez a dokumentum már szerepel a projektben.
+- Ez a gyártási tétel már készletre lett véve.
+- Ez a gép már hozzá van rendelve a projekthez.
+- Ez a késztermék már készletre lett véve.
+- Ez a projekt már hozzá van rendelve a géphez.
+- Ez nem dokumentáció nélküli projekt.
+- Ez nem teljes Kútfő Plusz ERP mentés.
+- FINAL_REKORD_NEM_ARCHIVALHATO
+- Feldolgozva – ellenőrzött
+- Felhasználói archiválás
+- Folyamatban
+- FÚRÁSI RÉTEGSOR
+- Fúrás
+- Fúrási adat mentve
+- Fúrási adatok és rétegsor rögzítése
+- Fúrási rétegsor
+- Fúrási rétegsor mentve
+- Fúrási szakasz mentve
+- Fúrási szakasz rögzítése
+- Fúrási szakasz szerkesztése
+- Gyártott alkatrész
+- Gyártva
+- Gyártás
+- Gyártás alatt
+- Gyártás → Anyagfelhasználás
+- Gyártás → Késztermék készletre vétel
+- Gyártás → Plusz karimás késztermék
+- Gyártás → Raktár
+- Gyártási anyagfoglalás miatt bevételezve.
+- Gyártási megjegyzés...
+- Gyártási recept mentve.
+- Gyártási recept törölve.
+- Gyártási terv
+- Gyártási terv létrehozva a projekthez.
+- Gyártási terv létrehozva – raktárra gyártás.
+- Gyártási terv mentve.
+- Gyártási tétel rögzítve.
+- Gyártási tétel, anyag, minőség, megjegyzés...
+- Gyártási állapot frissítve.
+- Gyártó
+- Gép hozzárendelve a projekthez
+- Gép leválasztva a projektről
+- Inline új munkanapló inicializálás:
+- Javítás
+- Javítás alatt
+- Jánkmajtis – 2 × 120 m öntözőkút
+- KM-PVC kútcsövek
+- Kapcsolt ajánlat elfogadása
+- Kiadva projektre: ${q} ${item.unit||
+- Kiadás projektre
+- Kivitelezés elkészült
+- Kivitelezés folyamatban
+- Kivitelezés lezárva
+- Kivitelezés lezárása
+- KÚTKIKÉPZÉS / SZŰRŐZÉS
+- Kész kút
+- Kész kút adatlap
+- Kész kút dokumentumcsomag ellenőrzése
+- Kész kút dokumentáció
+- Kész kút ellenőrzés
+- Kész kút összesítő
+- Kész kút – projekt FINAL állapotban lezárva
+- Kész kút – projekt lezárása
+- Készletmozgás
+- Készletmozgás mentve
+- Készletmozgás – 
+- Készletre véve
+- Következő teendő → Ajánlat létrehozása
+- Kút adatai – szerkesztés
+- Kút azonosító
+- Kút darabszám
+- Kút helye
+- Kút kivitelezés
+- Kút megnevezése
+- Kút mélysége
+- Kút átadása az ügyfélnek
+- Kút-adatszolgáltatás
+- Kút-adatszolgáltatás előkészítése
+- Kútadat összesítő
+- Kútadatok mentve
+- Kútfej
+- Kútfej és kapcsolódó szerelvények
+- Kútfúrás
+- Kútfúrás / kút kivitelezés
+- Kútfúrás Ø ${drillingPriceLabel(diameter)} mm
+- Kútfúrás – aktuális folyóméter árlista
+- Kútfő Plusz Kft.
+- Kútkialakítás mentve
+- Kútmélység
+- Kútsapka
+- Kúttalp: ${max.toFixed(1).replace(/\.0$/,
+- LEZÁRT
+- Lezárt
+- Lezárva
+- Lezárás
+- Lezárás előtt hiányzik: 
+- Létesítési engedély ellenőrzése
+- Maximális fúrási mélység (m)
+- Maximális fúrási átmérő (mm)
+- Megrendelve
+- Megrendelés
+- Minimumkészlet alatt
+- Motor gyártója
+- Munkanapló betöltve és piszkozatként mentve
+- Munkanapló piszkozat mentése:
+- Műszaki ellenőrzés
+- Nem Kútfő Plusz munkanapló fájl
+- Nem érvényes Kútfő Plusz munkanapló fájl.
+- Nincs ajánlatkérés
+- Nincs elfogadott ajánlatkérés
+- Nincs előkészített ajánlat
+- Nincs feldolgozható ajánlatkérés
+- Nincs felhasználható készlet a raktárban.
+- Nincs készletre vehető elkészült mennyiség.
+- Nincs készletre véve
+- Nyitókészlet
+- Névtelen projekt
+- Piszkozat
+- Pl. 2 db 120 m-es öntözőkút kivitelezése
+- Projekt
+- Projekt anyagköltség egyeztetés
+- Projekt archiválva – adatai megmaradtak.
+- Projekt archiválása végleges törlés helyett
+- Projekt dokumentum
+- Projekt dokumentum feltöltése
+- Projekt dokumentum hozzáadva.
+- Projekt dokumentum hozzáadása
+- Projekt felhasználás
+- Projekt folyamat
+- Projekt géphasználati díjak mentve
+- Projekt hozzárendelve
+- Projekt leválasztva
+- Projekt lezárva
+- Projekt létrehozva
+- Projekt létrehozva és az ajánlathoz kapcsolva
+- Projekt mentve
+- Projekt műszaki adatok ellenőrzése
+- Projekt neve
+- Projekt státusz
+- Projekt szerkesztése
+- Projekt végleges adatai
+- Projekt zárócsomag
+- Projekt átadása
+- Projekt → Raktár
+- Projekt → Raktár visszavétel
+- Projekt-géphasználat rögzítve
+- Projekt-géphasználat törölve
+- Projekt: 
+- Projektből előkészítve
+- Projektek
+- Raktár → Projekt
+- Raktárra gyártás
+- Teljesítve
+- Tervezett
+- Tervezett acélcső / iránycső
+- Tervezett csövezés
+- Tervezett furat / iránycső átmérő (mm)
+- Tervezett furatátmérő
+- Tervezett furatátmérő (mm)
+- Tervezett munkadíj
+- Tervezett mélység
+- Tervezett szűrőzés / szűrőzött szakasz
+- Tervezett talp:
+- Tervezett vízigény: ${wn}
+- Tervezett átmérő
+- Tervezett öntözőtelep nagysága:
+- Tervezés
+- Tervezési vízhozam (l/min)
+- Tervező
+- VOR – kút
+- VOR – kút: ...
+- Visszavételezés projektről
+- Válassz gyártott terméket.
+- Végleges kútadatok
+- Végleges kútadatok mentve
+- a projekt szerinti hosszig
+- ajánlat
+- archive
+- badge ${archived?
+- documentsArchive
+- fúrási bejegyzés
+- javítás
+- javítás alatt
+- készlet
+- kút
+- kút helye
+- kútfej
+- kútmélység
+- material-archived-badge
+- material-archived-row
+- pl. a kútsapka a védőcső átmérőjéhez igazodjon
+- pl. előregyártás raktárra
+- pl. fúráshoz kiadva
+- pl. minimumkészlet pótlása, projektigény...
+- project_archive
+- projekt
+- tervező
+- tervező neve
+- vízkészlet
+- }    Kút: ${o.wellNo||
+- } készletre véve.
+- } készlettel rendelkezik.\n\nBiztosan törlöd?
+- } késztermék készletre véve.
+- }, készlet ${huFormat(available,3)} ${x.unit||
+- }</p>
+ <h2>KÚT ÖSSZESÍTŐ</h2>${wlDocTable([
+- }>Elkészült</option><option ${w?.status===
+- }>Folyamatban</option><option ${w?.status===
+- Árajánlat
+- Árajánlat mentve
+- Árajánlat mentve – visszatértem a projekthez
+- Árazva
+- Árazás
+- Árazásra előkészítve
+- Öntözési igény és kútvízhozam összevetése
+- Öntözési terv adatai bekerültek a projektbe
+- Ø ${drillingPriceLabel(d)} mm kútfúrás
+- Ø ${drillingPriceLabel(diameter)} mm kútfúrás
+- Új
+- Új ajánlatkérés
+- Új anyag
+- Új eszköz
+- Új kútfúrási átmérő (mm):
+- Új munkanapló
+- Új projekt
+- Új szervizeset
+- Új tétel
+- Új árajánlat
+- Új öntözési zóna
+- Új ügyfél
+- Ügyfél + projekt
+- Ügyfél + projekt + engedély mentve
+- Ügyfél + projekt automatikus létrehozása
+- Ügyfél + projekt létrehozva
+- Ügyfél és projekt automatikusan létrehozva
+- Ügyfél, projekt és ajánlati piszkozat létrehozva
+- öntözőkút
+- ⚠ Nincs készlet
+- ⚠️ Nincs elegendő szabad készlet
+- ✓ Elkészült
+- ✓ Készletre véve
+- ✕ Nincs elkészült mennyiség
+- 🏭 Gyártás → Raktár
+- 🏭 Új gyártási munkalap
+- 📋 Gyártási recept szerkesztése
+- 📋 Új gyártási recept
+- 📤 Kiadás projektre
+- 📦 Gyártási anyagfelhasználás
+- 🔎 Cikk, cikkszám, projekt, beszállító...
+- 🔒 Új gyártás / anyagfoglalás
+- 🔴 Veszteséges projekt
+- 🛒 Új beszerzés
+- 🟠 Alacsony készlet
+- 🟠 Ellenőrzés szükséges
+- 🟢 HIVATALOS PROJEKT
+- 🟢 Hivatalos projekt
+- 🟢 Nyereséges projekt
+
+2. Kritikus mezők előfordulása
+- casingSections: 44
+- finalDepth: 27
+- productionPipe: 2
+- casingDiameter: 55
+- wellHead: 39
+- customer: 715
+- project: 2786
+- status: 767
+- revision: 6
+
+3. Duplikált függvények
+
+4. Veszélyes művelethez kapcsolódó gombszövegek
+- Véglegesítés
+- ✓ Végleges lezárás
+- Projekt lezárása
+- Vízhozam véglegesítése
+- Végleges kútadatok
+- ✓ Kész kút – projekt lezárása
+- Kivitelezés lezárása →
+- Belső munka lezárása →
+- Projekt lezárása →
+- ✓ Lezárás
+- 🗑️ Törlés / archiválás
+
+5. Forrásállományok
+- AUDIT_CONTINUOUS_R101_R110.txt	1985 bytes	1eb428232435e3431a232150c0dfa981aa43528402a242d29fd5b9d14d780657
+- AUDIT_CONTINUOUS_R111_R125.txt	621 bytes	665eeb5b22559266620d3cd97e835a563219342278e6f1d4635071068a92fec1
+- AUDIT_CONTINUOUS_R126_R150.txt	6421 bytes	cf19396a4de310dc76bfdc3d877db5d6d858255954a5350ff231de290085d4a2
+- AUDIT_CONTINUOUS_R151_R210.txt	69840 bytes	8be55ccc397eb6e11cb71361c638849b23e9457b91ff6a9a72d1d2f939bc71f0
+- AUDIT_CONTINUOUS_R76_R80.txt	4273 bytes	235d0dd445996090e77f04dff505ba5e4748f34bd737caa11537d3387587e0ed
+- AUDIT_CONTINUOUS_R81_R90.txt	36251 bytes	774b6f3228585a5ec7a50882716d31c8979d3b6ff877bb665bc82abe9f051b17
+- AUDIT_CONTINUOUS_R91_R100.txt	40483 bytes	0747a9fc73e16424ca3feaf9a223f00797bb54d5f928c3f2c2ed6246ad29f438
+- AUDIT_CURRENT_SOURCE_REPORT.txt	758 bytes	6739a0f54e443afa58a47a46c08aa94453a5d27ae519bf8c2f57058eb47cca3a
+- AUDIT_FINAL_R211_R250.txt	3603 bytes	fb3e01e9e37a90337b0f4c131cef66ebacfba6571f19190a3bad2ee469408502
+- AUDIT_R72_ACTUAL_CASING_FLOW.txt	19213 bytes	8868c065ba7ee29ff4b0d0d218c9dbe1dbce7a11b62da30608d38d8ca6d887e5
+- AUDIT_R73_CASING_MUTATION_CHAIN.txt	1286 bytes	fe503324c3e7cbc809dc974903b366ce86727050a52813ac8a78f580b49023ee
+- AUDIT_R74_SAVE_RELOAD.txt	826 bytes	4b4d7ea4a9fa679b931cf4229e7e3f413c4521217c575b3ad8224332f1522c77
+- AUDIT_R75_PERSISTENCE_KEYS.txt	427 bytes	93777b4ed007f744e7e13042b14547f0e1b54c5aec861d5da93720ed53d2b058
+- E2E_BUSINESS_FLOW_FINAL_AUDIT.txt	2401 bytes	f6a750544e395417cfba2a14e5a422fe16367240c4eab7146ccf08a5260189ff
+- FINAL_REGRESSION_R251_R300.txt	853 bytes	34a047cad1cf60e3ce9bc15f2269675d5201a5df57958d16cef7e4e3a39a510c
+- RELEASE_READINESS_FINAL.txt	2574 bytes	6800251157a0ca9d4b383931c4c9a486ea4ef25f4285abcbfa8c009b4caaa2c6
+- V2.0.0_RELEASE_NOTES.txt	34580 bytes	86ff2b5f44b1e842ab43c8f93df3f65e5a72025f60ed3d324de607bc9005942e
+- all.js	533293 bytes	a157d2ee7e2f02b2f867c40210cde1af6ae4dbf12ba18af6d5c87f075decffa5
+- index.html	1556063 bytes	00b31114b2e16e633c456d0fe56b244993c179ccef95b959b2dc60387b9e904c
+- jszip.min.js	98330 bytes	9a071e80079d173400bd011f19fd93639b32e52dde7b37de5f64a1c7407eb9e8
+- munkanaplo.html	38151 bytes	b0ebaf5882e7cd30d37ab73fe11c65c54abffeb3e861e757f6839529b7c189f6
+- quote_preview_pages.js	357961 bytes	9329982d092b1da0bed2e10ed298f1cce50e6f868dc2eb96415c340229ae650b
+- quote_preview_vectors.js	735351 bytes	1d971637baef1ac5d34c8d3f97a925b1094a88e2b35efd470ef52a0e2ef66a12
+- quote_template.js	679985 bytes	4be9b484346253581773e839bd5bfc8833876344bdb6b0f6ef57fb25871cccb8
+
+6. Státusz: STATIC PROCESS AUDIT COMPLETE
+Runtime E2E: NOT VERIFIED in this environment.

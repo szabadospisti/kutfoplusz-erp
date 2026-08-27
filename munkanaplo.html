@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kútfő Plusz ERP – Munkanapló</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#172b4d;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+header h1{margin:0;font-size: 15px}header span{font-size:13px;opacity:.8}
+.container{max-width:1400px;margin:24px auto;padding:0 16px}.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px #0000000d}
+h2{margin:0 0 16px;font-size: 15px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+label{font-size:12px;font-weight:700;color:#52606d;display:block;margin-bottom:5px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #d5dce3;border-radius:7px;font:inherit;background:#fff}
+textarea{min-height:70px;resize:vertical}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:900px}
+th{background:#eef2f6;text-align:left;font-size:12px;padding:10px;border-bottom:1px solid #dce2e8}td{padding:7px;border-bottom:1px solid #edf0f2;vertical-align:top}table input{min-width:90px}
+td input,td select{padding:8px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:pointer}
+.primary{background:#1769aa;color:#fff}.success{background:#18864b;color:#fff}.secondary{background:#e9eef3;color:#17202a}.danger{background:#c93737;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#f7f9fb;border-radius:9px;padding:14px}.stat small{display:block;color:#66788a}.stat strong{font-size: 17px;display:block;margin-top:4px}
+footer{color:#718096;text-align:center;font-size:12px;padding:20px}
+@media(max-width:900px){.grid,.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
+#layers th:nth-child(1),#layers td:nth-child(1),#layers th:nth-child(2),#layers td:nth-child(2){width:58px;max-width:58px}
+#layers th:nth-child(1) input,#layers td:nth-child(1) input,#layers th:nth-child(2) input,#layers td:nth-child(2) input{width:52px;min-width:52px}
+#layers th:nth-child(3){min-width:105px}#layers th:nth-child(4){min-width:120px}#layers th:nth-child(5){min-width:125px}#layers th:nth-child(6){min-width:150px}
+@media(max-width:600px){
+  #layers{min-width:0;width:100%;table-layout:fixed}
+  #layers th:nth-child(1),#layers td:nth-child(1),
+  #layers th:nth-child(2),#layers td:nth-child(2){width:43px;max-width:43px;padding:4px 2px}
+  #layers th:nth-child(1) input,#layers td:nth-child(1) input,
+  #layers th:nth-child(2) input,#layers td:nth-child(2) input{width:39px;min-width:39px;padding:7px 2px}
+  #layers th:nth-child(3){width:18%}
+  #layers th:nth-child(4){width:20%}
+  #layers th:nth-child(5){width:21%}
+  #layers th:nth-child(6){width:27%}
+  #layers th:nth-child(7){width:20px}
+  #layers th{font-size:10px;line-height:1.15;padding:7px 3px}
+  #layers td{padding:4px 2px}
+  #layers td input{font-size:10px;padding:7px 3px}
+  #layers td:nth-child(3) input,#layers td:nth-child(4) input,
+  #layers td:nth-child(5) input,#layers td:nth-child(6) input{width:100%;min-width:0}
+}
+
+#filters{min-width:0;width:100%;table-layout:fixed}
+#filters th:nth-child(1),#filters td:nth-child(1),#filters th:nth-child(2),#filters td:nth-child(2){width:75px;max-width:75px}
+#filters th:nth-child(3){width:120px}#filters th:nth-child(4){width:auto}#filters th:nth-child(5){width:28px}
+#filters th:nth-child(1) input,#filters td:nth-child(1) input,#filters th:nth-child(2) input,#filters td:nth-child(2) input{width:68px;min-width:68px}
+@media(max-width:600px){
+  #filters th:nth-child(1),#filters td:nth-child(1),#filters th:nth-child(2),#filters td:nth-child(2){width:52px;max-width:52px;padding:4px 2px}
+  #filters th:nth-child(1) input,#filters td:nth-child(1) input,#filters th:nth-child(2) input,#filters td:nth-child(2) input{width:47px;min-width:47px;padding:7px 3px;font-size:11px}
+  #filters th:nth-child(3){width:22%}#filters th:nth-child(4){width:38%}#filters th:nth-child(5){width:24px}
+  #filters td{padding:4px 2px}#filters td input{width:100%;min-width:0;font-size:11px;padding:7px 4px}
+}
+
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr 1fr;gap:10px}
+  .grid > div:first-child,.grid > div:nth-child(2){min-width:0}
+  .grid input,.grid select{font-size:12px;padding:9px 7px}
+  .grid label{font-size:11px}
+}
+
+.grid{box-sizing:border-box}
+.grid > div{min-width:0;box-sizing:border-box}
+.grid > div input,.grid > div select,.grid > div textarea{width:100%;max-width:100%;box-sizing:border-box}
+@media(max-width:600px){
+  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;row-gap:10px;width:100%}
+  .grid > div{min-width:0}
+  .grid > div input,.grid > div select{width:100%;min-width:0}
+}
+
+@media print{header,.actions,footer,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd}}
+
+.profile-wrap{display:flex;gap:22px;align-items:flex-start;overflow-x:auto;padding:10px 0}
+.profile-depth{position:relative;width:58px;flex:none;border-right:1px solid #9aa6b2}
+.profile-depth span{position:absolute;right:7px;font-size:10px;color:#596773;transform:translateY(-50%)}
+.profile-drawing{position:relative;width:300px;min-width:300px;height:580px;border:1px solid #aeb8c2;border-radius:8px;background:#f8fafb}
+.profile-ground{position:absolute;left:0;right:0;top:0;height:3px;background:#596773}
+.profile-layer{position:absolute;left:68px;right:10px;border-left:1px solid #6b7785;border-right:1px solid #6b7785;display:flex;align-items:center;padding-left:12px;font-size:11px;overflow:hidden}
+.profile-layer .depth{font-weight:700;margin-right:8px;white-space:nowrap}
+.profile-layer.sand{background:repeating-linear-gradient(135deg,#eadfc9 0,#eadfc9 4px,#d6c8ad 5px,#d6c8ad 6px)}
+.profile-layer.clay{background:repeating-linear-gradient(0deg,#b7a58e 0,#b7a58e 5px,#a58f75 6px,#a58f75 7px)}
+.profile-layer.clayey{background:repeating-linear-gradient(135deg,#d0c3ad 0,#d0c3ad 6px,#b9aa92 7px,#b9aa92 8px)}
+.profile-layer.gray{background:repeating-linear-gradient(45deg,#d4d8dc 0,#d4d8dc 5px,#bdc3c8 6px,#bdc3c8 7px)}
+.profile-filter{position:absolute;left:42px;width:22px;border:3px solid #1769aa;background:#1769aa22;border-radius:3px;z-index:5}
+.profile-filter:after{content:"";position:absolute;left:2px;right:2px;top:4px;bottom:4px;background:repeating-linear-gradient(0deg,#1769aa 0,#1769aa 2px,transparent 2px,transparent 6px);opacity:.7}
+.profile-pipe{position:absolute;left:48px;width:10px;border-left:2px solid #6b7280;border-right:2px solid #6b7280;background:#eef1f4;z-index:4}
+.profile-water{position:absolute;left:15px;right:10px;border-top:3px solid #1769aa;z-index:8}
+.profile-water span{position:absolute;left:auto;right:100%;margin-right:6px;top:-19px;font-size:10px;font-weight:700;color:#1769aa;background:#fff;padding:2px 4px;border-radius:3px;white-space:nowrap}
+.profile-legend{font-size:11px;color:#52606d;margin-top:10px;display:flex;gap:15px;flex-wrap:wrap}
+.profile-legend b{display:inline-block;width:13px;height:13px;border:1px solid #9aa6b2;vertical-align:middle;margin-right:4px}
+@media print{.profile-drawing{break-inside:avoid}}
+
+@media(max-width:600px){
+  .container{width:100%;max-width:100%;padding:0 16px;overflow:hidden}
+  .card{width:100%;max-width:100%;overflow:hidden}
+  .grid{
+    display:grid!important;
+    grid-template-columns:calc(50% - 6px) calc(50% - 6px)!important;
+    column-gap:12px!important;
+    row-gap:10px!important;
+    width:100%!important;
+  }
+  .grid>div{width:100%!important;min-width:0!important;max-width:100%!important}
+  .grid>div input,.grid>div select,.grid>div textarea{
+    display:block;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+  }
+  .grid>div input[type="date"]{
+    appearance:auto;
+    -webkit-appearance:auto;
+    overflow:hidden;
+  }
+}
+
+</style>
+
+<style id="mobile-grid-final-fix">
+@media (max-width:600px){
+  .grid{
+    display:grid !important;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    column-gap:16px !important;
+    row-gap:10px !important;
+    width:100% !important;
+  }
+  .grid > div{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    overflow:hidden !important;
+  }
+  .grid > div > input,
+  .grid > div > select,
+  .grid > div > textarea{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+  }
+}
+</style>
+
+<style id="mobile-field-border-fix">
+@media (max-width:600px){
+  .grid > div > input,
+  .grid > div > select,
+  .grid > div > textarea{
+    border:2px solid #d5dce3 !important;
+    border-radius:10px !important;
+    background:#fff !important;
+    outline:none !important;
+    box-shadow:none !important;
+    overflow:hidden !important;
+  }
+  .grid > div > input[type="date"]{
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    display:block !important;
+    border:2px solid #d5dce3 !important;
+    border-radius:10px !important;
+    padding:9px 10px !important;
+  }
+}
+
+@media print{
+  #wellProfile{display:flex!important;justify-content:center!important;overflow:visible!important;width:100%!important}
+  #wellProfile>div{max-width:48%!important}
+}
+
+<style>
+#constructionLogCard .construction-days{display:grid;grid-template-columns:1fr;gap:14px}
+#constructionLogCard .construction-day{background:#f8fafc;border:1px solid #d5dce3;border-radius:10px;padding:12px}
+#constructionLogCard .construction-day label{display:block;font-weight:800;color:#172b4d;margin-bottom:7px}
+#constructionLogCard .construction-day textarea{width:100%;box-sizing:border-box;min-height:78px;resize:vertical;border:2px solid #d5dce3;border-radius:10px;padding:10px;font:inherit;line-height:1.45;background:#fff}
+@media print{
+  #constructionLogCard .actions{display:none!important}
+  #constructionLogCard .construction-day{break-inside:avoid;border:1px solid #bbb}
+}
+</style>
+
+<style>
+#constructionLogCard .construction-editable{font-family:Arial,sans-serif;font-size:15px;line-height:1.45}
+#constructionLogCard .construction-title-row{display:flex;align-items:center;margin-bottom:16px;font-weight:700}
+#constructionLogCard .build-inline{flex:1;min-height:26px;border:1px dashed #9aa9b8;border-radius:6px;padding:5px 8px;font:inherit;font-weight:700;background:#fff}
+#constructionLogCard .construction-day{margin:0 0 14px}
+#constructionLogCard .construction-day label{display:block;font-weight:700;margin-bottom:5px}
+#constructionLogCard .build-editable-text{width:100%;box-sizing:border-box;min-height:64px;border:1px dashed #9aa9b8;border-radius:6px;padding:9px;background:#fff;font:inherit;line-height:1.45;white-space:pre-wrap}
+#constructionLogCard [contenteditable="true"]:focus{outline:2px solid #4b86b4;border-color:#4b86b4}
+@media print{
+ #constructionLogCard .actions{display:none!important}
+ #constructionLogCard textarea,#constructionLogCard .build-inline{border:0;background:transparent;padding:0;resize:none}
+}
+</style>
+</style>
+</head>
+<body>
+
+<style>
+.erp-back{position:fixed;right:16px;top:14px;z-index:9999;display:flex;gap:8px}
+.erp-back a{background:#fff;color:#172b4d;text-decoration:none;border-radius:7px;padding:9px 13px;font-weight:700;box-shadow:0 2px 8px #0002;font-size:12px}
+@media print{.erp-back{display:none!important}}
+</style>
+<div class="erp-back no-print">
+  <a href="index.html#/dashboard">← ERP</a>
+  <a href="index.html#/worklogs">Munkanaplók</a>
+</div>
+
+<header>
+  <h1>💧 Kútfő Plusz ERP – Munkanapló</h1>
+  <span>Vállalatirányítási rendszer / Kútfúrás</span>
+</header>
+
+<div class="container">
+<section class="card">
+<h2>1. Munkalap alapadatai</h2>
+<div class="grid">
+<div><label>Dátum</label><input id="date" type="date" value="2026-08-10"></div>
+<div><label>Helyszín</label><input id="location" value="Porcsalma"></div>
+<div><label>Megrendelő</label><input id="client" value="Kovács Balázs"></div>
+<div><label>Kút sorszáma</label><input id="wellNo" value="1. kút"></div>
+<div><label>Fúrómester</label><input id="driller"></div>
+<div><label>Fúróberendezés</label><input id="rig"></div>
+<div><label>Kút végmélysége (m)</label><input id="finalDepth" type="number" value="55" step="0.1"></div>
+<div><label>Munka státusza</label><select id="status" onchange="saveStatusOnly(this.value)"><option>Folyamatban</option><option>Elkészült</option><option>Ellenőrzés alatt</option></select></div>
+</div>
+
+</section>
+
+<section class="card" id="constructionLogCard">
+<h2>2. Építési napló</h2>
+<div class="construction-editable">
+  <div class="construction-title-row">
+    <div id="buildTitle" class="build-inline" contenteditable="true"></div>
+    <span> építési napló</span>
+  </div>
+
+  <div class="construction-day">
+    <label>1 nap:</label>
+    <div id="buildDay1" class="build-editable-text" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <div class="construction-day">
+    <label>2. nap.</label>
+    <div id="buildDay2" class="build-editable-text" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <div class="construction-day">
+    <label>3. nap:</label>
+    <div id="buildDay3" class="build-editable-text" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <div class="construction-day">
+    <label>4 nap:</label>
+    <div id="buildDay4" class="build-editable-text" contenteditable="true" spellcheck="false"></div>
+  </div>
+</div>
+
+<div class="actions no-print">
+  <button class="primary" onclick="generateConstructionLog()">↻ Automatikus kitöltés</button>
+  <button type="button" onclick="saveData()">💾 Építési napló mentése</button>
+</div>
+</section>
+
+<section class="card">
+<h2>3. Rétegnapló</h2>
+<div class="table-wrap">
+<table id="layers">
+<thead><tr><th>Kezdő (m)</th><th>Vég (m)</th><th>Réteg</th><th>Fúrási viselkedés</th><th>Vízszín / állapot</th><th>Megjegyzés</th><th></th></tr></thead>
+<tbody>
+<tr><td><input value="0"></td><td><input value="4"></td><td><input value="Agyag"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="4"></td><td><input value="16"></td><td><input value="Agyag"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="16"></td><td><input value="22"></td><td><input value="Gyengébb agyag"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="22"></td><td><input value="25"></td><td><input value="Iszapos agyag"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="25"></td><td><input value="28"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="28"></td><td><input value="31"></td><td><input value=""></td><td><input value="Gyorsabb"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="31"></td><td><input value="34"></td><td><input value=""></td><td><input value="Jobb"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="34"></td><td><input value="37"></td><td><input value=""></td><td><input value="Ugrálós – legjobb réteg"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="37"></td><td><input value="38"></td><td><input value=""></td><td><input value="Jó"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="38"></td><td><input value="40"></td><td><input value="Gyenge agyag"></td><td><input value=""></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="40"></td><td><input value="46"></td><td><input value=""></td><td><input value="Ugrálós réteg"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="46"></td><td><input value="49"></td><td><input value=""></td><td><input value="Lassú"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="49"></td><td><input value="52"></td><td><input value=""></td><td><input value="Jó"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="52"></td><td><input value="55"></td><td><input value=""></td><td><input value="Kevésbé jó"></td><td><input value=""></td><td><input value=""></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<div class="actions no-print"><button class="primary" onclick="addLayer()">+ Réteg hozzáadása</button><button class="secondary" onclick="sortLayers()">Mélység szerint rendezés</button></div>
+</section>
+
+<section class="card">
+<h2>4. Grafikus függőleges kútszelvény</h2>
+<div class="profile-wrap"><div class="profile-depth" style="height:550px"><span style="top:0px">0 m</span><span style="top:50px">5 m</span><span style="top:100px">10 m</span><span style="top:150px">15 m</span><span style="top:200px">20 m</span><span style="top:250px">25 m</span><span style="top:300px">30 m</span><span style="top:350px">35 m</span><span style="top:400px">40 m</span><span style="top:450px">45 m</span><span style="top:500px">50 m</span><span style="top:550px">55 m</span></div>
+<div class="profile-drawing" style="height:550px"><div class="profile-ground"></div><div class="profile-layer clay" style="top:0px;height:40px"><span class="depth">0–4 m Agyag</span></div><div class="profile-layer clay" style="top:40px;height:120px"><span class="depth">4–16 m Agyag</span></div><div class="profile-layer clay" style="top:160px;height:60px"><span class="depth">16–22 m Gyengébb agyag</span></div><div class="profile-layer clayey" style="top:220px;height:30px"><span class="depth">22–25 m Iszapos agyag</span></div><div class="profile-layer sand" style="top:250px;height:30px"><span class="depth">25–28 m </span></div><div class="profile-layer sand" style="top:280px;height:30px"><span class="depth">28–31 m Gyorsabb</span></div><div class="profile-layer sand" style="top:310px;height:30px"><span class="depth">31–34 m Jobb</span></div><div class="profile-layer sand" style="top:340px;height:30px"><span class="depth">34–37 m Ugrálós – legjobb réteg</span></div><div class="profile-layer sand" style="top:370px;height:10px"><span class="depth">37–38 m Jó</span></div><div class="profile-layer clay" style="top:380px;height:20px"><span class="depth">38–40 m Gyenge agyag</span></div><div class="profile-layer sand" style="top:400px;height:60px"><span class="depth">40–46 m Ugrálós réteg</span></div><div class="profile-layer sand" style="top:460px;height:30px"><span class="depth">46–49 m Lassú</span></div><div class="profile-layer sand" style="top:490px;height:30px"><span class="depth">49–52 m Jó</span></div><div class="profile-layer sand" style="top:520px;height:30px"><span class="depth">52–55 m Kevésbé jó</span></div>
+<div class="profile-pipe" style="top:310px;height:240px"></div><div class="profile-filter" style="top:310px;height:240px"></div>
+<div style="position:absolute;left:15px;right:10px;top:72px;border-top:3px solid #1769aa;z-index:8"><span style="position:absolute;left:4px;top:-19px;font-size:10px;font-weight:700;color:#1769aa;background:#fff;padding:2px 4px">Nyugalmi 7,20 m</span></div>
+<div style="position:absolute;left:15px;right:10px;top:176.3px;border-top:3px solid #1769aa;z-index:8"><span style="position:absolute;left:4px;top:-19px;font-size:10px;font-weight:700;color:#1769aa;background:#fff;padding:2px 4px">Üzemi 17,63 m</span></div>
+<div style="position:absolute;bottom:4px;left:68px;font-size:10px;font-weight:700;color:#596773">Kúttalp: 55 m</div></div></div>
+<div class="profile-legend"><span><b style="background:#eadfc9"></b>Gyors/homokos</span><span><b style="background:#b7a58e"></b>Agyag</span><span><b style="background:#d0c3ad"></b>Iszapos</span><span><b style="background:#1769aa"></b>Szűrő 31–55 m</span></div></section>
+<section class="card">
+<h2>5. Kútkiképzés / szűrőzés</h2>
+<div class="table-wrap">
+<table id="filters">
+<thead><tr><th>Szűrő kezdete (m)</th><th>Szűrő vége (m)</th><th>Típus / cső</th><th>Megjegyzés</th><th></th></tr></thead>
+<tbody>
+<tr><td><input value="0"></td><td><input value="31"></td><td><input value="Vak"></td><td><input value=""></td><td></td></tr>
+<tr><td><input value="31"></td><td><input value="55"></td><td><input value="24 m szűrő"></td><td><input value=""></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<div class="actions no-print"><button class="primary" onclick="addFilter()">+ Szűrőszakasz</button></div>
+<div class="grid" style="margin-top:15px">
+<div><label>Termelőcső hossza (m)</label><input id="prodPipe" type="number" value="24"></div>
+<div><label>Nyugalmi vízszint (m)</label><input id="staticWL" type="number" value="7.20" step="0.01"></div>
+<div><label>Üzemi vízszint (m)</label><input id="dynamicWL" type="number" value="17.63" step="0.01"></div>
+<div><label>Szivattyú</label><input id="pump" value="Cortex 910 literes"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>6. Próbaszivattyúzás</h2>
+<div class="grid">
+<div><label>Vízhozam Q (l/perc)</label><input id="flow" type="number" value="733" step="1" oninput="calculate()"></div>
+<div><label>Motor teljesítmény (kW)</label><input id="power" type="number" value="5.5" step="0.1"></div>
+<div><label>Üzemi vízszint (m)</label><input id="dynamic2" type="number" value="17.63" step="0.01" oninput="calculate()"></div>
+<div><label>Nyugalmi vízszint (m)</label><input id="static2" type="number" value="7.20" step="0.01" oninput="calculate()"></div>
+</div>
+<div class="stats" style="margin-top:15px">
+<div class="stat"><small>Leszívás</small><strong id="drawdown">10,69 m</strong></div>
+<div class="stat"><small>Fajlagos vízhozam</small><strong id="specific">73,3 l/perc/m</strong></div>
+<div class="stat"><small>Q</small><strong id="flowStat">733 l/perc</strong></div>
+<div class="stat"><small>22 m-nél számított Q</small><strong id="q22">733 l/perc</strong></div>
+</div>
+<div style="margin-top:15px"><label>Próbaszivattyúzás megjegyzése</label><textarea id="pumpNote">18 mp – 220 literes mérés. Megadott vízhozam: 733 l/perc. Fajlagos vízhozam: 73,3 l/perc/m.</textarea></div>
+</section>
+
+<section class="card">
+<h2>7. Munkanapló megjegyzés</h2>
+<textarea id="notes">0–31 m vak, 31–55 m 24 m szűrő. A 34–37 m közötti szakasz a legjobb, ugrálós réteg. 38 m körül gyenge agyag jelentkezett.</textarea>
+<div class="actions no-print">
+<button class="success" onclick="saveData()">💾 Mentés</button>
+<button class="primary" onclick="exportWorklogFile()">⬇️ Mentés fájlba</button>
+<button class="secondary" onclick="document.getElementById('worklogFileInput').click()">⬆️ Betöltés fájlból</button>
+<button class="primary" onclick="window.print()">🖨️ Nyomtatás / PDF</button>
+<button class="secondary" onclick="loadData()">↻ Helyi betöltés</button>
+<button class="danger" onclick="clearData()">Törlés</button>
+<input id="worklogFileInput" class="no-print" type="file" accept="application/json,.json" style="display:none" onchange="importWorklogFile(event)">
+<span id="saveState" style="align-self:center;font-size:12px;color:#66788a">✓ Automatikusan mentve ezen az eszközön</span>
+</div>
+</section>
+</div>
+<footer>Kútfő Plusz Kft. – Munkanapló modul</footer>
+
+<script>
+const layerData=[
+[7,10,"Szürke homok","","",""],
+[10,13,"Szürke","","",""],
+[13,16,"Szürke","","","16 m-nél agyag"],
+[16,19,"Agyag","","",""],
+[19,22,"","Gyors","",""],
+[22,25,"","Gyors, ugrálós","",""],
+[25,28,"","Gyors, ugrálós","",""],
+[28,31,"","Ugrálós","","30 m-nél agyag, lassabb"],
+[31,34,"Agyag","Nagyon lassú","Szürke, agyagos",""],
+[34,37,"Agyag","Közepes","Szürke, agyagos",""],
+[37,40,"Agyagos homok","Közepes","",""],
+[40,43,"Agyagos","Lassabb","",""],
+[43,46,"","Közepes","",""],
+[46,49,"","Nagyon ugrálós","",""],
+[49,52,"","Lassú/közepes","",""],
+[52,55,"","Gyors","",""],
+[55,58,"","Közepes/lassú","","57 m-nél agyag"]
+];
+const filterData=[[22,31,"Szűrő",""],[40,55,"Szűrő",""]];
+
+function addLayer(v=[0,0,"","","",""]){
+ const tr=document.querySelector("#layers tbody").insertRow();
+ v.forEach((x,i)=>{const td=tr.insertCell(); const inp=document.createElement("input"); inp.value=x; inp.type=i<2?"number":"text"; if(i<2) inp.step=".1"; td.appendChild(inp)});
+ const td=tr.insertCell(); const b=document.createElement("button"); b.className="danger"; b.textContent="×"; b.onclick=()=>tr.remove(); td.appendChild(b);
+}
+function addFilter(v=[0,0,"Szűrő",""]){
+ const tr=document.querySelector("#filters tbody").insertRow();
+ v.forEach((x,i)=>{const td=tr.insertCell(); const inp=document.createElement("input"); inp.value=x; inp.type=i<2?"number":"text"; if(i<2) inp.step=".1"; td.appendChild(inp)});
+ const td=tr.insertCell(); const b=document.createElement("button"); b.className="danger"; b.textContent="×"; b.onclick=()=>tr.remove(); td.appendChild(b);
+}
+function getTable(id){return [...document.querySelectorAll("#"+id+" tbody tr")].map(tr=>[...tr.querySelectorAll("input")].map(i=>i.value))}
+function sortLayers(){const data=getTable("layers").sort((a,b)=>Number(a[0])-Number(b[0]));document.querySelector("#layers tbody").innerHTML="";data.forEach(addLayer)}
+function calculate(){
+ const q=Number(flow.value)||0,s=Number(static2.value),d=Number(dynamic2.value);
+ const draw=(Number.isFinite(s)&&Number.isFinite(d)) ? d-s : 0;
+ const spec=(draw>0&&q>0) ? q/draw : 0;
+ drawdown.textContent=draw.toFixed(2)+" m";
+ specific.textContent=spec.toFixed(2)+" l/perc/m";
+ flowStat.textContent=q+" l/perc";
+ const q22=q; q22El.textContent=Math.round(q22)+" l/perc";
+ if(typeof renderProfile==='function') renderProfile();
+}
+const q22El=document.getElementById("q22");
+function fields(){return ["buildTitle","date","location","client","wellNo","driller","rig","finalDepth","status","prodPipe","staticWL","dynamicWL","pump","flow","power","dynamic2","static2","pumpNote","notes","buildDay1","buildDay2","buildDay3","buildDay4"]}
+
+function renderProfile(){
+ const box=document.getElementById("wellProfile"); box.innerHTML="";
+ const layers=getTable("layers"), filters=getTable("filters");
+ const max=Math.max(...layers.map(r=>Number(r[1])||0),Number(finalDepth.value)||58);
+ const scale=9;
+ const depth=document.createElement("div");
+ depth.style.cssText=`height:${max*scale}px;position:relative;border-right:1px solid #ccd4dc`;
+ for(let d=0;d<=max;d+=5){let x=document.createElement("div");x.textContent=d+" m";x.style.cssText=`position:absolute;top:${d*scale-7}px;right:8px;font-size:11px;color:#66788a`;depth.appendChild(x)}
+ box.appendChild(depth);
+ const well=document.createElement("div");
+ well.style.cssText=`height:${max*scale}px;position:relative;border:1px solid #cbd5df;border-radius:8px;background:repeating-linear-gradient(0deg,#fafbfc,#fafbfc 8px,#f0f3f6 9px)`;
+ layers.forEach(r=>{
+   const a=Number(r[0]),b=Number(r[1]); if(!Number.isFinite(a)||!Number.isFinite(b))return;
+   const el=document.createElement("div"); el.style.cssText=`position:absolute;left:0;right:0;top:${a*scale}px;height:${(b-a)*scale}px;border-bottom:1px solid #fff;padding:3px 7px;font-size:10px;overflow:hidden;background:#e4e8ec`;
+   el.textContent=`${a}–${b} m  ${r[2]||""}${r[3]?" • "+r[3]:""}`;
+   well.appendChild(el);
+ });
+ filters.forEach(r=>{
+   const a=Number(r[0]),b=Number(r[1]); if(!Number.isFinite(a)||!Number.isFinite(b))return;
+   const el=document.createElement("div"); el.style.cssText=`position:absolute;left:-6px;right:-6px;top:${a*scale}px;height:${(b-a)*scale}px;border:3px solid #1769aa;border-radius:4px;background:#1769aa22;pointer-events:none`;
+   const tag=document.createElement("span");tag.textContent=" SZŰRŐ";tag.style.cssText="position:absolute;right:4px;top:2px;font-size:10px;font-weight:700;color:#1769aa";el.appendChild(tag);well.appendChild(el);
+ });
+ box.appendChild(well);
+}
+
+function saveStatusOnly(value){
+  try{
+    const raw=localStorage.getItem("kutfoz-munkanaplo");
+    const d=raw?JSON.parse(raw):{};
+    d.status=value;
+    localStorage.setItem("kutfoz-munkanaplo",JSON.stringify(d));
+  }catch(e){}
+}
+
+function numVal(id){
+  const el=document.getElementById(id);
+  const n=Number(el?.value);
+  return Number.isFinite(n)?n:null;
+}
+function txtVal(id){
+  return String(document.getElementById(id)?.value||"").trim();
+}
+function fmtM(v){
+  return v===null||v===undefined||v==="" ? "—" : String(v).replace(".",",")+" m";
+}
+function constructionFilterRange(){
+  const rows=getTable("filters");
+  const actual=rows
+    .map(r=>({a:Number(r[0]),b:Number(r[1]),t:String(r[2]||"")}))
+    .filter(r=>Number.isFinite(r.a)&&Number.isFinite(r.b)&&r.b>r.a&&/szűr/i.test(r.t));
+  if(!actual.length){
+    const all=rows.map(r=>({a:Number(r[0]),b:Number(r[1]),t:String(r[2]||"")}))
+      .filter(r=>Number.isFinite(r.a)&&Number.isFinite(r.b)&&r.b>r.a);
+    if(all.length) return [Math.min(...all.map(x=>x.a)),Math.max(...all.map(x=>x.b))];
+    return [null,null];
+  }
+  return [Math.min(...actual.map(x=>x.a)),Math.max(...actual.map(x=>x.b))];
+}
+function constructionFillRange(){
+  const rows=getTable("filters");
+  if(!rows.length) return "—";
+  const valid=rows.map(r=>[Number(r[0]),Number(r[1]),r[2]||""])
+    .filter(r=>Number.isFinite(r[0])&&Number.isFinite(r[1])&&r[1]>r[0]);
+  if(!valid.length) return "—";
+  return valid.map(r=>`${String(r[0]).replace(".",",")}–${String(r[1]).replace(".",",")} m`).join(", ");
+}
+function generateConstructionLog(){
+  const projectTitle=(txtVal("client")||"")+
+    ((txtVal("location")||"")?(" "+txtVal("location")):"")+
+    ((txtVal("wellNo")||"")?(" "+txtVal("wellNo")):"");
+  setFieldValue("buildTitle",projectTitle.trim());
+
+  const depth=numVal("finalDepth");
+  const flow=numVal("flow");
+  const dyn=numVal("dynamic2") ?? numVal("dynamicWL");
+  const stat=numVal("static2") ?? numVal("staticWL");
+  const [filterFrom,filterTo]=constructionFilterRange();
+
+  const d=depth!==null?String(depth).replace(".",","):"60";
+  const q=flow!==null?String(flow).replace(".",",")+"l/p":"825l/p";
+  const dy=dyn!==null?String(dyn).replace(".",",")+"m":"6,32m";
+  const st=stat!==null?String(stat).replace(".",",")+"m":"5,10m";
+  const ff=filterFrom!==null?String(filterFrom).replace(".",","):"42,00";
+  const ft=filterTo!==null?String(filterTo).replace(".",","):"57,0";
+
+  setFieldValue("buildDay1",
+    `keresőfúrás165mm átmérőjű 3 élű fúróval,0-${d}m.ig\n`+
+    `geofizikaivizsgálat, bővítő fúrás 0-6. m-ig átmérő 360mm, iránycső beépítése 0-6m.-ig 324mm acél, palástcementezés.`);
+
+  setFieldValue("buildDay2",
+    `Bővítő fúrás 6,00m- ${d},00m ig. 315mm 4 élü fúróval. Furat öblítés, 225 mm GWE Szűrő cső beépítése ${d},0m.-ig szűrő helye ${ff}-${ft}m között. Szűrő mosatás, kavicsolás, ${d},00- 30,00m.-ig. Kavics tető ellenőrzés, homokfeltöltés 30-28m között, agyagfeltöltés 28-25m között, Gyűrűs tér kitöltése cementtejjel, 25m-től felszínig.`);
+
+  setFieldValue("buildDay3",
+    `tisztitó kompresszorozás, vízhozam ${q}, H üzemi ${dy}`);
+
+  setFieldValue("buildDay4",
+    `Szivattyúzás, vízhozam ${q}, H üzemi ${dy}, nyugalmi vízszint ${st}\n`+
+    `vízmintavétel kútvizsgálat.`);
+}function getFieldValue(id){
+ const el=document.getElementById(id);
+ if(!el) return "";
+ return el.isContentEditable ? el.innerText : el.value;
+}
+function setFieldValue(id,value){
+ const el=document.getElementById(id);
+ if(!el) return;
+ if(el.isContentEditable) el.innerText=value??"";
+ else el.value=value??"";
+}
+function saveData(){
+ const d={};
+ fields().forEach(id=>d[id]=getFieldValue(id));
+ d.layers=getTable("layers");d.filters=getTable("filters");
+ localStorage.setItem("kutfoz-munkanaplo",JSON.stringify(d));
+ alert("A munkanapló elmentve a böngészőbe.");
+}
+function loadData(){
+ const raw=localStorage.getItem("kutfoz-munkanaplo"); if(!raw){alert("Nincs mentett munkanapló.");return}
+ const d=JSON.parse(raw);fields().forEach(id=>{if(d[id]!==undefined)setFieldValue(id,d[id])});
+ document.querySelector("#layers tbody").innerHTML="";(d.layers||[]).forEach(addLayer);
+ document.querySelector("#filters tbody").innerHTML="";(d.filters||[]).forEach(addFilter);calculate();
+}
+function clearData(){if(confirm("Biztosan törlöd a mentett adatokat?")){localStorage.removeItem("kutfoz-munkanaplo");location.reload()}}
+calculate();
+if(!txtVal('buildDay1')) generateConstructionLog();
+renderProfile();
+</script>
+
+<script>
+(function(){
+  const STORAGE_KEY = "kutfoz-munkanaplo";
+  let saveTimer = null;
+
+  function collectData(){
+    const d={};
+    fields().forEach(id=>d[id]=getFieldValue(id));
+    d.layers=getTable("layers");
+    d.filters=getTable("filters");
+    d.savedAt=new Date().toISOString();
+    d.calculated={
+      drawdown:Number(document.getElementById("drawdown")?.textContent.replace(",",".").replace(/[^0-9.-]/g,""))||0,
+      specificYield:Number(document.getElementById("specific")?.textContent.replace(",",".").replace(/[^0-9.-]/g,""))||0,
+      flow:Number(flow.value)||0
+    };
+    return d;
+  }
+
+  function validateWorklog(d){
+    const errors=[];
+    const depth=Number(d.finalDepth);
+    if(!d.date) errors.push("A dátum nincs megadva.");
+    if(!d.client) errors.push("A megrendelő nincs megadva.");
+    if(!Number.isFinite(depth) || depth<=0) errors.push("A kút végmélységének 0-nál nagyobbnak kell lennie.");
+    (d.layers||[]).forEach((r,i)=>{
+      const a=Number(r[0]),b=Number(r[1]);
+      if(Number.isFinite(a)&&Number.isFinite(b)&&b<a) errors.push(`${i+1}. rétegnél a végmélység kisebb a kezdőmélységnél.`);
+    });
+    (d.filters||[]).forEach((r,i)=>{
+      const a=Number(r[0]),b=Number(r[1]);
+      if(Number.isFinite(a)&&Number.isFinite(b)&&b<a) errors.push(`${i+1}. szűrőszakasznál a végmélység kisebb a kezdőmélységnél.`);
+    });
+    return errors;
+  }
+
+  function writeLocal(showMessage){
+    try{
+      const data=collectData();
+      const errors=validateWorklog(data);
+      if(errors.length){
+        const state=document.getElementById('saveState');
+        if(state) state.textContent='⚠ Ellenőrzés szükséges';
+        if(showMessage) alert('A munkanapló nem menthető:\n\n'+errors.join('\n'));
+        return false;
+      }
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      const state=document.getElementById('saveState');
+      if(state) state.textContent='✓ Mentve ezen az eszközön';
+      if(showMessage) alert('A munkanapló elmentve.');
+      return true;
+    }catch(e){
+      const state=document.getElementById('saveState');
+      if(state) state.textContent='⚠ A helyi mentés nem sikerült';
+      return false;
+    }
+  }
+
+  // A sima Mentés csak ment. Nem zár be, nem navigál el, nem tölt le fájlt.
+  window.saveData=function(){ writeLocal(true); };
+
+  function autosave(){
+    clearTimeout(saveTimer);
+    const state=document.getElementById('saveState');
+    if(state) state.textContent='… Mentés folyamatban';
+    saveTimer=setTimeout(()=>writeLocal(false),350);
+  }
+
+  // Szerkesztés közben automatikusan mentünk, így frissítés vagy véletlen bezárás után
+  // a helyi mentésből visszaállítható a munkanapló.
+  document.addEventListener('input', function(e){
+    if(e.target.matches('input,textarea,[contenteditable="true"]')) autosave();
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.matches('input,textarea,select')) autosave();
+  });
+  window.addEventListener('beforeunload', function(){ writeLocal(false); });
+
+  window.exportWorklogFile=function(){
+    try{
+      const d=collectData();
+      const raw=JSON.stringify({version:'1.0',type:'kutfo-plusz-munkanaplo',data:d},null,2);
+      const blob=new Blob([raw],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const base=[txtVal('client'),txtVal('location'),txtVal('wellNo')].filter(Boolean).join('-')
+        .replace(/[^a-zA-Z0-9ÁÉÍÓÖŐÚÜŰáéíóöőúüű -]+/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,90);
+      a.href=url;
+      a.download=(base||'munkanaplo')+'-munkanaplo.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      const state=document.getElementById('saveState');
+      if(state) state.textContent='✓ Fájlba mentve';
+    }catch(e){
+      alert('A munkanapló fájlba mentése nem sikerült.');
+    }
+  };
+
+  window.importWorklogFile=function(event){
+    const file=event.target.files && event.target.files[0];
+    event.target.value='';
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(){
+      try{
+        const parsed=JSON.parse(reader.result);
+        const d=parsed && parsed.data ? parsed.data : parsed;
+        if(!d || typeof d!=='object' || (!d.layers && !d.filters)) throw new Error('Érvénytelen munkanapló fájl');
+        fields().forEach(id=>{if(d[id]!==undefined)setFieldValue(id,d[id]);});
+        document.querySelector('#layers tbody').innerHTML='';
+        (d.layers||[]).forEach(addLayer);
+        document.querySelector('#filters tbody').innerHTML='';
+        (d.filters||[]).forEach(addFilter);
+        calculate();
+        renderProfile();
+        writeLocal(false);
+        const state=document.getElementById('saveState');
+        if(state) state.textContent='✓ Fájl betöltve és helyben mentve';
+      }catch(e){
+        alert('Nem sikerült betölteni a munkanapló fájlt. Csak Kútfő Plusz munkanapló JSON fájl tölthető be.');
+      }
+    };
+    reader.readAsText(file);
+  };
+})();
+</script>
+
+</body>
+</html>

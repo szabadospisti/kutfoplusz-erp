@@ -1,0 +1,118 @@
+AUDIT-R72 – AKTUÁLIS INDEX.HTML CSÖVEZÉSI VEZÉRLÉSI ÚTVONAL
+======================================================================
+
+Talált cső/kút függvénynevek:
+- addCasingSection
+- addWellLayer
+- cancelProjectWellInline
+- captureWellEditDraft
+- closeInlineCasingDocument
+- editCasingSection
+- editProjectWell
+- editWellFinalData
+- editWellLayer
+- ensurePipeTypeCatalog
+- exportCasingFromExactTemplate
+- exportCasingPdf
+- legacy_editWellLayer
+- legacy_saveWellLayer
+- legacy_updateWellLayer
+- normalizePipeType
+- openWellLayerEditor
+- pipe3mParts
+- pipeTypeFromText
+- prepareWellDataService
+- productionWellheadSpecificationPanel
+- projectWellDisplayValue
+- projectWellPanel
+- projectWellPlannedSections
+- rebuildWellLayers
+- saveCasingSection
+- saveProjectWellInline
+- saveWellExtras
+- saveWellFinalData
+- saveWellLayer
+- setWellConstructionExtras
+- setWellTab
+- showWellDataSummary
+- updateCasingSection
+- updateWellLayer
+- validateWellConstruction
+- wellCompare
+- wellConstructionPanel
+- wellDataServicePanel
+- wellEditContent
+- wellLayerRows
+- wellRow
+- wellTabContent
+- wlAutoWellDiameter
+- wlCasingDocumentHtml
+- wlCasingProfileSvg
+
+Kulcsszó környezetek:
+
+[casingSections]
+=(w.layers||[]).map((x,i)=>`<div class="project-mini-row"><div>${esc(x.from)}–${esc(x.to)} m</div><div>${esc(x.layer||"")}</div><div>${esc(x.note||"")}</div><div><button class="btn secondary small" onclick="editWellLayer('${p.id}',${i})">Szerkesztés</button></div></div>`).join(""); const cas=(w.casingSections||[]).map((x,i)=>`<div class="project-mini-row"><div>${esc(x.from)}–${esc(x.to)} m</div><div>${esc(x.type||"")} ${esc(x.diameter||"")}</div><div>${esc(x.material||"")}</div><div><button class="btn secondary small" onclick="editCasingSection('${p.id}',${i})">Szerkesztés</button></div></div>`).join(""); return `<h3>Rétegsor</h3>${layers||"Nincs rétegsor."}<h3 style="margin-top:16px">Csövezés / szűrőzés</h3>${cas||"Nincs csövezés."}<div class="project-page-actions" style="margin-top:10px"><butt
+
+[casingSections]
+.isArray(p.generatedDocuments)?p.generatedDocuments:[]; const checks=[ ["Végleges vízhozam",!!Number(p.well?.actualFlow||p.actualFlow)], ["Végleges mélység",!!Number(p.well?.actualDepth||p.actualDepth)], ["Rétegsor",!!(p.well?.layers||[]).length], ["Csövezés / szűrőzés",!!(p.well?.casingSections||[]).length], ["Próbaszivattyúzás",!!(p.well?.pumpTests||[]).length], ["Dokumentumcsomag",gen.length>0], ["Átadás-átvétel",!!a.handoverDate], ["Garancia",!!a.warrantyUntil] ]; const ready=checks.slice(0,6).every(x=>x[1]); return `<div class="handover-panel"> <div class="panelhead"><div><h2>📦 Kút befejezése · Átadás · Garancia</h2><div class="label">A kivitelezés lezárásától az ügyfélnek történő átadásig.</div></div><button class="btn small" onclick="openHandover('${p.i
+
+[casingSections]
+owTasks||[];let x=p.workflowTasks.find(a=>a.id==="pump");if(!x){x={id:"pump"};p.workflowTasks.push(x)}x.done=true; save();render();toast(`Végleges vízhozam: ${max} l/min`); } function wellConstructionPanel(p){ const w=p.well||{},layers=Array.isArray(w.layers)?w.layers:[],casing=Array.isArray(w.casingSections)?w.casingSections:[]; return `<div class="well-construction"> <div class="panelhead"><div><h2>🕳️ Rétegsor · Csövezés · Szűrőzés · Kavicsolás</h2><div class="label">A fúrás közben rögzített rétegek és a végleges kútkialakítás egy helyen.</div></div><button class="btn small" onclick="addWellLayer('${p.id}')">+ Rétegszakasz</button></div> <div class="well-construction-grid"> <div class="well-const-stat"><div class="label">Rétegszakaszok</div><b>${layers.length}</b></div> <div
+
+[casingSections]
+p.workflowTasks.find(a=>a.id==="pump");if(!x){x={id:"pump"};p.workflowTasks.push(x)}x.done=true; save();render();toast(`Végleges vízhozam: ${max} l/min`); } function wellConstructionPanel(p){ const w=p.well||{},layers=Array.isArray(w.layers)?w.layers:[],casing=Array.isArray(w.casingSections)?w.casingSections:[]; return `<div class="well-construction"> <div class="panelhead"><div><h2>🕳️ Rétegsor · Csövezés · Szűrőzés · Kavicsolás</h2><div class="label">A fúrás közben rögzített rétegek és a végleges kútkialakítás egy helyen.</div></div><button class="btn small" onclick="addWellLayer('${p.id}')">+ Rétegszakasz</button></div> <div class="well-construction-grid"> <div class="well-const-stat"><div class="label">Rétegszakaszok</div><b>${layers.length}</b></div> <div class="well-const
+
+[casingSections]
+</div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`); } function saveCasingSection(ev,pid){ ev.preventDefault();const p=db.projects.find(x=>x.id===pid);if(!p)return;p.well=p.well||{};p.well.casingSections=Array.isArray(p.well.casingSections)?p.well.casingSections:[]; const o=Object.fromEntries(new FormData(ev.target).entries()); if(Number(o.to)<=Number(o.from)){toast("A To érték nagyobb kell legyen");return} p.well.casingSections.push(o);p.well.casingSections.sort((a,b)=>Number(a.from)-Number(b.from));p.well.casingData=true;p.well.screenData=p.well.casingSections.some(x=>x.type==="Szűrő"); save();closeModal();render();toast("Csőszakasz mentve"); } function editCasingSection(pid,i){ con
+
+[csőszakasz]
+="well-const-stat"><div class="label">Rétegszakaszok</div><b>${layers.length}</b></div> <div class="well-const-stat"><div class="label">Legnagyobb mélység</div><b>${layers.length?Math.max(...layers.map(x=>Number(x.to)||0)):"0"} m</b></div> <div class="well-const-stat"><div class="label">Csőszakaszok</div><b>${casing.length}</b></div> <div class="well-const-stat"><div class="label">Szűrőszakaszok</div><b>${casing.filter(x=>x.type==="Szűrő").length}</b></div> </div> <h3>Rétegsor</h3> <div class="well-layer-row" style="font-size:12px;color:#64748b;font-weight:700"><div>From</div><div>To</div><div>Réteg</div><div>Megjegyzés</div><div></div></div> ${layers.map((x,i)=>`<div class="well-layer-row"><div>${esc(x.from||"")} m</div><div>${esc(x.to||"")} m</div><div><b>${esc(x.
+
+[csőszakasz]
+ber(o.to)<=Number(o.from)){toast("A To érték nagyobb kell legyen");return} p.well.casingSections.push(o);p.well.casingSections.sort((a,b)=>Number(a.from)-Number(b.from));p.well.casingData=true;p.well.screenData=p.well.casingSections.some(x=>x.type==="Szűrő"); save();closeModal();render();toast("Csőszakasz mentve"); } function editCasingSection(pid,i){ const p=db.projects.find(x=>x.id===pid),x=p?.well?.casingSections?.[i];if(!x)return; openModal("Cső / szűrőszakasz",`<form onsubmit="updateCasingSection(event,'${pid}',${i})"><div class="formgrid"> <div class="field"><label>From</label><input class="input" name="from" value="${esc(x.from||"")}"></div><div class="field"><label>To</label><input class="input" name="to" value="${esc(x.to||"")}"></div> <div class="field"><label>Típus</label>
+
+[csőszakasz]
+ection(ev,pid,i){ ev.preventDefault();const p=db.projects.find(x=>x.id===pid),x=p?.well?.casingSections?.[i];if(!x)return; Object.assign(x,Object.fromEntries(new FormData(ev.target).entries()));p.well.screenData=p.well.casingSections.some(a=>a.type==="Szűrő");save();closeModal();render();toast("Csőszakasz frissítve"); } function setWellConstructionExtras(pid){ if(!kpV2KutFinalGuard(pid)) return false; const p=db.projects.find(x=>x.id===pid);if(!p)return;p.well=p.well||{}; openModal("Kavicsolás / tömítés",`<form onsubmit="saveWellExtras(event,'${pid}')"><div class="formgrid"> <div class="field full"><label>Kavicsolás</label><input class="input" name="gravel" value="${esc(p.well.gravel||"")}"></div> <div class="field full"><label>Tömítés / cementezés</label><input class="input" na
+
+[csőszakasz]
+casingSections||[],issues=[]; layers.forEach((x,i)=>{if(Number(x.to)<=Number(x.from))issues.push(`Rétegszakasz ${i+1}: hibás mélység`);if(i&&Number(x.from)<Number(layers[i-1].to))issues.push(`Rétegsor átfedés a ${i}. szakasznál`)}); c.forEach((x,i)=>{if(Number(x.to)<=Number(x.from))issues.push(`Csőszakasz ${i+1}: hibás mélység`);if(!x.diameter)issues.push(`Csőszakasz ${i+1}: hiányzó átmérő`)}); openModal("Műszaki ellenőrzés",`<div style="padding:12px;border:1px solid ${issues.length?'#fde68a':'#bbf7d0'};border-radius:8px;background:${issues.length?'#fffbeb':'#f0fdf4'}">${issues.length?issues.map(x=>`⚠ ${esc(x)}`).join("<br>"):"✓ A rétegsor és a csövezés alapellenőrzése rendben."}</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Bezárás</button></div>`); } function execut
+
+[csőszakasz]
+r(x.to)<=Number(x.from))issues.push(`Rétegszakasz ${i+1}: hibás mélység`);if(i&&Number(x.from)<Number(layers[i-1].to))issues.push(`Rétegsor átfedés a ${i}. szakasznál`)}); c.forEach((x,i)=>{if(Number(x.to)<=Number(x.from))issues.push(`Csőszakasz ${i+1}: hibás mélység`);if(!x.diameter)issues.push(`Csőszakasz ${i+1}: hiányzó átmérő`)}); openModal("Műszaki ellenőrzés",`<div style="padding:12px;border:1px solid ${issues.length?'#fde68a':'#bbf7d0'};border-radius:8px;background:${issues.length?'#fffbeb':'#f0fdf4'}">${issues.length?issues.map(x=>`⚠ ${esc(x)}`).join("<br>"):"✓ A rétegsor és a csövezés alapellenőrzése rendben."}</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Bezárás</button></div>`); } function executionPanel(p){ const e=p.execution||{}, logs=Array.isArray(e.da
+
+[csövezés]
+ }; const quote={ id:qid, customerId:cid, projectId:pid, name:canonicalProjectName+" – előzetes ajánlat", status:"Piszkozat", source:"Létesítési engedély AI feldolgozás", items:[ {name:"Kútfúrás / kút kivitelezés",quantity:1,unit:"projekt",price:0}, {name:"Csövezés és szűrőzés",quantity:1,unit:"projekt",price:0}, {name:"Kútfej és kapcsolódó szerelvények",quantity:1,unit:"projekt",price:0}, {name:"Vízhozamvizsgálat / próbaszivattyúzás",quantity:1,unit:"projekt",price:0} ], technicalData:{ depth:vals.quote_depth||vals.project_depth||"", flow:vals.quote_flow||vals.project_flow||"", scope:vals.quote_scope||"" }, notes:"Az ajánlat az AI által feldolgozott létesítési engedély adatai alapján előkészítve. Ármegadás és
+
+[csövezés]
+ion=firstExact(flat,[ /([0-9][0-9 .]*\s*fm\s+DN\s*[0-9]+\s*KPE\s+osztóvezeték)/i, /osztóvezeték\s*[:\-]?\s*([0-9][0-9 .]*\s*fm\s+DN\s*[0-9]+\s*KPE)/i, /([0-9][0-9 .]*\s*fm\s+DN\s*[0-9]+\s*KPE\s+osztócső)/i ]); if(distribution)f.distributionPipe=cleanPermitValue(distribution); // Csövezési / szűrőzési szakaszok: az engedélyben szereplő konkrét // mélységtartomány + átmérő + anyag adatok kerüljenek át az ajánlatba. const pipeSections=[]; const pipeRe=/(?:0[,.]?[0-9]*\s*[–-]\s*[0-9]+[,.]?[0-9]*\s*m)[^.;]{0,180}?(?:Ø|ø)\s*([0-9]+(?:[,.][0-9]+)?\/[0-9]+(?:[,.][0-9]+)?)(?:\s*mm)?[^.;]{0,100}/gi; for(const mm of flat.matchAll(pipeRe)){ const full=mm[0].replace(/\s+/g," ").trim(); const range=(full.match(/([0-9]+[,.]?[0-9]*)\s*[–-]\s*([0-9]+[,.]?[0-9]*)\s*m/i)||[]); 
+
+[csövezés]
+kérelmező","tervező","adószám","engedélyszám","vízikönyvi", "helyrajzi szám","hrsz","eov","kút helye","talpmélység","kútmélység", "béléscső","szűrőzés","szűrőcső","vízadó","kútfej","vízhozam","vízigény", "éves vízmennyiség","öntözés","öntözött terület","üzemidő","vízkivétel", "vor","csövezés","próbaszivattyúzás","geofizika" ]; const secondary=["kút","vízhasználat","vízkészlet","kivitelezés","szivattyú","cső"]; const legal=["indokolás","jogorvoslat","fellebbezés","jogszabály","hatósági bizonyítvány"]; let coreHits=0, score=0; for(const k of core)if(t.includes(k)){coreHits++;score+=3} for(const k of secondary)if(t.includes(k))score+=1; for(const k of legal)if(t.includes(k))score-=2; return {score:Math.max(0,score),coreHits}; } function relevantPageNumbers(results){ 
+
+[csövezés]
+invent a diameter/material. if(!sections.length && casing){ sections=[{type:"Béléscső",from:"0,0",to:depth||"",len:depth||"",spec:casing}]; } const tech=[ ...(steelPipe ? [{type:"Acél iránycső",from:"",to:"",len:"",spec:steelPipe+" acél"}] : []), ...sections.map(x=>({ type:"Csövezés", from:String(x.from??""), to:String(x.to??""), len:String(x.len??""), spec:String(x.spec??"") })), ...filters.map(x=>({ type:"Szűrőzés", from:String(x.from??""), to:String(x.to??""), len:String(x.len??""), spec:String(x.spec??"") })) ]; ensureDrillingPriceList(); const drillingDiameter=drillingDiameterFromText(casing||p?.name||f.quoteTitle||""); const meterRate=drillingPriceForDiameter(drillingDiameter); const depthNu
+
+[csövezés]
+<div>${esc(x.type||"")} ${esc(x.diameter||"")}</div><div>${esc(x.material||"")}</div><div><button class="btn secondary small" onclick="editCasingSection('${p.id}',${i})">Szerkesztés</button></div></div>`).join(""); return `<h3>Rétegsor</h3>${layers||"Nincs rétegsor."}<h3 style="margin-top:16px">Csövezés / szűrőzés</h3>${cas||"Nincs csövezés."}<div class="project-page-actions" style="margin-top:10px"><button class="btn secondary small" onclick="addWellLayer('${p.id}')">+ Réteg</button><button class="btn secondary small" onclick="addCasingSection('${p.id}')">+ Cső / szűrő</button></div>`; } if(tab==="pump"){ const rows=(w.pumpTests||[]).map(x=>`<div class="project-mini-row"><div>${esc(x.date||"")}</div><div>${esc(String(x.minutes||0))} perc</div><div>${esc(String(x.flow||0))} l/min</div
+
+[addCasing]
+r</h3>${layers||"Nincs rétegsor."}<h3 style="margin-top:16px">Csövezés / szűrőzés</h3>${cas||"Nincs csövezés."}<div class="project-page-actions" style="margin-top:10px"><button class="btn secondary small" onclick="addWellLayer('${p.id}')">+ Réteg</button><button class="btn secondary small" onclick="addCasingSection('${p.id}')">+ Cső / szűrő</button></div>`; } if(tab==="pump"){ const rows=(w.pumpTests||[]).map(x=>`<div class="project-mini-row"><div>${esc(x.date||"")}</div><div>${esc(String(x.minutes||0))} perc</div><div>${esc(String(x.flow||0))} l/min</div><div>${esc(String(x.dynamicLevel||"—"))} m</div></div>`).join(""); return `<div class="project-page-actions"><button class="btn" onclick="openPumpTest('${p.id}')">+ Mérési pont</button><button class="btn secondary small" onclick="open
+
+[addCasing]
+${esc(x.material||"")}</div><div><button class="btn secondary small" onclick="editCasingSection('${p.id}',${i})">Szerkesztés</button></div></div>`).join("")||'<div class="empty">Még nincs csövezési adat.</div>'} <div class="well-const-actions"> <button class="btn secondary small" onclick="addCasingSection('${p.id}')">+ Cső / szűrő</button> <button class="btn secondary small" onclick="setWellConstructionExtras('${p.id}')">Kavicsolás / tömítés</button> <button class="btn small" onclick="validateWellConstruction('${p.id}')">Műszaki ellenőrzés</button> </div> </div>`; } function addWellLayer(pid){ openModal("Rétegszakasz",`<form onsubmit="saveWellLayer(event,'${pid}')"><div class="formgrid"> <div class="field"><label>From (m)</label><input class="input" type="number" s
+
+[addCasing]
+efault();const p=db.projects.find(x=>x.id===pid);if(!p?.well?.layers?.[i])return; Object.assign(p.well.layers[i],Object.fromEntries(new FormData(ev.target).entries()));p.well.layers.sort((a,b)=>Number(a.from)-Number(b.from));save();closeModal();render();toast("Rétegszakasz frissítve"); } function addCasingSection(pid){ openModal("Cső / szűrőszakasz",`<form onsubmit="saveCasingSection(event,'${pid}')"><div class="formgrid"> <div class="field"><label>From (m)</label><input class="input" type="number" step="0.1" name="from" required></div> <div class="field"><label>To (m)</label><input class="input" type="number" step="0.1" name="to" required></div> <div class="field"><label>Típus</label><select class="select" name="type"><option>Cső</option><option>Szűrő</option></select></div> <d
+
+[saveCasing]
+)return; Object.assign(p.well.layers[i],Object.fromEntries(new FormData(ev.target).entries()));p.well.layers.sort((a,b)=>Number(a.from)-Number(b.from));save();closeModal();render();toast("Rétegszakasz frissítve"); } function addCasingSection(pid){ openModal("Cső / szűrőszakasz",`<form onsubmit="saveCasingSection(event,'${pid}')"><div class="formgrid"> <div class="field"><label>From (m)</label><input class="input" type="number" step="0.1" name="from" required></div> <div class="field"><label>To (m)</label><input class="input" type="number" step="0.1" name="to" required></div> <div class="field"><label>Típus</label><select class="select" name="type"><option>Cső</option><option>Szűrő</option></select></div> <div class="field"><label>Átmérő</label><input class="input" name="diameter"
+
+[saveCasing]
+terial"></div> <div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="note"></textarea></div> </div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`); } function saveCasingSection(ev,pid){ ev.preventDefault();const p=db.projects.find(x=>x.id===pid);if(!p)return;p.well=p.well||{};p.well.casingSections=Array.isArray(p.well.casingSections)?p.well.casingSections:[]; const o=Object.fromEntries(new FormData(ev.target).entries()); if(Number(o.to)<=Number(o.from)){toast("A To érték nagyobb kell legyen");return} p.well.casingSections.push(o);p.well.casingSections.sort((a,b)=>Number(a.from)-Number(b.from));p.well.casingData=true;p.well.screenData=p.well.casingSectio
+
+[updateCasing]
+p.well.screenData=p.well.casingSections.some(x=>x.type==="Szűrő"); save();closeModal();render();toast("Csőszakasz mentve"); } function editCasingSection(pid,i){ const p=db.projects.find(x=>x.id===pid),x=p?.well?.casingSections?.[i];if(!x)return; openModal("Cső / szűrőszakasz",`<form onsubmit="updateCasingSection(event,'${pid}',${i})"><div class="formgrid"> <div class="field"><label>From</label><input class="input" name="from" value="${esc(x.from||"")}"></div><div class="field"><label>To</label><input class="input" name="to" value="${esc(x.to||"")}"></div> <div class="field"><label>Típus</label><select class="select" name="type"><option ${x.type==="Cső"?"selected":""}>Cső</option><option ${x.type==="Szűrő"?"selected":""}>Szűrő</option></select></div> <div class="field"><label>Átmérő</
+
+[updateCasing]
+ <div class="field full"><label>Megjegyzés</label><textarea class="textarea" name="note">${esc(x.note||"")}</textarea></div> </div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`); } function updateCasingSection(ev,pid,i){ ev.preventDefault();const p=db.projects.find(x=>x.id===pid),x=p?.well?.casingSections?.[i];if(!x)return; Object.assign(x,Object.fromEntries(new FormData(ev.target).entries()));p.well.screenData=p.well.casingSections.some(a=>a.type==="Szűrő");save();closeModal();render();toast("Csőszakasz frissítve"); } function setWellConstructionExtras(pid){ if(!kpV2KutFinalGuard(pid)) return false; const p=db.projects.find(x=>x.id===pid);if(!p)return;p.well=p.well||{}; openModal
