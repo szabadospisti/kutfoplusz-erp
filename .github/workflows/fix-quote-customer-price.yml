@@ -1,0 +1,135 @@
+name: Fix quote customer and pricing
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quote editor
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_customer = '''function quoteCustomerChanged(){
+ const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+}
+'''
+          new_customer = '''function quoteCustomerChanged(){
+ const ce=document.getElementById("q_customer");
+ const id=ce?.value||"";
+ const c=(db.customers||[]).find(x=>String(x.id)===String(id));
+ if(!c)return;
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+ const pe=document.getElementById("q_project");
+ if(pe){
+   const selected=String(pe.value||"");
+   const projects=(db.projects||[]).filter(p=>String(p.customerId||"")===String(id));
+   pe.innerHTML='<option value="">— Válassz projektet —</option>'+projects.map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+   pe.value=projects.some(p=>String(p.id)===selected)?selected:"";
+   pe.disabled=false;
+ }
+}
+'''
+          old_project = '''function quoteProjectChanged(){
+ const id=document.getElementById("q_project")?.value,p=(db.projects||[]).find(x=>x.id===id);if(!p)return;
+ if(p.customerId){const ce=document.getElementById("q_customer");if(ce)ce.value=p.customerId;quoteCustomerChanged()}
+'''
+          new_project = '''function quoteProjectChanged(){
+ const pe=document.getElementById("q_project");
+ const id=pe?.value||"";
+ const p=(db.projects||[]).find(x=>String(x.id)===String(id));
+ if(!p){
+   if(pe)pe.value="";
+   recalculateQuoteMainItem(false);
+   renderQuoteEditor();
+   return;
+ }
+ const ce=document.getElementById("q_customer");
+ const selectedCustomerId=ce?.value||"";
+ if(selectedCustomerId && String(p.customerId||"")!==String(selectedCustomerId)){
+   if(pe)pe.value="";
+   toast("Ez a projekt nem tartozik a kiválasztott ügyfélhez.");
+   recalculateQuoteMainItem(false);
+   renderQuoteEditor();
+   return;
+ }
+ if(p.customerId && !selectedCustomerId){
+   if(ce)ce.value=p.customerId;
+ }
+ quoteCustomerChanged();
+ if(pe)pe.value=id;
+'''
+          old_rate = ''' const meterRate=drillingPriceForDiameter(diameter);
+ if(!Array.isArray(quoteItems)) quoteItems=[];
+'''
+          new_rate = ''' const projectId=document.getElementById("q_project")?.value||"";
+ const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
+ const meterRate=quoteMeterRateForProject(diameter,project);
+ if(!Array.isArray(quoteItems)) quoteItems=[];
+'''
+          old_dup = ''' const current=String(quoteItems[0].desc||"");
+ const projectId=document.getElementById("q_project")?.value||"";
+ const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
+ const purpose='''
+          new_dup = ''' const current=String(quoteItems[0].desc||"");
+ const purpose='''
+
+          changes = 0
+          if old_customer in s:
+              s=s.replace(old_customer,new_customer,1); changes += 1
+          elif 'const projects=(db.projects||[]).filter(p=>String(p.customerId||"")===String(id));' in s:
+              pass
+          else: raise SystemExit('customer block not found')
+          if old_project in s:
+              s=s.replace(old_project,new_project,1); changes += 1
+          elif 'BIZTONSÁGI INVARIÁNS: ajánlat csak a kiválasztott ügyfél projektjéhez köthető.' not in s:
+              raise SystemExit('project block not found')
+          if old_rate in s:
+              s=s.replace(old_rate,new_rate,1); changes += 1
+          if old_dup in s:
+              s=s.replace(old_dup,new_dup,1); changes += 1
+
+          # Save-time invariant: an idegen projektet ne lehessen kézi DOM-módosítással sem elmenteni.
+          marker='''function saveQuoteFromTemplate(){\n const o=collectQuoteTemplate();db.quotes=db.quotes||[];'''
+          replacement='''function saveQuoteFromTemplate(){\n const customerId=String(document.getElementById("q_customer")?.value||"");\n const projectId=String(document.getElementById("q_project")?.value||"");\n const selectedProject=(db.projects||[]).find(x=>String(x.id)===projectId);\n if(!customerId || !projectId || !selectedProject || String(selectedProject.customerId||"")!==customerId){\n   toast("Az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető.");\n   return false;\n }\n const o=collectQuoteTemplate();db.quotes=db.quotes||[];'''
+          if marker in s:
+              s=s.replace(marker,replacement,1); changes += 1
+          elif 'Az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető.' not in s:
+              raise SystemExit('save marker not found')
+
+          p.write_text(s,encoding='utf-8')
+          print(f'quote patch changes: {changes}')
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          js='\n'.join(re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S))
+          Path('/tmp/all-scripts.js').write_text(js,encoding='utf-8')
+          PY
+          node --check /tmp/all-scripts.js
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No index changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: filter quote projects by customer and calculate undocumented price"
+          git push
