@@ -13393,12 +13393,15 @@ function recalculateQuoteMainItem(doRender=true){
  const diameterRaw=document.getElementById("q_pipe_diameter")?.value ?? "";
  const depth=huNumber(depthRaw);
  const diameter=String(diameterRaw).trim();
- const meterRate=drillingPriceForDiameter(diameter);
  if(!Array.isArray(quoteItems)) quoteItems=[];
  if(!quoteItems.length) quoteItems.push({desc:"",qty:1,unit:"db",price:0});
  const current=String(quoteItems[0].desc||"");
  const projectId=document.getElementById("q_project")?.value||"";
  const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
+ const isUndocumented=String(project?.projectType||"official")==="undocumented";
+ const meterRate=isUndocumented
+   ? undocumentedDrillingPriceForDiameter(diameter)
+   : drillingPriceForDiameter(diameter);
  const purpose=String(project?.well?.purpose||project?.purpose||document.getElementById("q_purpose")?.value||document.getElementById("q_subject")?.value||"");
  const irrigation=/öntöz/i.test(purpose);
  const wellWord=irrigation?"öntözőkút":"kút";
