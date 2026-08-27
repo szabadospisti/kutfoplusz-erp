@@ -1,0 +1,1 @@
+The 2.0.0 release candidate was audited locally. GitHub upload is intentionally blocked until the verified full file contents can be transferred without using a placeholder or truncating the build.
