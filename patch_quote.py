@@ -3,7 +3,7 @@ p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 old='''function quoteCustomerChanged(){
  const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
- ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||"");
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
 }
 '''
 new='''function quoteCustomerChanged(){
