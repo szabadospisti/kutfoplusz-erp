@@ -1,19 +1,9 @@
 from pathlib import Path
+import re
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
-changes=[]
 
-def replace_once(old,new,label):
-    global s
-    if old in s:
-        s=s.replace(old,new,1); changes.append(label); return
-    print(label+': already applied or source differs')
-
-replace_once('''function quoteCustomerChanged(){
- const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
- ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||"");
-}
-''','''function quoteCustomerChanged(){
+customer_new='''function quoteCustomerChanged(){
  const ce=document.getElementById("q_customer");
  const id=ce?.value||"";
  const c=(db.customers||[]).find(x=>String(x.id)===String(id));
@@ -28,12 +18,8 @@ replace_once('''function quoteCustomerChanged(){
    pe.disabled=false;
  }
 }
-''','customer filter')
-
-replace_once('''function quoteProjectChanged(){
- const id=document.getElementById("q_project")?.value,p=(db.projects||[]).find(x=>x.id===id);if(!p)return;
- if(p.customerId){const ce=document.getElementById("q_customer");if(ce)ce.value=p.customerId;quoteCustomerChanged()}
-''','''function quoteProjectChanged(){
+'''
+project_new='''function quoteProjectChanged(){
  const pe=document.getElementById("q_project");
  const id=pe?.value||"";
  const p=(db.projects||[]).find(x=>String(x.id)===String(id));
@@ -52,29 +38,20 @@ replace_once('''function quoteProjectChanged(){
    renderQuoteEditor();
    return;
  }
- if(p.customerId && !selectedCustomerId){
-   if(ce)ce.value=p.customerId;
- }
+ if(p.customerId && !selectedCustomerId && ce) ce.value=p.customerId;
  quoteCustomerChanged();
  if(pe)pe.value=id;
-''','project/customer invariant')
+'''
 
-replace_once(''' const meterRate=drillingPriceForDiameter(diameter);
- if(!Array.isArray(quoteItems)) quoteItems=[];
-''',''' const projectId=document.getElementById("q_project")?.value||"";
- const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
- const meterRate=quoteMeterRateForProject(diameter,project);
- if(!Array.isArray(quoteItems)) quoteItems=[];
-''','project-aware price')
-
-replace_once(''' const current=String(quoteItems[0].desc||"");
- const projectId=document.getElementById("q_project")?.value||"";
- const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
- const purpose='''',''' const current=String(quoteItems[0].desc||"");
- const purpose='''','duplicate project declaration removal')
-
-replace_once('''function saveQuoteFromTemplate(){
- const o=collectQuoteTemplate();db.quotes=db.quotes||[];''','''function saveQuoteFromTemplate(){
+s,n1=re.subn(r'function quoteCustomerChanged\(\)\{.*?\n\}\n(?=function quoteMeterRateForProject)',customer_new,s,count=1,flags=re.S)
+s,n2=re.subn(r'function quoteProjectChanged\(\)\{.*?\n(?= const w=p\.well\|\|\{)',project_new,s,count=1,flags=re.S)
+# Current quote calculator must derive its rate from the selected project type.
+s=s.replace(' const meterRate=drillingPriceForDiameter(diameter);\n',' const projectId=document.getElementById("q_project")?.value||"";\n const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));\n const meterRate=quoteMeterRateForProject(diameter,project);\n',1)
+# Remove the now-duplicate project lookup in the calculator if it exists.
+s=s.replace(' const current=String(quoteItems[0].desc||"");\n const projectId=document.getElementById("q_project")?.value||"";\n const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));\n const purpose=', ' const current=String(quoteItems[0].desc||"");\n const purpose=',1)
+# Defense in depth at save time.
+marker='function saveQuoteFromTemplate(){\n const o=collectQuoteTemplate();db.quotes=db.quotes||[];'
+replacement='''function saveQuoteFromTemplate(){
  const customerId=String(document.getElementById("q_customer")?.value||"");
  const projectId=String(document.getElementById("q_project")?.value||"");
  const selectedProject=(db.projects||[]).find(x=>String(x.id)===projectId);
@@ -82,7 +59,10 @@ replace_once('''function saveQuoteFromTemplate(){
    toast("Az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető.");
    return false;
  }
- const o=collectQuoteTemplate();db.quotes=db.quotes||[];''','save invariant')
+ const o=collectQuoteTemplate();db.quotes=db.quotes||[];'''
+s=s.replace(marker,replacement,1)
 
+if n1!=1 or n2!=1:
+    raise SystemExit(f'quote functions not found: customer={n1}, project={n2}')
 p.write_text(s,encoding='utf-8')
-print('applied:',', '.join(changes) if changes else 'none')
+print(f'quote patch applied: customer={n1}, project={n2}')
