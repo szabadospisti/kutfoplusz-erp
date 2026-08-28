@@ -1,0 +1,52 @@
+name: one-time quote UI fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quote technical UI safely
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='''<div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>\n    <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>\n    <div><label>Béléscső átmérő (mm)</label><input id="q_pipe_diameter" class="input" type="text" readonly title="A kapcsolt projektből érkező átmérő"></div>'''
+          new='''<div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>\n    <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>\n    <div><label>Béléscső átmérő (mm)</label><select id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható" onchange="recalculateQuoteMainItem()"><option value="125">Ø 125 mm</option><option value="160">Ø 160 mm</option><option value="225">Ø 225 mm</option><option value="280">Ø 280 mm</option><option value="315">Ø 315 mm</option></select></div>'''
+          if old not in s:
+              raise SystemExit('TARGET_HTML_NOT_FOUND')
+          s=s.replace(old,new,1)
+          old_css='.offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}'
+          new_css='.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.offer-grid select.input{height:42px;min-height:42px;padding:10px 11px;box-sizing:border-box}'
+          if old_css not in s:
+              raise SystemExit('TARGET_CSS_NOT_FOUND')
+          s=s.replace(old_css,new_css,1)
+          marker='<!-- QUOTE_UI_FIX_2026_08_28 -->'
+          if marker not in s:
+              s=s.replace('<head>', '<head>\n'+marker, 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate HTML structure
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható"' in s
+          assert '.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}' in s
+          assert 'offer-grid select.input{height:42px;min-height:42px' in s
+          assert s.count('<script') == s.count('</script>')
+          print('QUOTE_UI_FIX_VALIDATION=PASS')
+          PY
+      - name: Commit and remove one-time workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github/workflows/quote_ui_fix_once.yml
+          git rm .github/workflows/quote_ui_fix_once.yml
+          git commit -m 'fix: equalize quote technical fields and selectable diameter'
+          git push
