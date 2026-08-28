@@ -1,7 +1,7 @@
 /* Kútfő Plusz ERP 2.0 – quote preview/layout/data cleanup */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-28-01";
+  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-28-02";
 
   function cleanNumber(v){
     const s=String(v??"").trim().replace(/,/g,".");
@@ -70,13 +70,13 @@
         const waterRegex=new RegExp('(<div class="qv-text[^>]*>)'+waterText.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(</div>)');
         p2=p2.replace(waterRegex,'');
 
-        // A vízigény a műszaki tartalom része, ezért az első oldal aljára kerül.
         if(String(q.waterNeed||"").trim()){
           const escaped=String(q.waterNeed||"").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          p1=p1.replace('</div>','<div class="qv-text" style="left:150px;top:1180px;width:500px">Tervezett vízigény: '+escaped+'</div></div>');
+          const addition='<div class="qv-text" style="left:150px;top:1180px;width:500px">Tervezett vízigény: '+escaped+'</div>';
+          const end=p1.lastIndexOf('</div>');
+          if(end>=0) p1=p1.slice(0,end)+addition+p1.slice(end);
         }
 
-        // A második oldal ne ismételje meg a cégfejlécet és a kék fejlécvonalat.
         p2=p2.replace('<div class="qv-page">','<div class="qv-page"><div class="qv-white" style="left:0;top:0;width:1020px;height:225px"></div>');
         return p1+p2;
       };
