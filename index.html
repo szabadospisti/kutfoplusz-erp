@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="hu">
 <head>
+<!-- QUOTE_ORDER_FIX_2026_08_28 -->
 <!-- QUOTE_UI_FIX_2026_08_28 -->
 <!-- v1.5.61.3 – Beszerzési igény GUI és navigáció – verzióazonosítás javítás -->
 <meta name="app-version" content="2.0.0"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta name="build-version" content="2.0.0">
@@ -13300,9 +13301,9 @@ function openQuoteModalLegacy(customerId){
   </section>
   <section class="offer-card"><h3>4. MŰSZAKI TARTALOM</h3>
    <div class="offer-grid">
+    <div><label>Béléscső átmérő (mm)</label><select id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható" onchange="recalculateQuoteMainItem()"><option value="125">Ø 125 mm</option><option value="160">Ø 160 mm</option><option value="225">Ø 225 mm</option><option value="280">Ø 280 mm</option><option value="315">Ø 315 mm</option></select></div>
     <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>
     <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>
-    <div><label>Béléscső átmérő (mm)</label><select id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható" onchange="recalculateQuoteMainItem()"><option value="125">Ø 125 mm</option><option value="160">Ø 160 mm</option><option value="225">Ø 225 mm</option><option value="280">Ø 280 mm</option><option value="315">Ø 315 mm</option></select></div>
     <input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
    </div>
    <h4>Csövezés / szűrőzés</h4>
