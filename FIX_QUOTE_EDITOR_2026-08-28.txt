@@ -1,0 +1,49 @@
+KÚTFŐ PLUSZ ERP 2.0 – AJÁNLAT SZERKESZTŐ JAVÍTÁS
+============================================================
+
+Dátum: 2026-08-28
+Fix azonosító: ERP2.0-QUOTE-UI-FIX-2026-08-28-01
+
+PROBLÉMA 1
+Az ajánlat szerkesztő projektválasztója minden projektet megjelenített, nem csak a kiválasztott ügyfélhez tartozókat.
+
+JAVÍTÁS
+- ügyfél kiválasztásakor a projektlista ügyfél szerint szűrődik;
+- idegen projekt kézi kiválasztása blokkolva van;
+- mentés előtt külön ellenőrzés marad érvényben;
+- a projekt → ügyfél kapcsolat customerId/clientId mezővel ellenőrzött.
+
+PROBLÉMA 2
+A béléscső átmérő mező readonly input volt, ezért az ajánlatban a projektből kapott értéket nem lehetett módosítani.
+
+JAVÍTÁS
+- a mező select lett;
+- az opciók a db.drillingPriceList aktuális árlistájából készülnek;
+- a 160 mm automatikusan elérhető, ha az árlistában szerepel;
+- projektből érkező átmérő továbbra is alapértelmezett;
+- átmérő módosításakor az ajánlati főtétel újraszámolódik.
+
+MEGLÉVŐ, MEGTARTOTT VÉDELEM
+A saveQuoteFromTemplate() már korábban is ellenőrizte, hogy az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető. A fix ezt a védelemhez illeszkedő UI-szűréssel egészíti ki.
+
+FORRÁSKEZELÉS
+Az index.html 1,57 MB-os monolitikus forrását nem írtuk át. A quote_preview_pages.js eredeti payloadja immutable Git commitban megmaradt:
+acc20abf63d707a2bc7a09aadcd38363478bdb1a
+
+A jelenlegi quote_preview_pages.js kompatibilitási wrapperként tölti be ezt az eredeti payloadot, majd a quote editor javításait alkalmazza.
+
+ELLENŐRZÉS
+- wrapper JavaScript syntax: PASS (node --check)
+- eredeti payload referencia: rögzítve
+- fix azonosító: jelen van
+- 160 mm: árlista-alapú opció
+- ügyfél/projekt kapcsolat: UI + mentési védelem
+
+KÖVETKEZŐ REGRESSZIÓS PONTOK
+1. Új ajánlat → ügyfél → csak saját projektek.
+2. Projekt kiválasztása → átmérő automatikus átvétele.
+3. 160 mm kiválasztása → ár újraszámolása.
+4. Mélység módosítása → ár újraszámolása.
+5. Mentés → újranyitás → ügyfél/projekt/átmérő/ár változatlan.
+6. Idegen projekt mentési kísérlet → blokkolás.
+7. Előnézet/PDF/Word → meglévő payload működése.
