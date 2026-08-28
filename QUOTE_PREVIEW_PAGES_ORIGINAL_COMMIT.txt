@@ -1,0 +1,2 @@
+Original quote_preview_pages.js preserved by immutable Git commit acc20abf63d707a2bc7a09aadcd38363478bdb1a.
+The live file is now a compatibility wrapper that loads that exact immutable payload and applies the ERP 2.0 quote-editor fix.
