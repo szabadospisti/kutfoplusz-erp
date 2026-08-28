@@ -13,12 +13,14 @@
   const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-01";
   function projectBelongsToCustomer(projectId,customerId){
     if(!projectId||!customerId)return true;
-    const p=(window.db?.projects||[]).find(x=>String(x.id)===String(projectId));
+    const p=((typeof db!=="undefined"&&db)?db.projects:[]).find(x=>String(x.id)===String(projectId));
     return !!p&&String(p.customerId||p.clientId||"")===String(customerId);
   }
   function drillingDiameterRows(){
     try{if(typeof window.ensureDrillingPriceList==="function")window.ensureDrillingPriceList()}catch(e){}
-    return Array.isArray(window.db?.drillingPriceList)?window.db.drillingPriceList.filter(x=>String(x?.diameter??"").trim()):[];
+    return Array.isArray(typeof db!=="undefined"&&db?db.drillingPriceList:null)
+      ? db.drillingPriceList.filter(x=>String(x?.diameter??"").trim())
+      : [];
   }
   function enhanceQuoteEditorBody(body,customerId){
     const host=document.createElement("div");host.innerHTML=String(body||"");
@@ -26,7 +28,7 @@
     if(projectSelect){
       const selectedCustomer=String(customerId||"").trim();
       const selectedProject=String(projectSelect.value||"").trim();
-      const projects=(window.db?.projects||[]).filter(p=>!selectedCustomer||String(p.customerId||p.clientId||"")===selectedCustomer);
+      const projects=((typeof db!=="undefined"&&db)?db.projects:[]).filter(p=>!selectedCustomer || String(p.customerId||p.clientId||"")===selectedCustomer);
       const frag=document.createDocumentFragment();
       const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="— Válassz projektet —";frag.appendChild(placeholder);
       projects.forEach(p=>{const o=document.createElement("option");o.value=String(p.id);o.textContent=`${p.id} – ${p.name||""}`;if(String(p.id)===selectedProject)o.selected=true;frag.appendChild(o)});
@@ -45,7 +47,7 @@
   function filterQuoteProjects(){
     const ce=document.getElementById("q_customer"),pe=document.getElementById("q_project");if(!pe)return;
     const customerId=String(ce?.value||"").trim(),current=String(pe.value||"").trim();
-    const projects=(window.db?.projects||[]).filter(p=>!customerId||String(p.customerId||p.clientId||"")===customerId);
+    const projects=((typeof db!=="undefined"&&db)?db.projects:[]).filter(p=>!customerId || String(p.customerId||p.clientId||"")===customerId);
     const valid=current&&projects.some(p=>String(p.id)===current);
     pe.innerHTML=`<option value="">— Válassz projektet —</option>`+projects.map(p=>`<option value="${typeof window.esc==='function'?window.esc(p.id):String(p.id)}">${typeof window.esc==='function'?window.esc(p.id):String(p.id)} – ${typeof window.esc==='function'?window.esc(p.name||""):String(p.name||"")}</option>`).join("");
     pe.value=valid?current:"";
@@ -79,5 +81,5 @@
     return originalSaveQuoteFromTemplate.apply(this,arguments);
   };
   window.KUTFOPLUSZ_QUOTE_UI_PATCH=PATCH_VERSION;
-  window.KUTFOPLUSZ_QUOTE_UI_PATCH_TEST=function(){const rows=drillingDiameterRows(),has160=rows.some(x=>String(x.diameter).trim()==="160"),p=(window.db?.projects||[])[0],customerId=p?String(p.customerId||p.clientId||""):"";return{patch:PATCH_VERSION,diameters:rows.map(x=>String(x.diameter)),has160,projectCustomerCheck:p?projectBelongsToCustomer(p.id,customerId):null}};
+  window.KUTFOPLUSZ_QUOTE_UI_PATCH_TEST=function(){const rows=drillingDiameterRows(),has160=rows.some(x=>String(x.diameter).trim()==="160"),p=((typeof db!=="undefined"&&db)?db.projects:[])[0],customerId=p?String(p.customerId||p.clientId||""):"";return{patch:PATCH_VERSION,diameters:rows.map(x=>String(x.diameter)),has160,projectCustomerCheck:p?projectBelongsToCustomer(p.id,customerId):null}};
 })();
