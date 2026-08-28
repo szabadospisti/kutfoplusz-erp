@@ -13301,7 +13301,8 @@ function openQuoteModalLegacy(customerId){
    <div class="offer-grid">
     <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>
     <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>
-    <input type="hidden" id="q_pipe_diameter"><input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
+    <div><label>Béléscső átmérő (mm)</label><input id="q_pipe_diameter" class="input" type="text" readonly title="A kapcsolt projektből érkező átmérő"></div>
+    <input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
    </div>
    <h4>Csövezés / szűrőzés</h4>
    <div class="offer-table-wrap"><table class="table"><thead><tr><th>Megnevezés</th><th>Kezdő</th><th>Vég</th><th>Hossz</th><th>Műszaki adat</th><th></th></tr></thead><tbody id="q_tech"></tbody></table></div>
