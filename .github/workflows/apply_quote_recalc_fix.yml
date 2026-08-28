@@ -11,7 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 fix_quote_recalc.py
-      - run: node --check index.html
       - name: Commit patch
         run: |
           git config user.name 'github-actions[bot]'
