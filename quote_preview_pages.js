@@ -1,10 +1,13 @@
 /* Kútfő Plusz ERP 2.0 – quote editor compatibility wrapper */
 (function(){
-  document.write('<script src="https://raw.githubusercontent.com/szabadospisti/kutfoplusz-erp/acc20abf63d707a2bc7a09aadcd38363478bdb1a/quote_preview_pages.js"><\\/script>');
+  const s=document.createElement("script");
+  s.src="https://raw.githubusercontent.com/szabadospisti/kutfoplusz-erp/acc20abf63d707a2bc7a09aadcd38363478bdb1a/quote_preview_pages.js";
+  s.async=false;
+  document.head.appendChild(s);
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-04";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-05";
   function installLayout(){
     if(document.getElementById("kutfo-quote-three-fields-style"))return;
     const s=document.createElement("style");s.id="kutfo-quote-three-fields-style";
