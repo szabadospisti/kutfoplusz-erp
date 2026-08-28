@@ -3133,10 +3133,14 @@ function huFormatFlexible(v,maxDecimals=2){
 function huFormatInput(el,decimals=1){
   if(!el) return;
   const raw=String(el.value??"");
-  if(!raw.trim()){el.value="";return;}
-  const n=huNumber(raw);
-  if(!Number.isFinite(n)) return;
-  el.value=n.toLocaleString("hu-HU",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+  if(!raw.trim()) return;
+  const start=typeof el.selectionStart==="number"?el.selectionStart:null;
+  const before=start==null?raw:raw.slice(0,start);
+  const normalized=raw.replace(/\\./g,",").replace(/[^0-9,\\-]/g,"");
+  if(normalized===raw) return;
+  const normalizedBefore=before.replace(/\\./g,",").replace(/[^0-9,\\-]/g,"");
+  el.value=normalized;
+  if(start!=null){const pos=Math.min(normalized.length,normalizedBefore.length);try{el.setSelectionRange(pos,pos)}catch(e){}}
 }
 function huFormatMoneyInputValue(v){ const n=huNumber(v); return n? n.toLocaleString("hu-HU",{minimumFractionDigits:0,maximumFractionDigits:0}):"0"; }
 function huFormatMoneyInput(el){
@@ -13295,7 +13299,7 @@ function openQuoteModalLegacy(customerId){
   </section>
   <section class="offer-card"><h3>4. MŰSZAKI TARTALOM</h3>
    <div class="offer-grid">
-    <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="recalculateQuoteMainItem()"></div>
+    <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>
     <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>
     <input type="hidden" id="q_pipe_diameter"><input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
    </div>
