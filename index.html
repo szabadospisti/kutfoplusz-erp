@@ -13382,7 +13382,7 @@ function quoteProjectChanged(){
  // Az ajánlati árlista a csőátmérőhöz (béléscsőhöz) tartozó Ft/m árat használja.
  // A furat/iránycső átmérője (pl. 419/405) ettől külön műszaki adat.
  const casing=w.casingDiameter??w.casing??p.casingDiameter??"";
- const diameter=casing || w.diameter || w.drillingDiameter || p.diameter || "";
+ const diameter=casing || w.diameter || w.drillingDiameter || p.diameter || drillingDiameterFromText(p.name||p.quoteTitle||"") || "";
  const steel=w.steelPipe??w.steelPipeDiameter??"";
  const screen=w.screenInterval??w.filter??"";
  const purpose=w.purpose??p.purpose??p.irrigation?.purpose??p.irrigation?.waterUsePurpose??"";
