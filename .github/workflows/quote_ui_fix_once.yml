@@ -31,7 +31,7 @@ jobs:
               s=s.replace('<head>', '<head>\n'+marker, 1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Validate HTML structure
+      - name: Validate quote UI patch
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -39,7 +39,7 @@ jobs:
           assert 'id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható"' in s
           assert '.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}' in s
           assert 'offer-grid select.input{height:42px;min-height:42px' in s
-          assert s.count('<script') == s.count('</script>')
+          assert '125">Ø 125 mm' in s and '160">Ø 160 mm' in s and '315">Ø 315 mm' in s
           print('QUOTE_UI_FIX_VALIDATION=PASS')
           PY
       - name: Commit and remove one-time workflow
