@@ -13416,7 +13416,9 @@ function quoteProjectChanged(){
  // az elmentett ajánlat ára később nem változik automatikusan.
  recalculateQuoteMainItem(false);
  renderQuoteEditor();
-}
+
+ // PROJECT_SELECTION_RECALC_FIX
+ recalculateQuoteMainItem(false);}
 function recalculateQuoteMainItem(doRender=true){
  const depthRaw=document.getElementById("q_depth")?.value ?? "";
  const diameterRaw=document.getElementById("q_pipe_diameter")?.value ?? "";
