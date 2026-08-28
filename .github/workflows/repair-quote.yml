@@ -1,0 +1,69 @@
+name: repair-quote
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-quote.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quote filtering and pricing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old=''' const projectOptions=(db.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
+          new=''' const selectedCustomerId=String(customerId||"");
+ const projectOptions=(db.projects||[]).filter(p=>!selectedCustomerId || String(p.customerId||"")===selectedCustomerId).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");'''
+          if old in s:
+              s=s.replace(old,new,1)
+          old='''function quoteCustomerChanged(){
+ const id=document.getElementById("q_customer").value,c=(db.customers||[]).find(x=>x.id===id);if(!c)return;
+ ["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+}'''
+          new='''function quoteCustomerChanged(){
+ const id=String(document.getElementById("q_customer")?.value||"");
+ const c=(db.customers||[]).find(x=>String(x.id)===id);
+ if(c)["name","address","tax","phone","email"].forEach(k=>{const el=document.getElementById("q_client_"+k);if(el)el.value=c[k]||""});
+ const pe=document.getElementById("q_project");
+ if(pe){
+   const current=String(pe.value||"");
+   const projects=(db.projects||[]).filter(p=>!id || String(p.customerId||"")===id);
+   pe.innerHTML=`<option value="">— Válassz projektet —</option>`+projects.map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+   if(projects.some(p=>String(p.id)===current)) pe.value=current;
+   else pe.value="";
+ }
+}'''
+          if old in s:
+              s=s.replace(old,new,1)
+          marker='function recalculateQuoteMainItem(doRender=true){'
+          idx=s.index(marker)
+          target=' const meterRate=drillingPriceForDiameter(diameter);'
+          pos=s.index(target,idx)
+          replacement=''' const projectId=document.getElementById("q_project")?.value||"";
+ const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
+ const isUndocumented=String(project?.projectType||"").toLowerCase()==="undocumented" || project?.isUndocumented===true || project?.documentationRequired===false;
+ const meterRate=isUndocumented ? undocumentedDrillingPriceForDiameter(diameter) : drillingPriceForDiameter(diameter);'''
+          s=s[:pos]+s[pos:].replace(target,replacement,1)
+          dup=''' const projectId=document.getElementById("q_project")?.value||"";
+ const project=(db.projects||[]).find(x=>String(x.id)===String(projectId));
+ const purpose=String(project?.well?.purpose||project?.purpose||document.getElementById("q_purpose")?.value||document.getElementById("q_subject")?.value||"");'''
+          s=s.replace(dup,''' const purpose=String(project?.well?.purpose||project?.purpose||document.getElementById("q_purpose")?.value||document.getElementById("q_subject")?.value||"");''',1)
+          p.write_text(s)
+          PY
+          python3 - <<'PY'
+          import re, subprocess
+          s=open('index.html',encoding='utf-8').read()
+          js='\n'.join(re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S|re.I))
+          open('/tmp/index.js','w',encoding='utf-8').write(js)
+          PY
+          node --check /tmp/index.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'fix: filter quote projects and use undocumented pricing'
+          git push
