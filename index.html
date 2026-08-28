@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="hu">
 <head>
+<!-- QUOTE_UI_FIX_2026_08_28 -->
 <!-- v1.5.61.3 – Beszerzési igény GUI és navigáció – verzióazonosítás javítás -->
 <meta name="app-version" content="2.0.0"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta name="build-version" content="2.0.0">
 <meta charset="utf-8">
@@ -608,7 +609,7 @@
 @media(max-width:900px){.wl-grid,.wl-stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.wl-shell{margin:-17px;padding:12px}.wl-grid{grid-template-columns:1fr 1fr;gap:10px}.wl-grid input,.wl-grid select{font-size:12px}.wl-table{min-width:0;table-layout:fixed}.wl-table th{font-size:10px;padding:6px 2px}.wl-table td{padding:4px 2px}.wl-table td input{font-size:10px;padding:6px 2px}.wl-table th:nth-child(1),.wl-table th:nth-child(2){width:43px}.wl-table th:nth-child(3){width:18%}.wl-table th:nth-child(4){width:20%}.wl-table th:nth-child(5){width:21%}.wl-table th:nth-child(6){width:27%}.wl-stats{grid-template-columns:1fr 1fr}}
 @media print{.sidebar,.top,.wl-actions{display:none!important}.wl-shell{margin:0;padding:0;background:#fff}.wl-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
 </style><style id="offer-template-css">
-.offer-editor{background:#f4f6f8;padding:4px}.offer-top{display:flex;justify-content:space-between;border-bottom:3px solid #2d78b8;padding:10px 4px 14px;margin-bottom:14px}.offer-company{font-size: 17px;font-weight:800;color:#2078b5}.offer-heading{font-size:24px;font-weight:800;color:#2078b5}.offer-card{background:#fff;border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 1px 7px #0001}.offer-card h3{margin:0 0 12px;color:#2878b0}.offer-card h4{color:#476f91}.offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.offer-grid label{display:block;font-size:12px;font-weight:700;color:#607284;margin:5px 0}.offer-grid .input,.offer-card textarea{width:100%;box-sizing:border-box}.offer-large{min-height:80px}.offer-listarea{min-height:170px}.offer-declarations{min-height:240px}.offer-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.offer-total{text-align:right;margin-top:12px;font-size:15px}@media(max-width:800px){.offer-grid,.offer-two{grid-template-columns:1fr}}
+.offer-editor{background:#f4f6f8;padding:4px}.offer-top{display:flex;justify-content:space-between;border-bottom:3px solid #2d78b8;padding:10px 4px 14px;margin-bottom:14px}.offer-company{font-size: 17px;font-weight:800;color:#2078b5}.offer-heading{font-size:24px;font-weight:800;color:#2078b5}.offer-card{background:#fff;border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 1px 7px #0001}.offer-card h3{margin:0 0 12px;color:#2878b0}.offer-card h4{color:#476f91}.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.offer-grid select.input{height:42px;min-height:42px;padding:10px 11px;box-sizing:border-box}.offer-grid label{display:block;font-size:12px;font-weight:700;color:#607284;margin:5px 0}.offer-grid .input,.offer-card textarea{width:100%;box-sizing:border-box}.offer-large{min-height:80px}.offer-listarea{min-height:170px}.offer-declarations{min-height:240px}.offer-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.offer-total{text-align:right;margin-top:12px;font-size:15px}@media(max-width:800px){.offer-grid,.offer-two{grid-template-columns:1fr}}
 <style id="quote-calculation-column-widths">
 /* Az árkalkulációban a Mennyiség és Egység csak a fejlécükhöz szükséges szélességet kapja. */
 .offer-table-wrap .table{table-layout:fixed}
@@ -13301,7 +13302,7 @@ function openQuoteModalLegacy(customerId){
    <div class="offer-grid">
     <div><label>Talpmélység (m)</label><input id="q_depth" class="input" type="text" inputmode="decimal" oninput="huFormatInput(this,1)" onchange="huFormatInput(this,1);recalculateQuoteMainItem()" onblur="huFormatInput(this,1)"></div>
     <div><label>Tervezett vízigény</label><input id="q_water_need" class="input" placeholder="pl. 800 l/p"></div>
-    <div><label>Béléscső átmérő (mm)</label><input id="q_pipe_diameter" class="input" type="text" readonly title="A kapcsolt projektből érkező átmérő"></div>
+    <div><label>Béléscső átmérő (mm)</label><select id="q_pipe_diameter" class="input" title="A projektből érkező átmérő, ajánlatban módosítható" onchange="recalculateQuoteMainItem()"><option value="125">Ø 125 mm</option><option value="160">Ø 160 mm</option><option value="225">Ø 225 mm</option><option value="280">Ø 280 mm</option><option value="315">Ø 315 mm</option></select></div>
     <input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
    </div>
    <h4>Csövezés / szűrőzés</h4>
