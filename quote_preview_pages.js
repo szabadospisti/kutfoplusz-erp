@@ -9,13 +9,13 @@
   p.async=false;
   document.head.appendChild(p);
   const v=document.createElement("script");
-  v.src="quote_preview_layout_fix.js?v=1";
+  v.src="quote_preview_layout_fix.js?v=2";
   v.async=false;
   document.head.appendChild(v);
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-07";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-08";
   function installLayout(){
     if(document.getElementById("kutfo-quote-three-fields-style"))return;
     const s=document.createElement("style");s.id="kutfo-quote-three-fields-style";
@@ -44,6 +44,6 @@
     if(!(window.__KUTFOPLUSZ_QUOTE_UI_PATCH_OPEN&&window.__KUTFOPLUSZ_QUOTE_UI_PATCH_CUSTOMER&&window.__KUTFOPLUSZ_QUOTE_UI_PATCH_PROJECT&&window.__KUTFOPLUSZ_QUOTE_UI_PATCH_SAVE))setTimeout(install,0);
   }
   window.KUTFOPLUSZ_QUOTE_UI_PATCH=PATCH_VERSION;
-  window.KUTFOPLUSZ_QUOTE_UI_PATCH_TEST=function(){const rows=priceRows(),p=projects()[0],cid=p?String(p.customerId||p.clientId||""):"";return{patch:PATCH_VERSION,diameters:rows.map(x=>String(x.diameter)),has160:rows.some(x=>String(x.diameter).trim()==="160"),projectCustomerCheck:p?projectBelongsToCustomer(p.id,cid):null,threeFieldLayout:true};};
+  window.KUTFOPLUSZ_QUOTE_UI_PATCH_TEST=function(){const rows=priceRows(),p=projects()[0],cid=p?String(p.customerId||p.clientId||""):"";return{patch:PATCH_VERSION,diameters:rows.map(x=>String(x.diameter)),has160:rows.some(x=>String(x.diameter).trim()==="160"),projectCustomerCheck:p?projectBelongsToCustomer(p.id,cid):null,threeFieldLayout:true,fullPagePreview:true};};
   install();window.addEventListener("load",install,{once:false});
 })();
