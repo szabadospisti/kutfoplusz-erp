@@ -17,7 +17,7 @@ PROBLÉMA 2
 A béléscső átmérő mező readonly input volt, ezért az ajánlatban a projektből kapott értéket nem lehetett módosítani.
 
 JAVÍTÁS
-- a mező select lett;
+- a live quote editor compatibility wrapperben a mező selectként jelenik meg;
 - az opciók a db.drillingPriceList aktuális árlistájából készülnek;
 - a 160 mm automatikusan elérhető, ha az árlistában szerepel;
 - projektből érkező átmérő továbbra is alapértelmezett;
@@ -27,17 +27,23 @@ MEGLÉVŐ, MEGTARTOTT VÉDELEM
 A saveQuoteFromTemplate() már korábban is ellenőrizte, hogy az ajánlat csak a kiválasztott ügyfél saját projektjéhez menthető. A fix ezt a védelemhez illeszkedő UI-szűréssel egészíti ki.
 
 FORRÁSKEZELÉS
-Az index.html 1,57 MB-os monolitikus forrását nem írtuk át. A quote_preview_pages.js eredeti payloadja immutable Git commitban megmaradt:
+Az index.html 1,57 MB-os monolitikus forrását közvetlenül nem írtuk át, mert a jelenlegi GitHub connector nem támogat részleges fájlpatch-et ekkora monolitikus fájlon.
+
+A quote_preview_pages.js eredeti payloadja immutable Git commitban megmaradt:
 acc20abf63d707a2bc7a09aadcd38363478bdb1a
 
 A jelenlegi quote_preview_pages.js kompatibilitási wrapperként tölti be ezt az eredeti payloadot, majd a quote editor javításait alkalmazza.
 
+MEGJEGYZÉS A FORRÁS-TISZTÍTÁSHOZ
+Megkíséreltük a javítást egyszeri GitHub Actions forráspatch-csel közvetlenül az index.html-be írni. A workflow validáció előtt, job nélkül sikertelen lett, ezért azt eltávolítottuk. Nem maradt futó ideiglenes workflow a projektben.
+
 ELLENŐRZÉS
-- wrapper JavaScript syntax: PASS (node --check)
+- compatibility wrapper JavaScript syntax: PASS (node --check)
 - eredeti payload referencia: rögzítve
 - fix azonosító: jelen van
 - 160 mm: árlista-alapú opció
 - ügyfél/projekt kapcsolat: UI + mentési védelem
+- ideiglenes patch workflow: eltávolítva
 
 KÖVETKEZŐ REGRESSZIÓS PONTOK
 1. Új ajánlat → ügyfél → csak saját projektek.
@@ -47,3 +53,4 @@ KÖVETKEZŐ REGRESSZIÓS PONTOK
 5. Mentés → újranyitás → ügyfél/projekt/átmérő/ár változatlan.
 6. Idegen projekt mentési kísérlet → blokkolás.
 7. Előnézet/PDF/Word → meglévő payload működése.
+8. A wrapper későbbi kiváltása közvetlen index.html patch-csel, amikor biztonságos részleges forrásmódosítás rendelkezésre áll.
