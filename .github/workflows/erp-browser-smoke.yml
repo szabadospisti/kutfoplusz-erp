@@ -21,12 +21,22 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Install Playwright package
+      - name: Install Playwright and official JSZip
         shell: bash
         run: |
           npm init -y >/dev/null 2>&1
-          npm install --no-save playwright@1.62.0 >/dev/null 2>&1
+          npm install --no-save playwright@1.62.0 jszip@3.10.1 >/dev/null 2>&1
           npx playwright install chromium --with-deps >/dev/null 2>&1
+
+      - name: Verify and repair bundled JSZip
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! cmp -s jszip.min.js node_modules/jszip/dist/jszip.min.js; then
+            cp node_modules/jszip/dist/jszip.min.js jszip.min.js
+            printf '%s\n' 'official npm JSZip 3.10.1 restored' >/tmp/jszip-repaired
+          fi
+          node --check jszip.min.js
 
       - name: Start static server
         shell: bash
@@ -57,6 +67,7 @@ jobs:
               const result = await page.evaluate(() => ({
                 patch: window.KUTFOPLUSZ_QUOTE_VISUAL_FIX || null,
                 jszip: typeof window.JSZip,
+                jszipVersion: window.JSZip && window.JSZip.version || null,
                 ensureJSZip: typeof window.KUTFOPLUSZ_ensureJSZip,
                 template: typeof window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64,
                 saveQuote: typeof window.saveQuoteFromTemplate,
@@ -75,6 +86,7 @@ jobs:
               console.log('BROWSER_SMOKE=' + JSON.stringify(payload));
               if (!result.patch) throw new Error('quote_ui_fix.js runtime marker missing');
               if (result.jszip !== 'function') throw new Error('JSZip is not available in browser runtime');
+              if (result.jszipVersion !== '3.10.1') throw new Error('Unexpected JSZip version: ' + result.jszipVersion);
               if (result.ensureJSZip !== 'function') throw new Error('JSZip dependency guard is not installed');
               if (result.template !== 'string') throw new Error('DOCX template global is not loaded');
               if (missing.length) throw new Error('Missing quote runtime functions: ' + missing.join(', '));
@@ -92,8 +104,7 @@ jobs:
             }
           })().catch(err => { fs.writeFileSync(out, JSON.stringify({ok:false,error:String(err&&err.stack||err)},null,2)); console.error(err.stack||err); process.exit(1); });
           NODE
-          status=$?
-          exit $status
+          exit $?
 
       - name: Publish browser smoke result
         if: always()
@@ -105,14 +116,20 @@ jobs:
             printf '%s\n' '{"ok":false,"error":"browser smoke produced no result file"}' > BROWSER_SMOKE_RESULT.json
           fi
 
-      - name: Commit browser smoke result on failure
-        if: failure()
+      - name: Commit browser smoke repair/result
+        if: always()
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add BROWSER_SMOKE_RESULT.json
-          git commit -m '[browser-smoke-result] capture browser runtime failure' || true
-          git push origin HEAD:main || true
+          test -f /tmp/jszip-repaired && git add jszip.min.js || true
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          if test -f /tmp/jszip-repaired; then
+            git commit -m '[browser-smoke-result] repair bundled JSZip and capture runtime result'
+          else
+            git commit -m '[browser-smoke-result] capture browser runtime result'
+          fi
+          git push origin HEAD:main
