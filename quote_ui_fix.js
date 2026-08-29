@@ -1,7 +1,7 @@
 /* Kútfő Plusz ERP 2.0 – quote preview/layout/data cleanup */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-28-02";
+  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-29-13";
 
   function cleanNumber(v){
     const s=String(v??"").trim().replace(/,/g,".");
@@ -35,7 +35,51 @@
     return q;
   }
 
+  function ensureJSZip(){
+    if(window.JSZip) return Promise.resolve(window.JSZip);
+    if(window.__KUTFOPLUSZ_JSZIP_PROMISE) return window.__KUTFOPLUSZ_JSZIP_PROMISE;
+    window.__KUTFOPLUSZ_JSZIP_PROMISE=new Promise(function(resolve,reject){
+      const existing=document.querySelector('script[data-kutfo-jszip="1"]');
+      if(existing){
+        existing.addEventListener("load",function(){resolve(window.JSZip);},{once:true});
+        existing.addEventListener("error",reject,{once:true});
+        return;
+      }
+      const s=document.createElement("script");
+      s.src="jszip.min.js?v=3.10.1";
+      s.async=false;
+      s.dataset.kutfoJszip="1";
+      s.onload=function(){
+        if(window.JSZip) resolve(window.JSZip);
+        else reject(new Error("JSZip betöltve, de a globális JSZip objektum nem érhető el."));
+      };
+      s.onerror=function(){reject(new Error("A jszip.min.js betöltése sikertelen."));};
+      document.head.appendChild(s);
+    });
+    return window.__KUTFOPLUSZ_JSZIP_PROMISE;
+  }
+
+  function installDocxDependencyGuard(){
+    ensureJSZip().catch(function(){ /* a kattintáskor újrapróbáljuk */ });
+    if(window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD) return;
+    window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD=true;
+    document.addEventListener("click",function(ev){
+      const target=ev.target&&ev.target.closest?ev.target.closest("button,a"):null;
+      if(!target || !/Word\s*\(\.docx\)/i.test(String(target.textContent||""))) return;
+      if(window.JSZip) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      ensureJSZip().then(function(){
+        if(document.contains(target)) target.click();
+      }).catch(function(err){
+        if(typeof window.toast==="function") window.toast("DOCX export hiba: "+String(err&&err.message||err));
+      });
+    },true);
+  }
+
   function patchFunctions(){
+    installDocxDependencyGuard();
+
     if(typeof window.recalculateQuoteMainItem==="function"&&!window.__KUTFOPLUSZ_VISUAL_RECALC){
       const original=window.recalculateQuoteMainItem;
       window.recalculateQuoteMainItem=function(){
