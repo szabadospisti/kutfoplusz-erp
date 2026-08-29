@@ -8,13 +8,6 @@
   "use strict";
   const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-25";
   function getItems(){try{if(typeof quoteItems!=="undefined"&&Array.isArray(quoteItems))return quoteItems;}catch(e){}return Array.isArray(window.quoteItems)?window.quoteItems:null;}
-  function cleanNumber(v){const n=Number(String(v??"").trim().replace(/,/g,"."));return Number.isFinite(n)?n:null;}
-  function normalizeItemCopy(x){
-    const out=Object.assign({},x||{});
-    const m=String(out.desc||"").match(/^\s*(\d+(?:[.,]\d+)?)\s*db\s+(.+)$/i);
-    if(m){const q=cleanNumber(m[1]);if(q!==null)out.qty=q;out.unit="db";out.desc=m[2].trim();}
-    return out;
-  }
   function loadJSZip(urls,index){if(window.JSZip)return Promise.resolve(window.JSZip);index=index||0;if(index>=urls.length)return Promise.reject(new Error("JSZip nem tölthető be egyik forrásból sem."));return new Promise(function(resolve,reject){const s=document.createElement("script");s.src=urls[index];s.async=false;s.dataset.kutfoJszip="1";s.onload=function(){if(window.JSZip)resolve(window.JSZip);else loadJSZip(urls,index+1).then(resolve,reject);};s.onerror=function(){loadJSZip(urls,index+1).then(resolve,reject);};document.head.appendChild(s);});}
   function ensureJSZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(window.__KUTFOPLUSZ_JSZIP_PROMISE)return window.__KUTFOPLUSZ_JSZIP_PROMISE;return window.__KUTFOPLUSZ_JSZIP_PROMISE=loadJSZip(["jszip.min.js","https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js","https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"],0);}
   function removePreviewControls(){document.querySelectorAll("button,a").forEach(function(el){const text=String(el.textContent||"").replace(/\s+/g," ").trim();if(/Előnézet\s*\/\s*PDF/i.test(text)||/PDF\s*\/\s*Nyomtatás/i.test(text)||/Nyomtatás\s*\/\s*PDF/i.test(text))el.remove();});document.querySelectorAll(".qv-page,.qv-wrap-modal").forEach(function(el){const modal=el.closest(".modal");if(modal&&/PDF előnézet/i.test(String(modal.textContent||"")))modal.remove();});}
