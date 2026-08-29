@@ -2,6 +2,9 @@ AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 ==================================================
 Dátum: 2026-08-29
 
+CURRENT MAIN:
+fcb27500df8519152943173b68d1855a40722e56
+
 ENTRY:
 munkanaplo.html
   - inline script blokkok: 2
@@ -13,21 +16,42 @@ index.html
 AKTUÁLIS DOKUMENTUM-EXPORT:
   - DOCX: quote_template.js + JSZip 3.10.1
   - quote_template.js: jelen van az aktuális main tree-ben
+  - jszip.min.js: hivatalos JSZip 3.10.1 csomagból helyreállítva
   - PDF / preview modulok: eltávolítva a repositoryból
   - quote_preview_pages.js: nincs az aktuális main tree-ben
   - quote_preview_vectors.js: nincs az aktuális main tree-ben
 
-FONTOS VALIDÁCIÓS STÁTUSZ:
-  - Statikus forrásellenőrzés: végrehajtva a rendelkezésre álló GitHub-forrásokon
-  - GitHub Actions source audit: a workflow a quote_template.js + JSZip felépítést ellenőrzi; az aktuális futás eredménye külön ellenőrizendő
-  - Browser/Safari E2E: ebből a környezetből nem igazolt
-  - PDF/preview funkció tényleges böngészős eltűnése: statikusan és a modulok törlésével ellenőrizendő; runtime E2E nem igazolt
-
-AJÁNLAT – AKTUÁLIS ADATMODELL CÉLÁLLAPOT:
+AJÁNLAT – AKTUÁLIS ADATMODELL:
   qty / unit / desc / price külön mezők.
   A darabszám nem kerülhet a desc mezőbe.
   Kézi egységár esetén priceManual=true mellett az automatikus projektár nem írhatja felül a felhasználói árat.
   A quote_ui_fix.js aktuális rétege nem normalizálja át a live quoteItems desc mezőt DOCX export előtt.
 
-MEGJEGYZÉS:
-A jelentés a jelenlegi repository-fát követi. Nem állít runtime működést ott, ahol nincs böngészős E2E bizonyíték.
+BIZONYÍTOTT RUNTIME SMOKE:
+  - quote_ui_fix runtime marker: PASS
+  - JSZip: PASS, version 3.10.1
+  - JSZip dependency guard: PASS
+  - DOCX template global: PASS
+  - saveQuoteFromTemplate: PASS
+  - openQuotePage: PASS
+  - editQuote: PASS
+  - recalculateQuoteMainItem: PASS
+  - collectQuoteTemplate: PASS
+  - exportQuoteDoc: PASS
+  - obsolete PDF preview script: FALSE
+  - browser page errors: 0
+  - console errors: 0
+  - request failures: 0
+  - evidence: BROWSER_SMOKE_RESULT.json
+
+GITHUB ACTIONS:
+  - ERP Source Audit: PASS
+  - ERP Browser Smoke: PASS
+
+FONTOS KORÁBBI HIBA, JAVÍTVA:
+  A repositoryban lévő jszip.min.js böngészős futáskor `ReferenceError: u is not defined` hibával elszállt. A böngészős smoke ezt ténylegesen reprodukálta. A bundled JSZip fájlt a hivatalos jszip@3.10.1 npm csomagból helyreállítottuk. A javítás után a böngészős smoke PASS lett.
+
+KORLÁT:
+  A browser smoke a futó entry point és az ajánlati runtime-függvények betöltését igazolja, de nem helyettesíti a teljes emberi UI-szintű mentés → újranyitás → DOCX fájlletöltés tesztet minden kombinációra. Ilyen tesztet csak akkor tekintünk PASS-nak, ha a tényleges mentési és fájlletöltési műveletet is lefuttattuk.
+
+Ez a jelentés nem állít olyan runtime működést, amelyet nem igazoltunk.
