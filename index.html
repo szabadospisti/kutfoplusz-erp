@@ -13409,12 +13409,12 @@ function quoteProjectChanged(){
  const purposeText=String(purpose||p.name||document.getElementById("q_subject")?.value||"");
  const irrigation=/öntöz/i.test(purposeText);
  const wellWord=irrigation?"öntözőkút":"kút";
- const mainDesc=`${count} db ${depth?String(depth).replace(".",",")+" m-es ":""}${wellWord} kivitelezése`;
- if(Array.isArray(quoteItems) && quoteItems.length){
-   const current=String(quoteItems[0]?.desc||"").trim();
-   const looksAuto=!current || /^\d+\s*db\s+.*(?:öntözőkút|kút)\s+kivitelezése$/i.test(current);
-   if(looksAuto){ quoteItems[0].desc=mainDesc; quoteItems[0].qty=1; quoteItems[0].unit="db"; }
- }
+ const mainDesc=`${depth?String(depth).replace(".",",")+" m-es ":""}${wellWord} kivitelezése`;
+if(Array.isArray(quoteItems) && quoteItems.length){
+  const current=String(quoteItems[0]?.desc||"").trim();
+  const looksAuto=!current || /^\d+\s*db\s+.*(?:öntözőkút|kút)\s+kivitelezése$/i.test(current);
+  if(looksAuto){ quoteItems[0].desc=mainDesc; quoteItems[0].qty=count>0 ? count : 1; quoteItems[0].unit="db"; }
+}
  // A teljes, projektben szerkesztett műszaki szakaszlista átadása az ajánlatnak.
  quoteTech=deriveQuoteTechFromProject(p);
  // A projekt típusát az árkalkuláció is figyelembe veszi:
@@ -13445,12 +13445,12 @@ function recalculateQuoteMainItem(doRender=true){
  const wellWord=irrigation?"öntözőkút":"kút";
  const count=Number.parseInt(String(project?.wellCount??project?.well?.wellCount??1).replace(/[^\d]/g,""),10)||1;
  const depthText=depthRaw!==""?huFormat(depth,1):"";
- const autoDesc=`${count} db ${depthText?depthText+" m-es ":""}${wellWord} kivitelezése`;
- const looksAuto=!current || /^\d+\s*db\s+.*(?:öntözőkút|kút)\s+kivitelezése$/i.test(current);
- if(looksAuto) quoteItems[0].desc=autoDesc;
- quoteItems[0].qty=1;
- quoteItems[0].unit="db";
- quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;
+ const autoDesc=`${depthText?depthText+" m-es ":""}${wellWord} kivitelezése`;
+const looksAuto=!current || /^\d+\s*db\s+.*(?:öntözőkút|kút)\s+kivitelezése$/i.test(current);
+if(looksAuto) quoteItems[0].desc=autoDesc;
+quoteItems[0].qty=count>0 ? count : 1;
+quoteItems[0].unit="db";
+if(!quoteItems[0].priceManual) quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;
  quoteItems[0].autoCalculated=true;
  quoteItems[0].priceListDiameter=diameter;
  quoteItems[0].meterRate=meterRate;
