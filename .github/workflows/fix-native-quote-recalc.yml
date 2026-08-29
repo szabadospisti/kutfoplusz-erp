@@ -1,0 +1,83 @@
+name: Fix native quote recalculation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[native-quote-recalc]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch native quote recalculation
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          original = text
+
+          pattern = re.compile(
+              r'''const autoDesc\s*=\s*`\$\{count\}\s*db\s*\$\{depthText\s*\?\s*depthText\s*\+\s*" m-es "\s*:\s*""\}\$\{wellWord\}\s*kivitelezése`\s*;\s*'''
+              r'''if\s*\(looksAuto\)\s*quoteItems\[0\]\.desc\s*=\s*autoDesc\s*;\s*'''
+              r'''quoteItems\[0\]\.qty\s*=\s*1\s*;\s*'''
+              r'''quoteItems\[0\]\.unit\s*=\s*"db"\s*;\s*'''
+              r'''quoteItems\[0\]\.price\s*=\s*depth\s*>\s*0\s*&&\s*meterRate\s*>\s*0\s*\?\s*depth\s*\*\s*meterRate\s*:\s*0\s*;''',
+              re.S
+          )
+
+          replacement = '''const autoDesc = `${depthText ? depthText + " m-es " : ""}${wellWord} kivitelezése`;
+          if (looksAuto) quoteItems[0].desc = autoDesc;
+          quoteItems[0].qty = count > 0 ? count : 1;
+          quoteItems[0].unit = "db";
+          if (!quoteItems[0].priceManual) quoteItems[0].price = depth > 0 && meterRate > 0 ? depth * meterRate : 0;'''
+
+          text, n = pattern.subn(replacement, text, count=1)
+          if n != 1:
+              raise SystemExit(f'Expected exactly one native recalc block, replaced {n}. Refusing to modify index.html.')
+
+          if 'quoteItems[0].qty = 1;' in text:
+              raise SystemExit('Old qty=1 assignment remains in index.html.')
+          if 'if (!quoteItems[0].priceManual)' not in text:
+              raise SystemExit('Manual-price guard missing after patch.')
+          if text == original:
+              raise SystemExit('No source change produced.')
+
+          p.write_text(text, encoding='utf-8')
+
+      - name: Validate native source
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert not re.search(r'quote_preview_(?:pages|vectors)\.js', html, re.I)
+          assert len(re.findall(r'quote_ui_fix\.js', html, re.I)) == 1
+          assert 'quoteItems[0].qty = count > 0 ? count : 1;' in html
+          assert 'if (!quoteItems[0].priceManual)' in html
+          blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.I | re.S)
+          with tempfile.TemporaryDirectory() as td:
+              for i, block in enumerate(blocks, 1):
+                  f = Path(td) / f'inline_{i}.js'
+                  f.write_text(block, encoding='utf-8')
+                  r = subprocess.run(['node', '--check', str(f)], text=True, capture_output=True)
+                  if r.returncode:
+                      raise SystemExit(f'inline script {i} syntax error:\n{r.stderr}')
+
+      - name: Commit and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm -f .github/workflows/fix-native-quote-recalc.yml
+          git commit -m "Fix native quote quantity and manual price recalculation [native-quote-recalc]"
+          git push origin HEAD:main
