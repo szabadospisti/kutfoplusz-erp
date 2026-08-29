@@ -1,0 +1,12 @@
+{
+  "ok": false,
+  "error": "Error: Browser page errors: ReferenceError: u is not defined | ReferenceError: u is not defined\n    at [stdin]:41:34",
+  "pageErrors": [
+    "ReferenceError: u is not defined",
+    "ReferenceError: u is not defined"
+  ],
+  "consoleErrors": [],
+  "requestFailures": [
+    "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js :: net::ERR_BLOCKED_BY_ORB"
+  ]
+}
