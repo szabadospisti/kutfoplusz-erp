@@ -1,12 +1,22 @@
 {
-  "ok": false,
-  "error": "Error: Browser page errors: ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269 | ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269\n    at [stdin]:41:34",
-  "pageErrors": [
-    "ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269",
-    "ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269"
-  ],
+  "ok": true,
+  "result": {
+    "patch": "ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-26",
+    "jszip": "function",
+    "jszipVersion": "3.10.1",
+    "ensureJSZip": "function",
+    "template": "string",
+    "saveQuote": "function",
+    "openQuote": "function",
+    "editQuote": "function",
+    "recalc": "function",
+    "collect": "function",
+    "exportDocx": "function",
+    "obsoletePreviewScript": false,
+    "quoteItemsType": "undefined"
+  },
+  "pageErrors": [],
   "consoleErrors": [],
-  "requestFailures": [
-    "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js :: net::ERR_BLOCKED_BY_ORB"
-  ]
+  "requestFailures": [],
+  "missing": []
 }
