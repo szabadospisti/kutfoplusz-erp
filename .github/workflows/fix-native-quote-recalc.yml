@@ -32,7 +32,7 @@ jobs:
           quoteItems[0].qty=count>0 ? count : 1;
           quoteItems[0].unit="db";
           if(!quoteItems[0].priceManual) quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;'''
-          text,n=recalc.subn(new_recalc,text,count=1)
+          text,n=recalc.subn(lambda m:new_recalc,text,count=1)
           if n!=1: raise SystemExit(f'native recalc match={n}, expected 1')
 
           project=re.compile(r'''const mainDesc=`\$\{count\}\s*db\s*\$\{depth\?String\(depth\)\.replace\("\.\",\",\"\)\+" m-es ":""\}\$\{wellWord\} kivitelezése`;\s*if\(Array\.isArray\(quoteItems\) && quoteItems\.length\)\{\s*const current=.*?const looksAuto=.*?if\(looksAuto\)\{ quoteItems\[0\]\.desc=mainDesc; quoteItems\[0\]\.qty=1; quoteItems\[0\]\.unit="db"; \}\s*\}''',re.S)
@@ -42,7 +42,7 @@ jobs:
             const looksAuto=!current || /^\\d+\\s*db\\s+.*(?:öntözőkút|kút)\\s+kivitelezése$/i.test(current);
             if(looksAuto){ quoteItems[0].desc=mainDesc; quoteItems[0].qty=count>0 ? count : 1; quoteItems[0].unit="db"; }
           }'''
-          text,n2=project.subn(new_project,text,count=1)
+          text,n2=project.subn(lambda m:new_project,text,count=1)
           if n2!=1: raise SystemExit(f'project-change match={n2}, expected 1')
 
           if text==original: raise SystemExit('No source change')
