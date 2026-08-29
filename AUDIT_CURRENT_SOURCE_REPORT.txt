@@ -1,23 +1,31 @@
-AUDIT – TÉNYLEGES FUTÓ UI FORRÁS
+AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 ==================================================
+Dátum: 2026-08-29
 
-ENTRY: munkanaplo.html
-INLINE SCRIPT BLOKKOK: 2
-KÜLSŐ SCRIPT:
+ENTRY:
+munkanaplo.html
+  - inline script blokkok: 2
 
-ENTRY: index.html
-INLINE SCRIPT BLOKKOK: 11
-KÜLSŐ SCRIPT:
-  - https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js
-  - quote_template.js
-  - quote_preview_pages.js?v=60
-  - jszip.min.js
-  - quote_preview_vectors.js
+index.html
+  - fő ERP entry point
+  - inline script blokkok: 11 (a nagy monolit fájl tartalma miatt a teljes statikus vizsgálat külön auditokban történik)
 
-all.js fájlok száma: 1
-all.js betöltve valamelyik HTML entryből: False
+AKTUÁLIS DOKUMENTUM-EXPORT:
+  - DOCX: quote_template.js + JSZip 3.10.1
+  - PDF / preview modulok: eltávolítva a repositoryból
+  - quote_preview_pages.js: nincs az aktuális main tree-ben
+  - quote_preview_vectors.js: nincs az aktuális main tree-ben
 
-HTML-ben talált releváns cső/casing előfordulások:
-  munkanaplo.html: [('pipe', 4)]
-  index.html: [('casingSections', 37), ('casing', 257), ('csőszakasz', 5), ('csovezes', 9), ('csövezés', 62), ('pipe', 281)]
+FONTOS VALIDÁCIÓS STÁTUSZ:
+  - Statikus forrásellenőrzés: végrehajtva a rendelkezésre álló GitHub-forrásokon
+  - GitHub Actions CI: az ellenőrzött commitokra nincs workflow run, ezért CI PASS nem állítható
+  - Browser/Safari E2E: ebből a környezetből nem igazolt
+  - PDF/preview funkció tényleges böngészős eltűnése: statikusan és a modulok törlésével ellenőrzendő; runtime E2E nem igazolt
+
+AJÁNLAT – AKTUÁLIS ADATMODELL CÉLÁLLAPOT:
+  qty / unit / desc / price külön mezők.
+  A darabszám nem kerülhet a desc mezőbe.
+  Kézi egységár esetén priceManual=true mellett az automatikus projektár nem írhatja felül a felhasználói árat.
+
+MEGJEGYZÉS:
+Ez a jelentés a korábbi, már elavult script-listát korrigálja. Nem állít runtime működést ott, ahol nincs böngészős E2E bizonyíték.
