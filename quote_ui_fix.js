@@ -3,7 +3,7 @@
  */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-18";
+  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-19";
 
   function getItems(){
     try{if(typeof quoteItems!=="undefined" && Array.isArray(quoteItems)) return quoteItems;}catch(e){}
@@ -16,10 +16,6 @@
     return Number.isFinite(n)?n:null;
   }
 
-  /* Keep quantity, unit and description as separate data fields.
-     Legacy automatic descriptions could contain the quantity/unit prefix,
-     which then produced e.g. "1 db 1 db 50,0 m-es kút kivitelezése" in DOCX.
-     Preserve an already edited quantity; only remove the legacy prefix. */
   function normalizeQuoteItems(){
     const items=getItems();
     if(!items) return;
@@ -67,8 +63,7 @@
   function removePreviewControls(){
     document.querySelectorAll("button,a").forEach(function(el){
       const text=String(el.textContent||"").replace(/\s+/g," ").trim();
-      if(/Előnézet\s*\/\s*PDF/i.test(text)) el.remove();
-      if(/PDF\s*\/\s*Nyomtatás/i.test(text)) el.remove();
+      if(/Előnézet\s*\/\s*PDF/i.test(text)||/PDF\s*\/\s*Nyomtatás/i.test(text)||/Nyomtatás\s*\/\s*PDF/i.test(text)) el.remove();
     });
     document.querySelectorAll(".qv-page,.qv-wrap-modal").forEach(function(el){
       const modal=el.closest(".modal");
@@ -90,6 +85,13 @@
         return false;
       };
       window.__KUTFOPLUSZ_PRINT_PREVIEW_DISABLED=true;
+    }
+    if(typeof window.printQuote==="function"&&!window.__KUTFOPLUSZ_PRINT_QUOTE_DISABLED){
+      window.printQuote=function(){
+        if(typeof window.toast==="function") window.toast("A PDF/nyomtatás funkció ki van kapcsolva. DOCX export használható.");
+        return false;
+      };
+      window.__KUTFOPLUSZ_PRINT_QUOTE_DISABLED=true;
     }
   }
 
