@@ -3,7 +3,7 @@
  */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-16";
+  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-17";
 
   function cleanNumber(v){
     const s=String(v??"").trim().replace(/,/g,".");
@@ -12,7 +12,9 @@
   }
 
   /* Keep quantity, unit and description as separate data fields.
-     This fixes the former "1 db 1 db ..." DOCX duplication. */
+     Legacy automatic descriptions could contain the quantity/unit prefix,
+     which then produced e.g. "1 db 1 db 50,0 m-es kút kivitelezése" in DOCX.
+     Preserve an already edited quantity; only remove the legacy prefix. */
   function normalizeQuoteItems(){
     if(!Array.isArray(window.quoteItems)) return;
     window.quoteItems.forEach(function(x){
@@ -20,7 +22,7 @@
       const m=String(x.desc||"").match(/^\s*(\d+(?:[.,]\d+)?)\s*db\s+(.+)$/i);
       if(m){
         const q=cleanNumber(m[1]);
-        if(q!==null) x.qty=q;
+        if(q!==null && !(Number(x.qty)>0)) x.qty=q;
         x.unit="db";
         x.desc=m[2].trim();
       }
@@ -85,6 +87,31 @@
     }
   }
 
+  function markManualPriceFromEditor(){
+    if(!Array.isArray(window.quoteItems)) return;
+    document.querySelectorAll("#q_items tr").forEach(function(row,i){
+      const cells=row.children;
+      const target=document.activeElement;
+      if(!target || !cells[3] || !cells[3].contains(target)) return;
+      if(window.quoteItems[i]) window.quoteItems[i].priceManual=true;
+    });
+  }
+
+  function installManualPriceTracking(){
+    if(window.__KUTFOPLUSZ_MANUAL_PRICE_TRACKER) return;
+    window.__KUTFOPLUSZ_MANUAL_PRICE_TRACKER=true;
+    document.addEventListener("change",function(ev){
+      const target=ev.target;
+      if(!target || !target.closest) return;
+      const row=target.closest("#q_items tr");
+      if(!row) return;
+      const cells=row.children;
+      if(!cells[3] || !cells[3].contains(target)) return;
+      const index=Array.prototype.indexOf.call(row.parentElement.children,row);
+      if(Array.isArray(window.quoteItems) && window.quoteItems[index]) window.quoteItems[index].priceManual=true;
+    },true);
+  }
+
   function installDocxDependencyGuard(){
     ensureJSZip().catch(function(){});
     if(window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD) return;
@@ -105,12 +132,39 @@
 
   function patchFunctions(){
     installDocxDependencyGuard();
+    installManualPriceTracking();
     disablePreviewFunctions();
+
+    if(typeof window.openQuotePage==="function"&&!window.__KUTFOPLUSZ_DOCX_OPEN_PAGE){
+      const original=window.openQuotePage;
+      window.openQuotePage=function(){
+        const id=arguments[0];
+        const q=(typeof db!=="undefined"&&db&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
+        const result=original.apply(this,arguments);
+        if(q) setTimeout(function(){
+          if(Array.isArray(window.quoteItems) && Array.isArray(q.items)){
+            window.quoteItems.forEach(function(item,i){
+              const saved=q.items[i];
+              if(saved) item.priceManual=!!saved.priceManual;
+            });
+          }
+          normalizeQuoteItems();
+        },0);
+        return result;
+      };
+      window.__KUTFOPLUSZ_DOCX_OPEN_PAGE=true;
+    }
 
     if(typeof window.recalculateQuoteMainItem==="function"&&!window.__KUTFOPLUSZ_DOCX_RECALC){
       const original=window.recalculateQuoteMainItem;
       window.recalculateQuoteMainItem=function(){
+        const manualPrice=Array.isArray(window.quoteItems)&&window.quoteItems[0]?.priceManual;
+        const preservedPrice=Array.isArray(window.quoteItems)?Number(window.quoteItems[0]?.price):null;
         const r=original.apply(this,arguments);
+        if(manualPrice && Array.isArray(window.quoteItems) && Number.isFinite(preservedPrice)){
+          window.quoteItems[0].price=preservedPrice;
+          window.quoteItems[0].priceManual=true;
+        }
         normalizeQuoteItems();
         return r;
       };
@@ -121,7 +175,13 @@
       const original=window.collectQuoteTemplate;
       window.collectQuoteTemplate=function(){
         normalizeQuoteItems();
-        return original.apply(this,arguments);
+        const result=original.apply(this,arguments);
+        if(result&&Array.isArray(result.items)&&Array.isArray(window.quoteItems)){
+          result.items.forEach(function(item,i){
+            item.priceManual=!!window.quoteItems[i]?.priceManual;
+          });
+        }
+        return result;
       };
       window.__KUTFOPLUSZ_DOCX_COLLECT=true;
     }
@@ -130,8 +190,9 @@
   function install(){
     patchFunctions();
     normalizeQuoteItems();
+    markManualPriceFromEditor();
     removePreviewControls();
-    if(!(window.__KUTFOPLUSZ_DOCX_RECALC&&window.__KUTFOPLUSZ_DOCX_COLLECT)) setTimeout(install,50);
+    if(!(window.__KUTFOPLUSZ_DOCX_RECALC&&window.__KUTFOPLUSZ_DOCX_COLLECT&&window.__KUTFOPLUSZ_DOCX_OPEN_PAGE)) setTimeout(install,50);
   }
 
   window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;
