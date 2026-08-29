@@ -9,13 +9,13 @@
   p.async=false;
   document.head.appendChild(p);
   const v=document.createElement("script");
-  v.src="quote_preview_layout_fix.js?v=6";
+  v.src="quote_preview_layout_fix.js?v=7";
   v.async=false;
   document.head.appendChild(v);
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-11";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-12";
   function installLayout(){
     if(document.getElementById("kutfo-quote-three-fields-style"))return;
     const s=document.createElement("style");s.id="kutfo-quote-three-fields-style";
