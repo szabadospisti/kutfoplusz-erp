@@ -15,52 +15,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Patch exact native quote blocks
+      - name: Patch native quote recalculation
         shell: python
         run: |
           from pathlib import Path
+          import re
 
           p=Path('index.html')
           text=p.read_text(encoding='utf-8')
           original=text
 
-          old_recalc='''const autoDesc=`${count} db ${depthText?depthText+" m-es ":""}${wellWord} kivitelezése`;
-          const looksAuto=!current || /^\\d+\\s*db\\s+.*(?:öntözőkút|kút)\\s+kivitelezése$/i.test(current);
-          if(looksAuto) quoteItems[0].desc=autoDesc;
-          quoteItems[0].qty=1;
-          quoteItems[0].unit="db";
-          quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;'''
+          recalc=re.compile(r'''const autoDesc=`\$\{count\}\s*db\s*\$\{depthText\?depthText\+" m-es ":""\}\$\{wellWord\} kivitelezése`;\s*const looksAuto=.*?quoteItems\[0\]\.desc=autoDesc;\s*quoteItems\[0\]\.qty=1;\s*quoteItems\[0\]\.unit="db";\s*quoteItems\[0\]\.price=depth>0 && meterRate>0 \? depth\*meterRate : 0;''', re.S)
           new_recalc='''const autoDesc=`${depthText?depthText+" m-es ":""}${wellWord} kivitelezése`;
           const looksAuto=!current || /^\\d+\\s*db\\s+.*(?:öntözőkút|kút)\\s+kivitelezése$/i.test(current);
           if(looksAuto) quoteItems[0].desc=autoDesc;
           quoteItems[0].qty=count>0 ? count : 1;
           quoteItems[0].unit="db";
           if(!quoteItems[0].priceManual) quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;'''
+          text,n=recalc.subn(new_recalc,text,count=1)
+          if n!=1: raise SystemExit(f'native recalc match={n}, expected 1')
 
-          if text.count(old_recalc)!=1:
-              raise SystemExit(f'Native recalc block count={text.count(old_recalc)}, expected 1')
-          text=text.replace(old_recalc,new_recalc,1)
-
-          old_project='''const mainDesc=`${count} db ${depth?String(depth).replace(".",",")+" m-es ":""}${wellWord} kivitelezése`;
-          if(Array.isArray(quoteItems) && quoteItems.length){
-            const current=String(quoteItems[0]?.desc||"").trim();
-            const looksAuto=!current || /^\\d+\\s*db\\s+.*(?:öntözőkút|kút)\\s+kivitelezése$/i.test(current);
-            if(looksAuto){ quoteItems[0].desc=mainDesc; quoteItems[0].qty=1; quoteItems[0].unit="db"; }
-          }'''
+          project=re.compile(r'''const mainDesc=`\$\{count\}\s*db\s*\$\{depth\?String\(depth\)\.replace\("\.\",\",\"\)\+" m-es ":""\}\$\{wellWord\} kivitelezése`;\s*if\(Array\.isArray\(quoteItems\) && quoteItems\.length\)\{\s*const current=.*?const looksAuto=.*?if\(looksAuto\)\{ quoteItems\[0\]\.desc=mainDesc; quoteItems\[0\]\.qty=1; quoteItems\[0\]\.unit="db"; \}\s*\}''',re.S)
           new_project='''const mainDesc=`${depth?String(depth).replace(".",",")+" m-es ":""}${wellWord} kivitelezése`;
           if(Array.isArray(quoteItems) && quoteItems.length){
             const current=String(quoteItems[0]?.desc||"").trim();
             const looksAuto=!current || /^\\d+\\s*db\\s+.*(?:öntözőkút|kút)\\s+kivitelezése$/i.test(current);
             if(looksAuto){ quoteItems[0].desc=mainDesc; quoteItems[0].qty=count>0 ? count : 1; quoteItems[0].unit="db"; }
           }'''
+          text,n2=project.subn(new_project,text,count=1)
+          if n2!=1: raise SystemExit(f'project-change match={n2}, expected 1')
 
-          if text.count(old_project)!=1:
-              raise SystemExit(f'Project-change block count={text.count(old_project)}, expected 1')
-          text=text.replace(old_project,new_project,1)
-
-          if text==original: raise SystemExit('No change')
-          if 'quoteItems[0].qty=1;' in text: raise SystemExit('Old native qty=1 assignment remains')
-          if 'if(!quoteItems[0].priceManual)' not in text: raise SystemExit('Manual price guard missing')
+          if text==original: raise SystemExit('No source change')
+          if 'quoteItems[0].qty=1;' in text: raise SystemExit('old native qty=1 assignment remains')
+          if 'if(!quoteItems[0].priceManual)' not in text: raise SystemExit('manual-price guard missing')
           p.write_text(text,encoding='utf-8')
 
       - name: Validate
