@@ -1,0 +1,76 @@
+name: Fix quote runtime loader
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[quote-runtime-loader]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch index loader safely
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          original = text
+
+          # Remove the obsolete preview/vector script tags without touching any other source.
+          text = re.sub(r'<script[^>]+src=["\'][^"\']*quote_preview_vectors\.js[^"\']*["\'][^>]*>\s*</script>', '', text, flags=re.I)
+
+          # The old pages wrapper was the historical loader for quote_ui_fix.js.
+          # Replace that loader directly with the actual quote fix script.
+          text = re.sub(r'<script[^>]+src=["\'][^"\']*quote_preview_pages\.js[^"\']*["\'][^>]*>\s*</script>', '<script src="quote_ui_fix.js"></script>', text, flags=re.I)
+
+          # Avoid duplicate direct loading if an existing quote_ui_fix tag is already present.
+          tags = re.findall(r'<script[^>]+src=["\'][^"\']*quote_ui_fix\.js[^"\']*["\'][^>]*>\s*</script>', text, flags=re.I)
+          if len(tags) > 1:
+              first = True
+              def dedupe(m):
+                  nonlocal first
+                  if first:
+                      first = False
+                      return m.group(0)
+                  return ''
+              text = re.sub(r'<script[^>]+src=["\'][^"\']*quote_ui_fix\.js[^"\']*["\'][^>]*>\s*</script>', dedupe, text, flags=re.I)
+
+          if text == original:
+              raise SystemExit('No loader change was necessary; refusing to create a no-op commit.')
+
+          if re.search(r'quote_preview_(?:pages|vectors)\.js', text, flags=re.I):
+              raise SystemExit('Obsolete quote preview script reference remains after patch.')
+
+          if len(re.findall(r'quote_ui_fix\.js', text, flags=re.I)) != 1:
+              raise SystemExit('Expected exactly one quote_ui_fix.js script reference.')
+
+          p.write_text(text, encoding='utf-8')
+
+      - name: Validate
+        shell: bash
+        run: |
+          test -f index.html
+          test -f quote_ui_fix.js
+          test -f quote_template.js
+          test -f jszip.min.js
+          ! grep -Eiq 'quote_preview_(pages|vectors)\.js' index.html
+          test "$(grep -Eio 'quote_ui_fix\.js' index.html | wc -l | tr -d ' ')" = "1"
+
+      - name: Commit source patch and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm -f .github/workflows/fix-quote-runtime-loader.yml
+          git commit -m "Fix quote runtime loader [quote-runtime-loader]"
+          git push origin HEAD:main
