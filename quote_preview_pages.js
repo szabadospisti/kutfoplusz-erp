@@ -1,16 +1,17 @@
 /* Kútfő Plusz ERP 2.0 – quote editor compatibility wrapper
- * Word/DOCX export only. PDF/preview functionality intentionally removed.
+ * DOCX export only. PDF/preview functionality intentionally removed.
  */
 (function(){
   "use strict";
+  if(typeof window!="undefined" && window.__KUTFOPLUSZ_QUOTE_UI_FIX_LOADED) return;
   const p=document.createElement("script");
-  p.src="quote_ui_fix.js?v=16";
+  p.src="quote_ui_fix.js?v=17";
   p.async=false;
   document.head.appendChild(p);
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-16-DOCX-ONLY";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-17-DOCX-ONLY";
   function projects(){return (typeof db!=="undefined"&&db&&Array.isArray(db.projects))?db.projects:[];}
   function priceRows(){try{if(typeof window.ensureDrillingPriceList==="function")window.ensureDrillingPriceList()}catch(e){}return Array.isArray(typeof db!=="undefined"&&db?db.drillingPriceList:null)?db.drillingPriceList.filter(x=>String(x?.diameter??"").trim()):[];}
   function projectBelongsToCustomer(projectId,customerId){if(!projectId||!customerId)return true;const p=projects().find(x=>String(x.id)===String(projectId));return !!p&&String(p.customerId||p.clientId||"")===String(customerId);}
@@ -27,8 +28,7 @@
   function removePreviewControls(){
     document.querySelectorAll("button,a").forEach(function(el){
       const text=String(el.textContent||"").replace(/\s+/g," ").trim();
-      if(/Előnézet\s*\/\s*PDF/i.test(text)) el.remove();
-      if(/PDF\s*\/\s*Nyomtatás/i.test(text)) el.remove();
+      if(/Előnézet\s*\/\s*PDF/i.test(text)||/PDF\s*\/\s*Nyomtatás/i.test(text)) el.remove();
     });
     document.querySelectorAll(".qv-page,.qv-wrap-modal").forEach(function(el){
       const modal=el.closest(".modal");
