@@ -21,8 +21,8 @@ jobs:
           set -euo pipefail
           test -s index.html
           test -s quote_ui_fix.js
-          test -s quote_template.js
           test -s jszip.min.js
+          test ! -e quote_template.js
 
       - name: Validate quote script wiring
         shell: bash
@@ -34,6 +34,10 @@ jobs:
           fi
           count=$(grep -Eio 'quote_ui_fix\.js([?][^"'"'"' >]*)?' index.html | wc -l | tr -d ' ')
           test "$count" -eq 1
+          if grep -Fq 'quote_template.js' index.html; then
+            echo 'ERROR: stale external quote_template.js reference remains in index.html'
+            exit 1
+          fi
 
       - name: Validate native quote calculation guards
         shell: bash
@@ -42,11 +46,11 @@ jobs:
           grep -Fq 'quoteItems[0].qty=count>0 ? count : 1;' index.html
           grep -Fq 'if(!quoteItems[0].priceManual)' index.html
 
-      - name: Validate DOCX-only quote path
+      - name: Validate embedded DOCX-only quote path
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'quote_template.js' index.html
+          grep -Fq 'KUTFOPLUSZ_QUOTE_TEMPLATE_B64' index.html
           grep -Fq 'jszip.min.js' index.html
           grep -Fq 'function disablePreviewFunctions' quote_ui_fix.js
           grep -Fq 'window.previewQuote=function' quote_ui_fix.js
@@ -60,7 +64,6 @@ jobs:
         run: |
           set -euo pipefail
           node --check quote_ui_fix.js
-          node --check quote_template.js
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess, tempfile
