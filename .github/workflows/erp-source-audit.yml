@@ -48,10 +48,10 @@ jobs:
           set -euo pipefail
           grep -Fq 'quote_template.js' index.html
           grep -Fq 'jszip.min.js' index.html
-          if grep -Eiq 'printExactPdfPreview|previewQuote|window\.print\(' quote_ui_fix.js; then
-            echo 'ERROR: PDF/preview/print runtime path remains in quote_ui_fix.js'
-            exit 1
-          fi
+          grep -Fq 'function disablePreviewFunctions' quote_ui_fix.js
+          grep -Fq 'window.previewQuote=function' quote_ui_fix.js
+          grep -Fq 'window.printExactPdfPreview=function' quote_ui_fix.js
+          grep -Fq 'window.printQuote=function' quote_ui_fix.js
           test ! -e quote_preview_pages.js
           test ! -e quote_preview_vectors.js
 
