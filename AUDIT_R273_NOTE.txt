@@ -1,0 +1,1 @@
+Follow-up checkpoint: verify quote persistence and DOCX runtime generation from the live source. Browser/Safari E2E is not claimed without a browser runner.
