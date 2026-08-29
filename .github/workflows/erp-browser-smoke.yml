@@ -44,51 +44,8 @@ jobs:
         run: |
           set +e
           node <<'NODE'
-          const fs = require('fs');
-          const { chromium } = require('playwright');
-          const out='/tmp/browser-smoke-result.json';
-          (async()=>{
-            const browser=await chromium.launch({headless:true});
-            const page=await browser.newPage();
-            const pageErrors=[],consoleErrors=[],requestFailures=[];
-            page.on('pageerror',e=>pageErrors.push(String(e&&e.stack||e)));
-            page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
-            page.on('requestfailed',r=>requestFailures.push(`${r.url()} :: ${r.failure()?.errorText||'unknown'}`));
-            try{
-              await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
-              await page.waitForTimeout(1500);
-              const result=await page.evaluate(()=>({
-                patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,
-                jszip:typeof window.JSZip,jszipVersion:window.JSZip&&window.JSZip.version||null,
-                ensureJSZip:typeof window.KUTFOPLUSZ_ensureJSZip,template:typeof window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64,
-                saveQuote:typeof window.saveQuoteFromTemplate,saveQuoteArity:window.saveQuoteFromTemplate&&window.saveQuoteFromTemplate.length,
-                saveQuoteHead:window.saveQuoteFromTemplate?String(window.saveQuoteFromTemplate).slice(0,1000):null,
-                openQuote:typeof window.openQuotePage,editQuote:typeof window.editQuote,recalc:typeof window.recalculateQuoteMainItem,
-                collect:typeof window.collectQuoteTemplate,collectArity:window.collectQuoteTemplate&&window.collectQuoteTemplate.length,
-                collectHead:window.collectQuoteTemplate?String(window.collectQuoteTemplate).slice(0,1000):null,
-                exportDocx:typeof window.exportQuoteDoc,exportDocxArity:window.exportQuoteDoc&&window.exportQuoteDoc.length,
-                exportDocxHead:window.exportQuoteDoc?String(window.exportQuoteDoc).slice(0,1000):null,
-                obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\\.js/i.test(s.src)),
-                quoteItemsType:Array.isArray(window.quoteItems)?'array':typeof window.quoteItems,
-                buttons:Array.from(document.querySelectorAll('button')).map(b=>String(b.textContent||'').replace(/\\s+/g,' ').trim()).filter(Boolean).slice(0,80),
-                bodyHead:String(document.body.innerText||'').replace(/\\s+/g,' ').trim().slice(0,2000)
-              }));
-              const required=['saveQuote','openQuote','editQuote','recalc','collect','exportDocx'];
-              const missing=required.filter(k=>result[k]!=='function');
-              const payload={ok:false,result,pageErrors,consoleErrors,requestFailures,missing};
-              fs.writeFileSync(out,JSON.stringify(payload,null,2));
-              console.log('BROWSER_SMOKE='+JSON.stringify(payload));
-              if(!result.patch)throw new Error('quote_ui_fix.js runtime marker missing');
-              if(result.jszip!=='function')throw new Error('JSZip is not available in browser runtime');
-              if(result.jszipVersion!=='3.10.1')throw new Error('Unexpected JSZip version: '+result.jszipVersion);
-              if(result.ensureJSZip!=='function')throw new Error('JSZip dependency guard is not installed');
-              if(result.template!=='string')throw new Error('DOCX template global is not loaded');
-              if(missing.length)throw new Error('Missing quote runtime functions: '+missing.join(', '));
-              if(result.obsoletePreviewScript)throw new Error('Obsolete PDF preview script is still loaded');
-              if(pageErrors.length)throw new Error('Browser page errors: '+pageErrors.join(' | '));
-              payload.ok=true;fs.writeFileSync(out,JSON.stringify(payload,null,2));await browser.close();
-            }catch(err){const payload={ok:false,error:String(err&&err.stack||err),pageErrors,consoleErrors,requestFailures};fs.writeFileSync(out,JSON.stringify(payload,null,2));console.error('BROWSER_SMOKE='+JSON.stringify(payload));try{await browser.close()}catch(_){}process.exit(1)}
-          })().catch(err=>{fs.writeFileSync(out,JSON.stringify({ok:false,error:String(err&&err.stack||err)},null,2));console.error(err.stack||err);process.exit(1)});
+          const fs=require('fs');const {chromium}=require('playwright');const out='/tmp/browser-smoke-result.json';
+          (async()=>{const browser=await chromium.launch({headless:true});const page=await browser.newPage();const pageErrors=[],consoleErrors=[],requestFailures=[];page.on('pageerror',e=>pageErrors.push(String(e&&e.stack||e)));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});page.on('requestfailed',r=>requestFailures.push(`${r.url()} :: ${r.failure()?.errorText||'unknown'}`));try{await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(1500);const result=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:typeof window.JSZip,jszipVersion:window.JSZip&&window.JSZip.version||null,ensureJSZip:typeof window.KUTFOPLUSZ_ensureJSZip,template:typeof window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64,saveQuote:typeof window.saveQuoteFromTemplate,saveQuoteArity:window.saveQuoteFromTemplate&&window.saveQuoteFromTemplate.length,saveQuoteChunk1:window.saveQuoteFromTemplate?String(window.saveQuoteFromTemplate).slice(0,1200):null,saveQuoteChunk2:window.saveQuoteFromTemplate?String(window.saveQuoteFromTemplate).slice(1200,2400):null,saveQuoteChunk3:window.saveQuoteFromTemplate?String(window.saveQuoteFromTemplate).slice(2400,3600):null,openQuote:typeof window.openQuotePage,editQuote:typeof window.editQuote,recalc:typeof window.recalculateQuoteMainItem,collect:typeof window.collectQuoteTemplate,collectArity:window.collectQuoteTemplate&&window.collectQuoteTemplate.length,collectHead:window.collectQuoteTemplate?String(window.collectQuoteTemplate).slice(0,1200):null,exportDocx:typeof window.exportQuoteDoc,exportDocxArity:window.exportQuoteDoc&&window.exportQuoteDoc.length,exportDocxChunk1:window.exportQuoteDoc?String(window.exportQuoteDoc).slice(0,1500):null,exportDocxChunk2:window.exportQuoteDoc?String(window.exportQuoteDoc).slice(1500,3000):null,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\\.js/i.test(s.src)),quoteItemsType:Array.isArray(window.quoteItems)?'array':typeof window.quoteItems,buttons:Array.from(document.querySelectorAll('button')).map(b=>String(b.textContent||'').replace(/\\s+/g,' ').trim()).filter(Boolean).slice(0,80)}));const required=['saveQuote','openQuote','editQuote','recalc','collect','exportDocx'];const missing=required.filter(k=>result[k]!=='function');const payload={ok:false,result,pageErrors,consoleErrors,requestFailures,missing};fs.writeFileSync(out,JSON.stringify(payload,null,2));if(!result.patch||result.jszip!=='function'||result.jszipVersion!=='3.10.1'||result.ensureJSZip!=='function'||result.template!=='string'||missing.length||result.obsoletePreviewScript||pageErrors.length)throw new Error('Browser smoke invariant failed');payload.ok=true;fs.writeFileSync(out,JSON.stringify(payload,null,2));await browser.close()}catch(err){const payload={ok:false,error:String(err&&err.stack||err),pageErrors,consoleErrors,requestFailures};fs.writeFileSync(out,JSON.stringify(payload,null,2));try{await browser.close()}catch(_){}process.exit(1)}})();
           NODE
           exit $?
       - name: Publish result
@@ -101,10 +58,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add BROWSER_SMOKE_RESULT.json QUOTE_RUNTIME_SIGNATURES.json
-          test -f /tmp/jszip-repaired && git add jszip.min.js || true
-          if git diff --cached --quiet; then exit 0; fi
-          if test -f /tmp/jszip-repaired; then git commit -m '[browser-smoke-signatures] repair JSZip and capture quote runtime signatures'; else git commit -m '[browser-smoke-signatures] capture quote runtime signatures'; fi
-          git push origin HEAD:main
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'; git add BROWSER_SMOKE_RESULT.json QUOTE_RUNTIME_SIGNATURES.json; test -f /tmp/jszip-repaired && git add jszip.min.js || true; if git diff --cached --quiet; then exit 0; fi; if test -f /tmp/jszip-repaired; then git commit -m '[browser-smoke-signatures] repair JSZip and capture quote runtime signatures'; else git commit -m '[browser-smoke-signatures] capture quote runtime signatures'; fi; git push origin HEAD:main
