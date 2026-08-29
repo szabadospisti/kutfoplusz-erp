@@ -1,0 +1,18 @@
+KÚTFŐ PLUSZ ERP 2.0 — R261–R270 SOURCE AUDIT
+
+Date: 2026-08-29
+Branch: main
+Commit: f7a6f734663862f8fbf6fba2d024da51b5508691
+
+R261 Persistent source-audit workflow: ADDED.
+R262 Required quote files: checked by workflow.
+R263 Obsolete quote_preview_pages.js / quote_preview_vectors.js: workflow FAIL condition.
+R264 quote_ui_fix.js wiring count: workflow requires exactly one reference.
+R265 Native qty=count guard: workflow checks for the corrected source expression.
+R266 Native manual-price guard: workflow checks for priceManual protection.
+R267 DOCX dependencies quote_template.js and jszip.min.js: workflow checks presence and wiring.
+R268 quote_ui_fix.js PDF/preview/print runtime references: workflow rejects them.
+R269 JavaScript syntax: workflow runs node --check for standalone JS and inline script blocks.
+R270 Browser/Safari E2E: NOT CLAIMED. This workflow is static/source validation only.
+
+Important: this workflow is read-only with respect to repository contents. It does not patch, commit, or delete source files.
