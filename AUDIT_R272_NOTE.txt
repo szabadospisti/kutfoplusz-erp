@@ -1,0 +1,1 @@
+Follow-up: inspect quote save/reload persistence and DOCX runtime generation. Browser/Safari E2E remains unverified without an actual browser runner.
