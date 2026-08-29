@@ -1,0 +1,53 @@
+name: Verify quote runtime
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: ${{ !contains(github.event.head_commit.message, '[quote-runtime-verify]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify source structure and JavaScript syntax
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert not re.search(r'quote_preview_(?:pages|vectors)\.js', html, re.I), 'obsolete preview script reference remains'
+          assert len(re.findall(r'quote_ui_fix\.js', html, re.I)) == 1, 'quote_ui_fix.js must be loaded exactly once'
+          assert Path('quote_ui_fix.js').is_file()
+          assert Path('quote_template.js').is_file()
+          assert Path('jszip.min.js').is_file()
+
+          blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.I | re.S)
+          assert blocks, 'no inline script blocks found'
+          with tempfile.TemporaryDirectory() as td:
+              for i, block in enumerate(blocks, 1):
+                  f = Path(td) / f'inline_{i}.js'
+                  f.write_text(block, encoding='utf-8')
+                  r = subprocess.run(['node', '--check', str(f)], text=True, capture_output=True)
+                  if r.returncode:
+                      raise SystemExit(f'inline script {i} syntax error:\n{r.stderr}')
+
+          for name in ['quote_ui_fix.js', 'quote_template.js']:
+              r = subprocess.run(['node', '--check', name], text=True, capture_output=True)
+              if r.returncode:
+                  raise SystemExit(f'{name} syntax error:\n{r.stderr}')
+
+      - name: Remove one-shot verification workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f .github/workflows/verify-quote-runtime.yml
+          git commit -m "Verify quote runtime source [quote-runtime-verify]"
+          git push origin HEAD:main
