@@ -5,7 +5,7 @@
   s.async=false;
   document.head.appendChild(s);
   const p=document.createElement("script");
-  p.src="quote_ui_fix.js?v=6";
+  p.src="quote_ui_fix.js?v=15";
   p.async=false;
   document.head.appendChild(p);
   const v=document.createElement("script");
@@ -15,7 +15,7 @@
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-14";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-15";
   function installLayout(){
     if(document.getElementById("kutfo-quote-three-fields-style"))return;
     const s=document.createElement("style");s.id="kutfo-quote-three-fields-style";
