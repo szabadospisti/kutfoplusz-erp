@@ -1,0 +1,38 @@
+AUDIT R251-R260 – AJÁNLAT → MENTÉS → VISSZATÖLTÉS → DOCX
+======================================================================
+Dátum: 2026-08-29
+
+R251 – AJÁNLATI ADATMODELL
+  qty / unit / desc / price külön mezők: NATÍV FORRÁSBAN JAVÍTVA
+  count → qty; a darabszám nem kerülhet a desc prefixébe.
+
+R252 – KÉZI EGYSÉGÁR
+  priceManual=true esetén a natív újraszámítás nem írhatja felül a price értéket: JAVÍTVA.
+  Statikus forrás alapján igazolt; browser E2E nem igazolt.
+
+R253 – MENTÉS
+  collectQuoteTemplate() a quote item mezőket külön gyűjti.
+  Statikus forrás alapján igazolt; tényleges böngészős mentési futás nincs igazolva.
+
+R254 – VISSZATÖLTÉS
+  qty/unit/desc/price visszatöltési lánc: runtime E2E NEM IGAZOLT.
+
+R255 – DOCX ADATCSATORNA
+  collectQuoteTemplate() → exportQuoteDoc(): forrásból azonosított.
+  Runtime Word-fájl generálás: NEM IGAZOLT.
+
+R256 – DOCX MEZŐK
+  qty / unit / desc külön marad; megjelenítéskor összefűzhető.
+  Elvárt: „2 db 50,0 m-es kút kivitelezése”.
+
+R257 – NETTÓ: qty × price alapú tételösszeg szükséges.
+R258 – ÁFA: nettó alapján számított érték szükséges.
+R259 – BRUTTÓ: nettó + ÁFA szükséges.
+R260 – PDF / PREVIEW: modulok repositoryból eltávolítva; browser E2E NEM IGAZOLT.
+
+ÖSSZESÍTÉS
+  Statikus javítások: IGEN
+  GitHub commit: IGEN
+  GitHub Actions CI: az ellenőrzött commitokra nincs workflow run
+  Safari E2E: NEM IGAZOLT
+  Következő fókusz: tényleges DOCX-generálás és mentés/visszatöltés runtime teszt.
