@@ -56,6 +56,35 @@
     return window.__KUTFOPLUSZ_JSZIP_PROMISE;
   }
 
+  function removePreviewControls(){
+    document.querySelectorAll("button,a").forEach(function(el){
+      const text=String(el.textContent||"").replace(/\s+/g," ").trim();
+      if(/Előnézet\s*\/\s*PDF/i.test(text)) el.remove();
+      if(/PDF\s*\/\s*Nyomtatás/i.test(text)) el.remove();
+    });
+    document.querySelectorAll(".qv-page,.qv-wrap-modal").forEach(function(el){
+      const modal=el.closest(".modal");
+      if(modal && /PDF előnézet/i.test(String(modal.textContent||""))) modal.remove();
+    });
+  }
+
+  function disablePreviewFunctions(){
+    if(typeof window.previewQuote==="function"&&!window.__KUTFOPLUSZ_PREVIEW_DISABLED){
+      window.previewQuote=function(){
+        if(typeof window.toast==="function") window.toast("A PDF/előnézet funkció ki van kapcsolva.");
+        return false;
+      };
+      window.__KUTFOPLUSZ_PREVIEW_DISABLED=true;
+    }
+    if(typeof window.printExactPdfPreview==="function"&&!window.__KUTFOPLUSZ_PRINT_PREVIEW_DISABLED){
+      window.printExactPdfPreview=function(){
+        if(typeof window.toast==="function") window.toast("A PDF/nyomtatás funkció ki van kapcsolva.");
+        return false;
+      };
+      window.__KUTFOPLUSZ_PRINT_PREVIEW_DISABLED=true;
+    }
+  }
+
   function installDocxDependencyGuard(){
     ensureJSZip().catch(function(){});
     if(window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD) return;
@@ -76,6 +105,7 @@
 
   function patchFunctions(){
     installDocxDependencyGuard();
+    disablePreviewFunctions();
 
     if(typeof window.recalculateQuoteMainItem==="function"&&!window.__KUTFOPLUSZ_DOCX_RECALC){
       const original=window.recalculateQuoteMainItem;
@@ -100,10 +130,15 @@
   function install(){
     patchFunctions();
     normalizeQuoteItems();
+    removePreviewControls();
     if(!(window.__KUTFOPLUSZ_DOCX_RECALC&&window.__KUTFOPLUSZ_DOCX_COLLECT)) setTimeout(install,50);
   }
 
   window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;
   install();
   window.addEventListener("load",install,{once:false});
+  if(!window.__KUTFOPLUSZ_PREVIEW_REMOVAL_OBSERVER){
+    window.__KUTFOPLUSZ_PREVIEW_REMOVAL_OBSERVER=true;
+    new MutationObserver(function(){removePreviewControls();disablePreviewFunctions();}).observe(document.documentElement,{childList:true,subtree:true});
+  }
 })();
