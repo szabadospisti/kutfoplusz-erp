@@ -71,13 +71,21 @@ jobs:
                 ensureJSZip: typeof window.KUTFOPLUSZ_ensureJSZip,
                 template: typeof window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64,
                 saveQuote: typeof window.saveQuoteFromTemplate,
+                saveQuoteArity: window.saveQuoteFromTemplate && window.saveQuoteFromTemplate.length,
+                saveQuoteHead: window.saveQuoteFromTemplate ? String(window.saveQuoteFromTemplate).slice(0,600) : null,
                 openQuote: typeof window.openQuotePage,
                 editQuote: typeof window.editQuote,
                 recalc: typeof window.recalculateQuoteMainItem,
                 collect: typeof window.collectQuoteTemplate,
+                collectArity: window.collectQuoteTemplate && window.collectQuoteTemplate.length,
+                collectHead: window.collectQuoteTemplate ? String(window.collectQuoteTemplate).slice(0,600) : null,
                 exportDocx: typeof window.exportQuoteDoc,
+                exportDocxArity: window.exportQuoteDoc && window.exportQuoteDoc.length,
+                exportDocxHead: window.exportQuoteDoc ? String(window.exportQuoteDoc).slice(0,600) : null,
                 obsoletePreviewScript: Array.from(document.scripts).some(s => /quote_preview_(pages|vectors)\\.js/i.test(s.src)),
-                quoteItemsType: Array.isArray(window.quoteItems) ? 'array' : typeof window.quoteItems
+                quoteItemsType: Array.isArray(window.quoteItems) ? 'array' : typeof window.quoteItems,
+                buttons: Array.from(document.querySelectorAll('button')).map(b => String(b.textContent||'').replace(/\\s+/g,' ').trim()).filter(Boolean).slice(0,80),
+                bodyHead: String(document.body.innerText||'').replace(/\\s+/g,' ').trim().slice(0,2000)
               }));
               const required = ['saveQuote','openQuote','editQuote','recalc','collect','exportDocx'];
               const missing = required.filter(k => result[k] !== 'function');
@@ -124,9 +132,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add BROWSER_SMOKE_RESULT.json
           test -f /tmp/jszip-repaired && git add jszip.min.js || true
-          if git diff --cached --quiet; then
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           if test -f /tmp/jszip-repaired; then
             git commit -m '[browser-smoke-result] repair bundled JSZip and capture runtime result'
           else
