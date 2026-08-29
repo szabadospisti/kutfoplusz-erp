@@ -1,0 +1,1 @@
+Do not claim browser E2E from static source checks. Next work item: quote save/reload persistence and live DOCX generation.
