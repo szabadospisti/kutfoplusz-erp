@@ -1,0 +1,1 @@
+Next checkpoint: trace quote save/reload persistence and DOCX export runtime path. Browser E2E remains unverified until an actual browser environment is available.
