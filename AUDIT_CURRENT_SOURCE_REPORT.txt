@@ -11,15 +11,15 @@ index.html
   - inline script blokkok: 11 (a nagy monolit fájl tartalma miatt a teljes statikus vizsgálat külön auditokban történik)
 
 AKTUÁLIS DOKUMENTUM-EXPORT:
-  - DOCX: az index.html-be ágyazott KUTFOPLUSZ_QUOTE_TEMPLATE_B64 template + JSZip 3.10.1
-  - quote_template.js: NINCS az aktuális main tree-ben
+  - DOCX: quote_template.js + JSZip 3.10.1
+  - quote_template.js: jelen van az aktuális main tree-ben
   - PDF / preview modulok: eltávolítva a repositoryból
   - quote_preview_pages.js: nincs az aktuális main tree-ben
   - quote_preview_vectors.js: nincs az aktuális main tree-ben
 
 FONTOS VALIDÁCIÓS STÁTUSZ:
   - Statikus forrásellenőrzés: végrehajtva a rendelkezésre álló GitHub-forrásokon
-  - GitHub Actions source audit: a workflow frissítve az aktuális embedded-DOCX felépítésre; új futás eredménye külön ellenőrzendő
+  - GitHub Actions source audit: a workflow a quote_template.js + JSZip felépítést ellenőrzi; az aktuális futás eredménye külön ellenőrizendő
   - Browser/Safari E2E: ebből a környezetből nem igazolt
   - PDF/preview funkció tényleges böngészős eltűnése: statikusan és a modulok törlésével ellenőrizendő; runtime E2E nem igazolt
 
@@ -30,4 +30,4 @@ AJÁNLAT – AKTUÁLIS ADATMODELL CÉLÁLLAPOT:
   A quote_ui_fix.js aktuális rétege nem normalizálja át a live quoteItems desc mezőt DOCX export előtt.
 
 MEGJEGYZÉS:
-Ez a jelentés korrigálja a korábbi, elavult quote_template.js-re hivatkozó dokumentációt. Nem állít runtime működést ott, ahol nincs böngészős E2E bizonyíték.
+A jelentés a jelenlegi repository-fát követi. Nem állít runtime működést ott, ahol nincs böngészős E2E bizonyíték.
