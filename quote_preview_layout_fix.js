@@ -1,8 +1,9 @@
 /* Kútfő Plusz ERP 2.0 – PDF preview: fullscreen A4 viewer */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-PREVIEW-FULLSCREEN-A4-2026-08-29-03";
+  const PATCH="ERP2.0-QUOTE-PREVIEW-FULLSCREEN-A4-2026-08-29-04";
   let raf=0;
+  const initialized=new WeakSet();
 
   function appLogoSrc(){
     const imgs=[...document.images].filter(img=>!img.closest(".qv-page")&&img.complete&&img.naturalWidth>0);
@@ -47,8 +48,6 @@
     page.style.transformOrigin="top center";
     page.style.transform=scale<1?"scale("+scale+")":"none";
     page.style.width=naturalW+"px";
-    // A qv-page contains absolutely positioned A4 content, therefore its
-    // height must remain explicit. Setting height:auto collapses the page.
     page.style.height=naturalH+"px";
     page.style.margin="0 auto 16px";
     page.style.flex="0 0 auto";
@@ -98,12 +97,24 @@
     logo.style.objectFit="contain";
   }
 
+  function resetPreviewToTop(page){
+    if(initialized.has(page))return;
+    const m=findModal(page);
+    if(m.body){
+      m.body.scrollTop=0;
+      m.body.scrollLeft=0;
+      m.body.dataset.kutfoPreviewTopReset="1";
+    }
+    initialized.add(page);
+  }
+
   function run(){
     injectFullscreenStyle();
     document.querySelectorAll(".qv-page").forEach(function(page){
       fitModal(page);
       fitPage(page);
       repairLogo(page);
+      resetPreviewToTop(page);
     });
   }
 
