@@ -18,6 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Install Playwright package
+        shell: bash
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.62.0 >/dev/null 2>&1
+
       - name: Start static server
         shell: bash
         run: |
