@@ -1,9 +1,9 @@
 {
   "ok": false,
-  "error": "Error: Browser page errors: ReferenceError: u is not defined | ReferenceError: u is not defined\n    at [stdin]:41:34",
+  "error": "Error: Browser page errors: ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269 | ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269\n    at [stdin]:41:34",
   "pageErrors": [
-    "ReferenceError: u is not defined",
-    "ReferenceError: u is not defined"
+    "ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269",
+    "ReferenceError: u is not defined\n    at legacy_legacy_s (http://127.0.0.1:4173/jszip.min.js:13:734)\n    at http://127.0.0.1:4173/jszip.min.js:13:751\n    at http://127.0.0.1:4173/jszip.min.js:13:264\n    at http://127.0.0.1:4173/jszip.min.js:13:269"
   ],
   "consoleErrors": [],
   "requestFailures": [
