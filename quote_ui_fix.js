@@ -1,7 +1,9 @@
-/* Kútfő Plusz ERP 2.0 – quote preview/layout/data cleanup */
+/* Kútfő Plusz ERP 2.0 – Word/DOCX export data cleanup
+ * PDF/preview support intentionally removed.
+ */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-29-15";
+  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-16";
 
   function cleanNumber(v){
     const s=String(v??"").trim().replace(/,/g,".");
@@ -9,6 +11,8 @@
     return Number.isFinite(n)?n:null;
   }
 
+  /* Keep quantity, unit and description as separate data fields.
+     This fixes the former "1 db 1 db ..." DOCX duplication. */
   function normalizeQuoteItems(){
     if(!Array.isArray(window.quoteItems)) return;
     window.quoteItems.forEach(function(x){
@@ -21,18 +25,6 @@
         x.desc=m[2].trim();
       }
     });
-  }
-
-  function normalizeSubject(q){
-    if(!q) return q;
-    const name=String(q.name||"").trim();
-    const diameter=String(q.pipeDiameter||"").replace(/[^0-9.,]/g,"").trim();
-    const depth=String(q.depth||"").replace(/[^0-9.,]/g,"").trim();
-    if(name&&diameter&&depth){
-      const base=name.replace(/\s*-\s*\d+(?:[.,]\d+)?\s*mm\s*-\s*\d+(?:[.,]\d+)?\s*m\s*$/i,"").trim();
-      q.subject=(base||name)+" - "+diameter+" mm - "+depth+" m";
-    }
-    return q;
   }
 
   function loadJSZip(urls,index){
@@ -85,54 +77,30 @@
   function patchFunctions(){
     installDocxDependencyGuard();
 
-    if(typeof window.recalculateQuoteMainItem==="function"&&!window.__KUTFOPLUSZ_VISUAL_RECALC){
+    if(typeof window.recalculateQuoteMainItem==="function"&&!window.__KUTFOPLUSZ_DOCX_RECALC){
       const original=window.recalculateQuoteMainItem;
       window.recalculateQuoteMainItem=function(){
         const r=original.apply(this,arguments);
         normalizeQuoteItems();
         return r;
       };
-      window.__KUTFOPLUSZ_VISUAL_RECALC=true;
+      window.__KUTFOPLUSZ_DOCX_RECALC=true;
     }
 
-    if(typeof window.collectQuoteTemplate==="function"&&!window.__KUTFOPLUSZ_VISUAL_COLLECT){
+    if(typeof window.collectQuoteTemplate==="function"&&!window.__KUTFOPLUSZ_DOCX_COLLECT){
       const original=window.collectQuoteTemplate;
       window.collectQuoteTemplate=function(){
         normalizeQuoteItems();
-        return normalizeSubject(original.apply(this,arguments));
+        return original.apply(this,arguments);
       };
-      window.__KUTFOPLUSZ_VISUAL_COLLECT=true;
-    }
-
-    if(typeof window.buildExactPdfPreview==="function"&&!window.__KUTFOPLUSZ_VISUAL_PREVIEW){
-      const original=window.buildExactPdfPreview;
-      window.buildExactPdfPreview=function(q){
-        q=normalizeSubject(q);
-        const html=original.call(this,q);
-        const pages=html.split('<div class="qv-page">');
-        if(pages.length<3) return html;
-        let p1='<div class="qv-page">'+pages[1];
-        let p2='<div class="qv-page">'+pages[2];
-        const waterText='Tervezett vízigény: '+String(q.waterNeed||"");
-        const waterRegex=new RegExp('(<div class="qv-text[^>]*>)'+waterText.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(</div>)');
-        p2=p2.replace(waterRegex,'');
-        if(String(q.waterNeed||"").trim()){
-          const escaped=String(q.waterNeed||"").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          const addition='<div class="qv-text" style="left:150px;top:1180px;width:500px">Tervezett vízigény: '+escaped+'</div>';
-          const end=p1.lastIndexOf('</div>');
-          if(end>=0) p1=p1.slice(0,end)+addition+p1.slice(end);
-        }
-        p2=p2.replace('<div class="qv-page">','<div class="qv-page"><div class="qv-white" style="left:0;top:0;width:1020px;height:225px"></div>');
-        return p1+p2;
-      };
-      window.__KUTFOPLUSZ_VISUAL_PREVIEW=true;
+      window.__KUTFOPLUSZ_DOCX_COLLECT=true;
     }
   }
 
   function install(){
     patchFunctions();
     normalizeQuoteItems();
-    if(!(window.__KUTFOPLUSZ_VISUAL_RECALC&&window.__KUTFOPLUSZ_VISUAL_COLLECT&&window.__KUTFOPLUSZ_VISUAL_PREVIEW)) setTimeout(install,50);
+    if(!(window.__KUTFOPLUSZ_DOCX_RECALC&&window.__KUTFOPLUSZ_DOCX_COLLECT)) setTimeout(install,50);
   }
 
   window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;
