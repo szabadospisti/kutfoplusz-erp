@@ -48,7 +48,7 @@ jobs:
             const pageErrors = [];
             const consoleErrors = [];
             const requestFailures = [];
-            page.on('pageerror', e => pageErrors.push(String(e)));
+            page.on('pageerror', e => pageErrors.push(String(e && e.stack || e)));
             page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
             page.on('requestfailed', r => requestFailures.push(`${r.url()} :: ${r.failure()?.errorText || 'unknown'}`));
             try {
@@ -93,7 +93,6 @@ jobs:
           })().catch(err => { fs.writeFileSync(out, JSON.stringify({ok:false,error:String(err&&err.stack||err)},null,2)); console.error(err.stack||err); process.exit(1); });
           NODE
           status=$?
-          echo "$status" >/tmp/browser-smoke-status
           exit $status
 
       - name: Publish browser smoke result
