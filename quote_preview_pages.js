@@ -5,17 +5,17 @@
   s.async=false;
   document.head.appendChild(s);
   const p=document.createElement("script");
-  p.src="quote_ui_fix.js?v=3";
+  p.src="quote_ui_fix.js?v=4";
   p.async=false;
   document.head.appendChild(p);
   const v=document.createElement("script");
-  v.src="quote_preview_layout_fix.js?v=4";
+  v.src="quote_preview_layout_fix.js?v=5";
   v.async=false;
   document.head.appendChild(v);
 })();
 (function(){
   "use strict";
-  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-28-09";
+  const PATCH_VERSION="ERP2.0-QUOTE-UI-FIX-2026-08-29-10";
   function installLayout(){
     if(document.getElementById("kutfo-quote-three-fields-style"))return;
     const s=document.createElement("style");s.id="kutfo-quote-three-fields-style";
