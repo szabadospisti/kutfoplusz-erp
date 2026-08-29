@@ -1,0 +1,77 @@
+name: ERP Source Audit
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s index.html
+          test -s quote_ui_fix.js
+          test -s quote_template.js
+          test -s jszip.min.js
+
+      - name: Validate quote script wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -Eiq 'quote_preview_(pages|vectors)\.js' index.html; then
+            echo 'ERROR: obsolete quote preview script reference remains in index.html'
+            exit 1
+          fi
+          count=$(grep -Eio 'quote_ui_fix\.js([?][^"'"'"' >]*)?' index.html | wc -l | tr -d ' ')
+          test "$count" -eq 1
+
+      - name: Validate native quote calculation guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'quoteItems[0].qty=count>0 ? count : 1;' index.html
+          grep -Fq 'if(!quoteItems[0].priceManual)' index.html
+
+      - name: Validate DOCX-only quote path
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'quote_template.js' index.html
+          grep -Fq 'jszip.min.js' index.html
+          if grep -Eiq 'printExactPdfPreview|previewQuote|window\.print\(' quote_ui_fix.js; then
+            echo 'ERROR: PDF/preview/print runtime path remains in quote_ui_fix.js'
+            exit 1
+          fi
+          test ! -e quote_preview_pages.js
+          test ! -e quote_preview_vectors.js
+
+      - name: JavaScript syntax check
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check quote_ui_fix.js
+          node --check quote_template.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          html=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,re.I|re.S)
+          with tempfile.TemporaryDirectory() as td:
+              for i, block in enumerate(blocks, 1):
+                  p=Path(td)/f'inline_{i}.js'
+                  p.write_text(block, encoding='utf-8')
+                  r=subprocess.run(['node','--check',str(p)],capture_output=True,text=True)
+                  if r.returncode:
+                      raise SystemExit(f'inline script {i} syntax error:\n{r.stderr}')
+          print(f'Checked {len(blocks)} inline script blocks')
+          PY
