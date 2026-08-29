@@ -1,7 +1,7 @@
 /* Kútfő Plusz ERP 2.0 – quote preview/layout/data cleanup */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-29-13";
+  const PATCH="ERP2.0-QUOTE-VISUAL-FIX-2026-08-29-15";
 
   function cleanNumber(v){
     const s=String(v??"").trim().replace(/,/g,".");
@@ -35,32 +35,37 @@
     return q;
   }
 
-  function ensureJSZip(){
+  function loadJSZip(urls,index){
     if(window.JSZip) return Promise.resolve(window.JSZip);
-    if(window.__KUTFOPLUSZ_JSZIP_PROMISE) return window.__KUTFOPLUSZ_JSZIP_PROMISE;
-    window.__KUTFOPLUSZ_JSZIP_PROMISE=new Promise(function(resolve,reject){
-      const existing=document.querySelector('script[data-kutfo-jszip="1"]');
-      if(existing){
-        existing.addEventListener("load",function(){resolve(window.JSZip);},{once:true});
-        existing.addEventListener("error",reject,{once:true});
-        return;
-      }
+    index=index||0;
+    if(index>=urls.length) return Promise.reject(new Error("JSZip nem tölthető be egyik forrásból sem."));
+    return new Promise(function(resolve,reject){
       const s=document.createElement("script");
-      s.src="jszip.min.js?v=3.10.1";
+      s.src=urls[index];
       s.async=false;
       s.dataset.kutfoJszip="1";
       s.onload=function(){
         if(window.JSZip) resolve(window.JSZip);
-        else reject(new Error("JSZip betöltve, de a globális JSZip objektum nem érhető el."));
+        else loadJSZip(urls,index+1).then(resolve,reject);
       };
-      s.onerror=function(){reject(new Error("A jszip.min.js betöltése sikertelen."));};
+      s.onerror=function(){loadJSZip(urls,index+1).then(resolve,reject);};
       document.head.appendChild(s);
     });
+  }
+
+  function ensureJSZip(){
+    if(window.JSZip) return Promise.resolve(window.JSZip);
+    if(window.__KUTFOPLUSZ_JSZIP_PROMISE) return window.__KUTFOPLUSZ_JSZIP_PROMISE;
+    const urls=[
+      "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+      "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+    ];
+    window.__KUTFOPLUSZ_JSZIP_PROMISE=loadJSZip(urls,0);
     return window.__KUTFOPLUSZ_JSZIP_PROMISE;
   }
 
   function installDocxDependencyGuard(){
-    ensureJSZip().catch(function(){ /* a kattintáskor újrapróbáljuk */ });
+    ensureJSZip().catch(function(){});
     if(window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD) return;
     window.__KUTFOPLUSZ_DOCX_JSZIP_GUARD=true;
     document.addEventListener("click",function(ev){
@@ -106,21 +111,17 @@
         const html=original.call(this,q);
         const pages=html.split('<div class="qv-page">');
         if(pages.length<3) return html;
-
         let p1='<div class="qv-page">'+pages[1];
         let p2='<div class="qv-page">'+pages[2];
-
         const waterText='Tervezett vízigény: '+String(q.waterNeed||"");
         const waterRegex=new RegExp('(<div class="qv-text[^>]*>)'+waterText.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(</div>)');
         p2=p2.replace(waterRegex,'');
-
         if(String(q.waterNeed||"").trim()){
           const escaped=String(q.waterNeed||"").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
           const addition='<div class="qv-text" style="left:150px;top:1180px;width:500px">Tervezett vízigény: '+escaped+'</div>';
           const end=p1.lastIndexOf('</div>');
           if(end>=0) p1=p1.slice(0,end)+addition+p1.slice(end);
         }
-
         p2=p2.replace('<div class="qv-page">','<div class="qv-page"><div class="qv-white" style="left:0;top:0;width:1020px;height:225px"></div>');
         return p1+p2;
       };
@@ -131,8 +132,7 @@
   function install(){
     patchFunctions();
     normalizeQuoteItems();
-    if(!(window.__KUTFOPLUSZ_VISUAL_RECALC&&window.__KUTFOPLUSZ_VISUAL_COLLECT&&window.__KUTFOPLUSZ_VISUAL_PREVIEW))
-      setTimeout(install,50);
+    if(!(window.__KUTFOPLUSZ_VISUAL_RECALC&&window.__KUTFOPLUSZ_VISUAL_COLLECT&&window.__KUTFOPLUSZ_VISUAL_PREVIEW)) setTimeout(install,50);
   }
 
   window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;
