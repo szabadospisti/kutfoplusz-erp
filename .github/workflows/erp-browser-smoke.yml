@@ -12,27 +12,29 @@ jobs:
   browser-smoke:
     if: ${{ !contains(github.event.head_commit.message, '[browser-smoke-result]') }}
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.62.0-noble
-      options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
 
       - name: Install Playwright package
         shell: bash
         run: |
           npm init -y >/dev/null 2>&1
           npm install --no-save playwright@1.62.0 >/dev/null 2>&1
+          npx playwright install chromium --with-deps >/dev/null 2>&1
 
       - name: Start static server
         shell: bash
         run: |
-          python3 -m http.server 4173 --bind 0.0.0.0 >/tmp/erp-http.log 2>&1 &
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
           sleep 2
 
       - name: Browser smoke test
-        id: smoke
         shell: bash
         run: |
           set +e
