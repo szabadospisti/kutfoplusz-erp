@@ -1,0 +1,64 @@
+name: ERP Browser Smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.0-noble
+      options: --user 1001
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Start static server
+        shell: bash
+        run: |
+          python3 -m http.server 4173 --bind 0.0.0.0 >/tmp/erp-http.log 2>&1 &
+          sleep 2
+
+      - name: Browser smoke test
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage();
+            const errors = [];
+            page.on('pageerror', e => errors.push(String(e)));
+            page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+            await page.goto('http://127.0.0.1:4173/index.html', {waitUntil:'networkidle', timeout:60000});
+            await page.waitForTimeout(1000);
+            const result = await page.evaluate(() => ({
+              patch: window.KUTFOPLUSZ_QUOTE_VISUAL_FIX || null,
+              jszip: typeof window.JSZip,
+              ensureJSZip: typeof window.KUTFOPLUSZ_ensureJSZip,
+              saveQuote: typeof window.saveQuoteFromTemplate,
+              openQuote: typeof window.openQuotePage,
+              editQuote: typeof window.editQuote,
+              recalc: typeof window.recalculateQuoteMainItem,
+              collect: typeof window.collectQuoteTemplate,
+              exportDocx: typeof window.exportQuoteDoc,
+              obsoletePreviewScript: Array.from(document.scripts).some(s => /quote_preview_(pages|vectors)\\.js/i.test(s.src)),
+              quoteItemsType: Array.isArray(window.quoteItems) ? 'array' : typeof window.quoteItems
+            }));
+            const required = ['saveQuote','openQuote','editQuote','recalc','collect','exportDocx'];
+            const missing = required.filter(k => result[k] !== 'function');
+            if (!result.patch) throw new Error('quote_ui_fix.js runtime marker missing');
+            if (result.jszip !== 'function') throw new Error('JSZip is not available in browser runtime');
+            if (result.ensureJSZip !== 'function') throw new Error('JSZip dependency guard is not installed');
+            if (missing.length) throw new Error('Missing quote runtime functions: ' + missing.join(', '));
+            if (result.obsoletePreviewScript) throw new Error('Obsolete PDF preview script is still loaded');
+            if (errors.length) throw new Error('Browser console/page errors: ' + errors.join(' | '));
+            console.log(JSON.stringify(result, null, 2));
+            await browser.close();
+          })().catch(err => { console.error(err.stack || err); process.exit(1); });
+          NODE
