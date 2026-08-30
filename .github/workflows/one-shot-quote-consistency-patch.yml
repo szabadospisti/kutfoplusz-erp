@@ -1,0 +1,35 @@
+name: one-shot quote consistency patch
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'fix: apply quote consistency runtime patch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch to runtime-loaded quote layer
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          target=Path('quote_ui_fix.js')
+          patch=Path('QUOTE_DATA_CONSISTENCY_PATCH.js').read_text(encoding='utf-8')
+          text=target.read_text(encoding='utf-8')
+          marker='__KPF_QUOTE_DATA_CONSISTENCY_V1'
+          if marker not in text:
+              target.write_text(text+'\n\n/* ERP2.0 QUOTE DATA CONSISTENCY */\n'+patch+'\n',encoding='utf-8')
+          else:
+              print('patch already present')
+          PY
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add quote_ui_fix.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: apply quote consistency runtime patch"
+          git push origin HEAD:main
