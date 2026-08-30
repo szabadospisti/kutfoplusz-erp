@@ -1,0 +1,52 @@
+name: Quote Runtime Diagnostic
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.62.0 >/dev/null 2>&1
+          npx playwright install chromium --with-deps >/dev/null 2>&1
+      - name: Inspect quote editor data flow
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage();
+            page.on('pageerror',e=>console.log('PAGEERROR',String(e&&e.stack||e)));
+            await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
+            await page.waitForTimeout(1500);
+            const pre=await page.evaluate(()=>({quoteRows:String(window.quoteRows||''),editQuote:String(window.editQuote||''),quoteNetValue:String(window.quoteNetValue||''),nav:String(window.nav||''),quoteCount:Array.isArray(window.eval('db')?.quotes)?window.eval('db').quotes.length:-1,first:window.eval('db')?.quotes?.[0]||null}));
+            console.log('PRE',JSON.stringify(pre));
+            const result=await page.evaluate(async()=>{
+              const d=window.eval('db'),s=window.eval('save');
+              const projectId='DIAG-PROJECT-'+Date.now(),quoteId='DIAG-QUOTE-'+Date.now();
+              if(!Array.isArray(d.customers))d.customers=[];
+              d.customers.push({id:'__diag__',name:'Diagnostic Customer'});
+              d.projects.push({id:projectId,name:'Diagnostic Project',status:'Ajánlat',customerId:'__diag__'});
+              d.quotes.push({id:quoteId,customerId:'__diag__',projectId,status:'Piszkozat',name:'Diagnostic Quote',location:'Diagnostic Location',depth:55,pipeDiameter:'324',net:250000,gross:317500,items:[{qty:2,quantity:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,unitPrice:125000,priceManual:true}]});
+              s();return {projectId,quoteId};
+            });
+            await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
+            const before=await page.evaluate(id=>{const d=window.eval('db'),q=d.quotes.find(x=>String(x.id)===String(id));return {q,quoteItems:window.eval('typeof quoteItems')==='undefined'?null:window.eval('quoteItems'),html:document.getElementById('content')?.textContent||''};},result.quoteId);
+            await page.evaluate(id=>window.editQuote(id),result.quoteId);await page.waitForTimeout(700);
+            const after=await page.evaluate(()=>({quoteItems:(()=>{try{return window.eval('quoteItems')}catch(e){return null}})(),content:document.getElementById('content')?.textContent||'',fields:{depth:document.getElementById('q_depth')?.value||'',diameter:document.getElementById('q_pipe_diameter')?.value||'',items:document.getElementById('q_items')?.innerText||''}}));
+            console.log('BEFORE',JSON.stringify(before));
+            console.log('AFTER',JSON.stringify(after));
+            await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));d.customers=d.customers.filter(x=>String(x.id)!=='__diag__');s();},result);
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
