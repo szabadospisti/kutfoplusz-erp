@@ -71,4 +71,13 @@
   patch();window.addEventListener('load',patch);window.addEventListener('hashchange',()=>setTimeout(patch,0));setTimeout(patch,300);setTimeout(patch,1200);
 })();
 
+/* ERP2.0-QUOTE-NUMBER-CANONICAL-2026-08-30 */
+(function(){
+  "use strict";
+  if(typeof window.nextQuoteId==='function'&&!window.__KPF_QUOTE_NUMBER_V2){
+    window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);return `A-${yy}-${String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():(typeof nextDocumentSequence==='function'?nextDocumentSequence():1)).padStart(3,'0')}`;};
+    window.__KPF_QUOTE_NUMBER_V2=true;
+  }
+})();
+
 /* smoke-regression-trigger: quote list */
