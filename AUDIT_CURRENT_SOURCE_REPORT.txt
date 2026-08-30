@@ -1,9 +1,9 @@
 AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 ==================================================
-Dátum: 2026-08-29
+Dátum: 2026-08-30
 
 CURRENT MAIN:
-fcb27500df8519152943173b68d1855a40722e56
+c2f89558169cfe793623b743b97f79794cad633b
 
 ENTRY:
 munkanaplo.html
@@ -21,14 +21,45 @@ AKTUÁLIS DOKUMENTUM-EXPORT:
   - quote_preview_pages.js: nincs az aktuális main tree-ben
   - quote_preview_vectors.js: nincs az aktuális main tree-ben
 
+AJÁNLAT – TÉNYLEGES FUTÓ LISTA RENDERER:
+  - index.html inline runtime: quotes -> quoteRows(arr=db.quotes)
+  - az Ajánlatok főoldal eredeti listája közvetlenül db.quotes mezőkből dolgozott
+  - eredeti lista árforrás: Number(q.gross)||0
+  - eredeti lista nem tartalmazott fúrási mélység / csőátmérő oszlopot
+
 AJÁNLAT – AKTUÁLIS ADATMODELL:
   qty / unit / desc / price külön mezők.
   A darabszám nem kerülhet a desc mezőbe.
   Kézi egységár esetén priceManual=true mellett az automatikus projektár nem írhatja felül a felhasználói árat.
-  A quote_ui_fix.js aktuális rétege nem normalizálja át a live quoteItems desc mezőt DOCX export előtt.
+  Az ajánlat szerkesztő és DOCX modell az items tömbből dolgozik.
+
+AJÁNLAT – NORMALIZÁLT LISTA:
+  - ajánlatszám
+  - munka / megnevezés
+  - ügyfél
+  - helyszín
+  - fúrási mélység
+  - csőátmérő
+  - nettó ajánlati érték
+  - státusz
+  - megnyitás / projektbe konvertálás / törlés funkciók megőrizve
+  - régi mezőnevek: netTotal, totalNet, wellDepth, talpDepth, diameter, casingDiameter, quantity támogatva
+  - projektkapcsolatok: projectId, sourceProjectId, linkedProjectId támogatva
+  - csőátmérő projekt esetén a meglévő KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter() logikából származik; nincs fix listaérték
+
+AJÁNLAT – ÁR NORMALIZÁLÁS:
+  - elsődleges forrás: q.net
+  - legacy: q.netTotal / q.totalNet
+  - végső fallback: items[].qty × items[].price
+  - 0 Ft-os valódi ajánlat 0 Ft marad; hiányzó/hibás összeg esetén a tételsorokból számolunk
+  - a globális quoteNetValue() ugyanezt a fallback logikát kapta, így a projekt szerződéses értéke sem tér el a listától
+
+AJÁNLATSZÁM:
+  A következő új ajánlat az egységes A-26-001 formátumot használja: A-YY-NNN.
+  A kétjegyű év és az adott évi háromjegyű folyamatos sorszám kötőjellel szerepel.
 
 BIZONYÍTOTT RUNTIME SMOKE:
-  - quote_ui_fix runtime marker: PASS
+  - quote_ui_fix runtime marker: PASS a korábbi smoke-ban
   - JSZip: PASS, version 3.10.1
   - JSZip dependency guard: PASS
   - DOCX template global: PASS
@@ -39,19 +70,17 @@ BIZONYÍTOTT RUNTIME SMOKE:
   - collectQuoteTemplate: PASS
   - exportQuoteDoc: PASS
   - obsolete PDF preview script: FALSE
-  - browser page errors: 0
-  - console errors: 0
-  - request failures: 0
-  - evidence: BROWSER_SMOKE_RESULT.json
+  - browser page errors: 0 a korábbi PASS futásban
+
+ÚJ REGRESSZIÓS ELLENŐRZÉS:
+  - Ajánlatok lista: Fúrási mélység / Csőátmérő / Nettó / Státusz oszlopok ellenőrzése
+  - tesztadat: 55,0 m + Ø 324 mm + 250 000 Ft nettó + Piszkozat
+  - meglévő DOCX modell- és persistence-teszt megőrizve
 
 GITHUB ACTIONS:
-  - ERP Source Audit: PASS
-  - ERP Browser Smoke: PASS
+  - ERP Browser Smoke: futtatás alatt / friss regressziós ellenőrzés hozzáadva
+  - ERP DOCX Real Data E2E: futtatás alatt / meglévő export-regresszió megőrizve
+  - Quote List Diagnostic: futtatás alatt / élő quoteRows runtime vizsgálat
 
-FONTOS KORÁBBI HIBA, JAVÍTVA:
-  A repositoryban lévő jszip.min.js böngészős futáskor `ReferenceError: u is not defined` hibával elszállt. A böngészős smoke ezt ténylegesen reprodukálta. A bundled JSZip fájlt a hivatalos jszip@3.10.1 npm csomagból helyreállítottuk. A javítás után a böngészős smoke PASS lett.
-
-KORLÁT:
-  A browser smoke a futó entry point és az ajánlati runtime-függvények betöltését igazolja, de nem helyettesíti a teljes emberi UI-szintű mentés → újranyitás → DOCX fájlletöltés tesztet minden kombinációra. Ilyen tesztet csak akkor tekintünk PASS-nak, ha a tényleges mentési és fájlletöltési műveletet is lefuttattuk.
-
-Ez a jelentés nem állít olyan runtime működést, amelyet nem igazoltunk.
+MEGJEGYZÉS:
+  A quote list javítás nem feltételezett fájlt módosított: a ténylegesen futó quotes -> quoteRows(db.quotes) útvonalat azonosítottuk, és a már betöltött quote_ui_fix.js rétegben normalizáltuk. A részletező/szerkesztő által használt quoteNetValue fallbackot is egységesítettük.
