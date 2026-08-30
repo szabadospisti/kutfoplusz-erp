@@ -12,4 +12,19 @@ jobs:
       - name: Patch runtime
         env:
           GH_TOKEN: ${{ github.token }}
-        run: echo patch
+        run: |
+          node <<'NODE'
+          const owner='szabadospisti',repo='kutfoplusz-erp',branch='main';
+          const H={Authorization:`Bearer ${process.env.GH_TOKEN}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+          async function get(p){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}?ref=${branch}`,{headers:H});if(!r.ok)throw Error(await r.text());return r.json();}
+          async function put(p,sha,s,msg){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{method:'PUT',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({message:msg,content:Buffer.from(s).toString('base64'),sha,branch})});if(!r.ok)throw Error(await r.text());}
+          const f=await get('quote_ui_fix.js');let s=Buffer.from(f.content,'base64').toString();
+          const a="if(typeof window.recalculateQuoteMainItem==='function')window.recalculateQuoteMainItem(false);";
+          const b="if(typeof window.recalculateQuoteMainItem==='function'){const oldValue=el.value;el.value=numeric;window.recalculateQuoteMainItem(false);el.value=oldValue;}";
+          if(!s.includes(a))throw Error('recalc anchor missing');s=s.replace(a,b);
+          const a2="function patchQuoteEditorOpen(){if(window.__KPF_QUOTE_EDITOR_OPEN||typeof window.openQuoteEditorPage!==\"function\")return;window.__KPF_QUOTE_EDITOR_OPEN=true;const original=window.openQuoteEditorPage;window.openQuoteEditorPage=function(){const r=original.apply(this,arguments);setTimeout(()=>{syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();},80);setTimeout(()=>{syncQuoteDiameterFromProject();},500);return r;};}";
+          const b2="function patchQuoteEditorOpen(){if(!window.__KPF_QUOTE_EDITOR_OPEN&&typeof window.openQuoteEditorPage===\"function\"){window.__KPF_QUOTE_EDITOR_OPEN=true;const original=window.openQuoteEditorPage;window.openQuoteEditorPage=function(){const r=original.apply(this,arguments);setTimeout(()=>{syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();},80);setTimeout(()=>{syncQuoteDiameterFromProject();},500);return r;};}if(!window.__KPF_EDIT_QUOTE_OPEN&&typeof window.editQuote===\"function\"){window.__KPF_EDIT_QUOTE_OPEN=true;const originalEdit=window.editQuote;window.editQuote=function(){const r=originalEdit.apply(this,arguments);setTimeout(()=>{syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();},100);setTimeout(()=>{syncQuoteDiameterFromProject();},600);return r;};}}";
+          if(!s.includes(a2))throw Error('editor anchor missing');s=s.replace(a2,b2);
+          await put('quote_ui_fix.js',f.sha,s,'fix: apply diameter runtime');
+          console.log('diameter runtime patch committed');
+          NODE
