@@ -3,7 +3,7 @@ AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 Dátum: 2026-08-30
 
 CURRENT MAIN:
-c2f89558169cfe793623b743b97f79794cad633b
+31be77b286183d1335933a551f6ec9f302ce4385
 
 ENTRY:
 munkanaplo.html
@@ -78,9 +78,9 @@ BIZONYÍTOTT RUNTIME SMOKE:
   - meglévő DOCX modell- és persistence-teszt megőrizve
 
 GITHUB ACTIONS:
-  - ERP Browser Smoke: futtatás alatt / friss regressziós ellenőrzés hozzáadva
-  - ERP DOCX Real Data E2E: futtatás alatt / meglévő export-regresszió megőrizve
-  - Quote List Diagnostic: futtatás alatt / élő quoteRows runtime vizsgálat
+  - korábbi élő quoteRows runtime diagnosztika: PASS
+  - új quote editor adatfolyam diagnosztika: triggerelve a jelenlegi forráson
+  - korábbi DOCX Real Data E2E: FAIL, mert az editorban a teszt tétel 1 db / 0 Ft-ra normalizálódott; ezt külön kapcsolódó hibaként vizsgáljuk
 
 MEGJEGYZÉS:
   A quote list javítás nem feltételezett fájlt módosított: a ténylegesen futó quotes -> quoteRows(db.quotes) útvonalat azonosítottuk, és a már betöltött quote_ui_fix.js rétegben normalizáltuk. A részletező/szerkesztő által használt quoteNetValue fallbackot is egységesítettük.
