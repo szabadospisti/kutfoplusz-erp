@@ -5876,7 +5876,20 @@ async function savePermitIntake(){
         irrigationMethod:f.irrigationMethod,
         dailyIrrigationHours:f.dailyIrrigationHours,
         pressurePipe:f.pressurePipe,
-        distributionPipe:f.distributionPipe
+        distributionPipe:f.distributionPipe,
+        // A létesítési engedélyből felismert műszaki szakaszok tartósan
+        // kerüljenek a projekthez is, ne csak az ajánlat pillanatnyi tech tömbjébe.
+        casingSections:(()=>{
+          const depth=String(f.plannedDepth||f.wellDepth||"").replace(",",".");
+          const steel=String(f.steelPipe||"").trim();
+          const casing=String(f.casingDiameter||"").trim();
+          const screen=String(f.screenInterval||"").trim().match(/([0-9]+(?:[.,][0-9]+)?)\s*[–-]\s*([0-9]+(?:[.,][0-9]+)?)/);
+          const out=[];
+          if(steel) out.push({type:"Acél iránycső",from:"0",to:String((Array.isArray(f.pipeSections)?f.pipeSections:[]).find(x=>/acél/i.test(String(x?.spec||"")))?.to||"6"),len:String((Array.isArray(f.pipeSections)?f.pipeSections:[]).find(x=>/acél/i.test(String(x?.spec||"")))?.len||"6"),diameter:steel,material:"acél"});
+          if(casing && depth) out.push({type:"Cső",from:"0",to:depth,len:depth,diameter:casing,material:/PVC/i.test(casing)?"PVC":""});
+          if(screen) out.push({type:"Szűrő",from:screen[1].replace(",","."),to:screen[2].replace(",","."),len:String(Number(screen[2].replace(",","."))-Number(screen[1].replace(",","."))),diameter:String(f.filterDiameter||casing),material:/PVC/i.test(String(f.filterDiameter||casing))?"PVC":""});
+          return out;
+        })()
       },
       permit:{
         number:f.permitNumber,
