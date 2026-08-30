@@ -1,6 +1,6 @@
 {
   "ok": false,
-  "error": "Error: Quote editor did not expose quoteItems array: {\"quoteItemsType\":\"object\",\"quoteItemsIsArray\":false,\"quoteItems\":null}\n    at [stdin]:16:43",
+  "error": "Error: DOCX data model check failed: {\"error\":\"Cannot read properties of null (reading 'value')\"}\n    at [stdin]:15:58",
   "pageErrors": [],
   "consoleErrors": [],
   "requestFailures": []
