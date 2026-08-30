@@ -1,9 +1,7 @@
 {
   "ok": false,
-  "error": "Error: Quote editor did not expose quoteItems array: {\"quoteItemsType\":\"object\",\"quoteItemsIsArray\":false,\"quoteItems\":null}\n    at [stdin]:15:43",
-  "pageErrors": [
-    "TypeError: Cannot read properties of undefined (reading 'casingDiameter')\n    at deriveQuoteTechFromProject (http://127.0.0.1:4173/index.html:13965:59)\n    at http://127.0.0.1:4173/index.html:14092:19"
-  ],
+  "error": "Error: Quote editor did not expose quoteItems array: {\"quoteItemsType\":\"object\",\"quoteItemsIsArray\":false,\"quoteItems\":null}\n    at [stdin]:16:43",
+  "pageErrors": [],
   "consoleErrors": [],
   "requestFailures": []
 }
