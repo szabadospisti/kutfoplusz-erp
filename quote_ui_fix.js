@@ -6,7 +6,7 @@
  */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-30-27";
+  const PATCH="ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-30-28";
   function getItems(){try{if(typeof quoteItems!=="undefined"&&Array.isArray(quoteItems))return quoteItems;}catch(e){}return Array.isArray(window.quoteItems)?window.quoteItems:null;}
   function loadJSZip(urls,index){if(window.JSZip)return Promise.resolve(window.JSZip);index=index||0;if(index>=urls.length)return Promise.reject(new Error("JSZip nem tölthető be egyik forrásból sem."));return new Promise(function(resolve,reject){const s=document.createElement("script");s.src=urls[index];s.async=false;s.dataset.kutfoJszip="1";s.onload=function(){if(window.JSZip)resolve(window.JSZip);else loadJSZip(urls,index+1).then(resolve,reject);};s.onerror=function(){loadJSZip(urls,index+1).then(resolve,reject);};document.head.appendChild(s);});}
   function ensureJSZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(window.__KUTFOPLUSZ_JSZIP_PROMISE)return window.__KUTFOPLUSZ_JSZIP_PROMISE;return window.__KUTFOPLUSZ_JSZIP_PROMISE=loadJSZip(["jszip.min.js","https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js","https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"],0);}
@@ -20,8 +20,14 @@
      of whether the project came from a permit or was created without docs. */
   function currentProject(){
     try{
-      const pid=window.projectPageId;
-      if(typeof db!=="undefined"&&db&&Array.isArray(db.projects)){
+      let pid=null;
+      if(typeof window.projectPageId!=="undefined"&&window.projectPageId)pid=window.projectPageId;
+      if(!pid&&typeof db!=="undefined"&&db&&db.ui&&db.ui.openProjectId)pid=db.ui.openProjectId;
+      if(!pid){
+        const raw=String(location.hash||"").replace(/^#\//,"");
+        if(raw.indexOf("project/")===0)pid=decodeURIComponent(raw.split("/")[1]||"");
+      }
+      if(typeof db!=="undefined"&&db&&Array.isArray(db.projects)&&pid){
         return db.projects.find(function(p){return String(p.id)===String(pid);})||null;
       }
     }catch(e){}
@@ -44,7 +50,7 @@
   function normalizeDiameterText(text){
     let s=String(text||"").replace(/\s+/g," ").trim();
     s=s.replace(/\s*Ø\s*/gi," ").replace(/\s*mm\b/gi," mm");
-    const m=s.match(/(?:^|\s)(\d+(?:[.,]\d+)?(?:\s*\/\s*\d+(?:[.,]\d+)? )?)\s*mm\b/i);
+    const m=s.match(/(?:^|\s)(\d+(?:[.,]\d+)?(?:\s*\/\s*\d+(?:[.,]\d+)?)?)\s*mm\b/i);
     if(!m)return s;
     const d=m[1].replace(/\s+/g,"").replace(/,/g,".");
     const prefix=s.slice(0,m.index||0).trim();
@@ -82,7 +88,7 @@
       const value=card.querySelector(".value");
       if(label)label.textContent=labels[i];
       if(value)value.textContent=values[i];
-      if(i===3)value&&value.classList.toggle("green",profit>=0),value.classList.toggle("red",profit<0);
+      if(i===3&&value){value.classList.toggle("green",profit>=0);value.classList.toggle("red",profit<0);}
     });
   }
   function normalizeProjectUi(){
