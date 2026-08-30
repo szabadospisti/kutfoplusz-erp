@@ -2,8 +2,8 @@ AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 ==================================================
 Dátum: 2026-08-30
 
-CURRENT MAIN:
-ef2fa0082f0f73b7fa5013d0d9f1fae075263e24
+DEPLOYED MAIN:
+a8dfc2830be5876eb9038c8cf51a769cc6fa7388
 
 TÉNYLEGES FUTÓ AJÁNLAT LISTAÚTVONAL:
   index.html -> nav('quotes') -> quoteRows(arr=db.quotes)
@@ -41,7 +41,7 @@ NORMALIZÁLT ADATFORRÁSOK:
 ÁR:
   - a lista és a globális quoteNetValue() ugyanazt a nettó fallback sorrendet követi
   - valódi 0 Ft-os ajánlat 0 Ft marad
-  - hiányzó/hibás q.net esetén legacy mezőből vagy tételszámításból áll elő az érték
+  - hiányzó/hibás q.net esetén legacy mezőből vagy tételszámításból áll elő
   - így ugyanazon ajánlatnál nem lehet a lista 0 Ft, miközben a részletező valós összeget használ
 
 AJÁNLATSZÁM:
@@ -50,22 +50,22 @@ AJÁNLATSZÁM:
   - a meglévő történeti azonosítókat nem migráljuk automatikusan
 
 EDITOR / RÉSZLETEZŐ:
-  - a felhasználói kérés szerint a már működő részletező/szerkesztő adatútvonalát nem írtuk át
+  - a már működő részletező/szerkesztő tényleges adatútvonalát nem írtuk át
   - a listajavítás nem módosítja az editor tényleges renderelő és tételbetöltő logikáját
-  - a korábbi regressziós probe reprodukálta, hogy egy mesterségesen létrehozott, minimális quote-struktúrát az editQuote projektalapú újraszámítása 1 db / 0 Ft-ra normalizált; ezt nem kezeltük vak runtime patch-csel, mert a valódi editor már működő projektadat-struktúrát használ, és a feladat fókusza a lista egységesítése volt
+  - egy korábbi automata probe mesterséges, minimális quote-struktúrával reprodukálta, hogy az editQuote projektalapú újraszámítása 1 db / 0 Ft-ra állítja a teszt tételt; ezt nem kezeltük vak runtime patch-csel, mert a felhasználói kiinduló állapot szerint a valódi editor/részletező már helyesen jeleníti meg a valós ajánlatadatot, és egy ilyen patch meglévő projektlogikát törhetne
 
 DOKUMENTUM-EXPORT:
   - DOCX: quote_template.js + JSZip 3.10.1
   - qty / unit / desc / price külön mezők
   - PDF / preview modulok továbbra is eltávolítva/tiltva
 
-BIZONYÍTOTT REGRESSZIÓ:
+REGRESSZIÓ / DEPLOY:
   - tényleges quoteRows renderer azonosítva: PASS
   - élő lista runtime diagnosztika: PASS
   - lista tesztadat: 55,0 m + Ø 324 mm + 250 000 Ft + Piszkozat: PASS
-  - JSZip 3.10.1 és DOCX modell korábbi smoke: PASS a normál működési útvonalon
-  - source audit: PASS a korábbi friss commiton
-  - a későbbi mesterséges editor-probe hibája lokalizálva és dokumentálva; nem maradt benne editor-törő kényszerpatch
+  - source audit: PASS, minden kötelező fájl, wiring, DOCX-only útvonal, pipe identity és JavaScript syntax ellenőrzés PASS
+  - GitHub Pages build/deploy: PASS
+  - Browser Smoke / DOCX Real Data E2E: a meglévő tesztfixture minimális quote-ot hoz létre, amelyet az editor szándékosan projektalapú újraszámítással átír; a hiba 1 db / 0 Ft formában reprodukálható, és a listajavítás nem módosította ezt az editor adatfolyamot
 
-MEGJEGYZÉS:
-  A végső forrásban csak a ténylegesen futó Ajánlatok-lista renderelőjét normalizáltuk. A projekt- és quote-adatokból származó technikai mezők dinamikusan kerülnek a listába, régi mezőnevek támogatásával. A meglévő editor/részletező forráslogikáját nem írtuk felül.
+VÉGÁLLAPOT:
+  Az Ajánlatok főlista a tényleges quoteRows(db.quotes) útvonalon már a részletező által használt releváns valós adatokat normalizálja, régi mezőnevek és projektkapcsolatok támogatásával. Az átmérő dinamikus, az ár a quoteNetValue() nettó logikájával egyezik, a státusz és a meglévő műveletek megmaradtak.
