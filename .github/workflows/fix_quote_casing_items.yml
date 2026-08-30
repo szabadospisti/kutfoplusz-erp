@@ -1,0 +1,83 @@
+name: fix quote casing items
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch casing quantity and material pricing sync
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('quote_ui_fix.js')
+          s=p.read_text(encoding='utf-8')
+          marker='  function installDocxGuard(){'
+          if 'function syncQuoteCasingItemsFromProject()' not in s:
+              fn=r'''  function syncQuoteCasingItemsFromProject(){
+            try{
+              const items=getItems(),pe=document.getElementById("q_project");
+              if(!items||!pe||typeof db==="undefined"||!db)return;
+              const pid=String(pe.value||"").trim();
+              const p=(Array.isArray(db.projects)?db.projects:[]).find(x=>String(x.id)===pid);
+              if(!p)return;
+              const sections=Array.isArray(p.well?.casingSections)?p.well.casingSections:[];
+              if(!sections.length)return;
+              const normType=v=>{const x=String(v??"").trim().toLowerCase();return (x==="szűrő"||x==="szuro"||x==="szűrőcső"||x==="szurocso"||x==="filter")?"Szűrő":"Vak";};
+              const meters=type=>sections.filter(x=>normType(x.type)===type).reduce((a,x)=>a+Math.max(0,(Number(x.to)||0)-(Number(x.from)||0)),0);
+              const firstDia=String(document.getElementById("q_pipe_diameter")?.dataset.fullDiameter||sections.find(x=>x.diameter)?.diameter||"").replace(/\s+/g,"");
+              const materialRows=Array.isArray(db.materials)?db.materials:[];
+              function catalogPrice(type){
+                const nums=(firstDia.match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>x.replace(",","."));
+                const isFilter=type==="Szűrő";
+                const candidates=materialRows.filter(m=>{
+                  const n=String(m.name||"").toLowerCase();
+                  if(!n||!nums.some(d=>n.includes(d)))return false;
+                  if(isFilter)return /szűr|szuro|filter/.test(n);
+                  return /pvc|km|vak|cső|cso/.test(n)&&!/szűr|szuro|filter/.test(n);
+                });
+                return candidates.length?Number(candidates[0].price)||0:null;
+              }
+              function upsert(type,count){
+                if(count<=0)return;
+                const isFilter=type==="Szűrő";
+                const tag=isFilter?"__KPF_CASING_FILTER":"__KPF_CASING_BLANK";
+                let item=items.find(x=>x&&x[tag]);
+                if(!item)item=items.find(x=>{const n=String(x?.name||"").toLowerCase();return isFilter?/szűr|szuro|filter/.test(n):/béléscső|belescso|vak cső|vak cso|csövezés/.test(n)&&!/szűr|szuro|filter/.test(n)});
+                if(!item){item={name:"",quantity:0,unit:"m",price:0};items.push(item);}
+                item[tag]=true;
+                item.name=isFilter?`PVC szűrőcső ${firstDia?"Ø"+firstDia+" mm":""}`.trim():`PVC béléscső ${firstDia?"Ø"+firstDia+" mm":""}`.trim();
+                item.quantity=count;item.qty=count;item.unit="m";
+                const cp=catalogPrice(type);
+                if(!item.priceManual && cp!=null)item.price=cp;
+              }
+              upsert("Vak",meters("Vak"));
+              upsert("Szűrő",meters("Szűrő"));
+              try{if(typeof window.renderQuoteItems==="function")window.renderQuoteItems();else if(typeof window.renderQuoteEditor==="function")window.renderQuoteEditor();else if(typeof window.renderQuotePage==="function")window.renderQuotePage();}catch(e){}
+              try{if(typeof window.recalculateQuoteTotals==="function")window.recalculateQuoteTotals();else if(typeof window.recalculateQuoteMainItem==="function")window.recalculateQuoteMainItem();}catch(e){}
+            }catch(e){console.warn("Ajánlat csövezés/szűrőzés szinkron:",e);}
+          }
+          '''
+              s=s.replace(marker,fn+marker,1)
+          s=s.replace('normalizeProjectUi();syncQuoteDiameterFromProject();', 'normalizeProjectUi();syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();', 1)
+          s=s.replace('syncQuoteDiameterFromProject();},0);return r;', 'syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();},0);return r;', 1)
+          s=s.replace('setTimeout(syncQuoteDiameterFromProject,1500);', 'setTimeout(syncQuoteDiameterFromProject,1500);setTimeout(syncQuoteCasingItemsFromProject,1800);', 1)
+          s=s.replace('const PATCH="ERP2.0-QUOTE-DOCX-AND-PROJECT-NAV-FIX-2026-08-30-33";', 'const PATCH="ERP2.0-QUOTE-DOCX-AND-PROJECT-NAV-FIX-2026-08-30-34";', 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate JavaScript
+        run: |
+          node --check quote_ui_fix.js
+          grep -q 'syncQuoteCasingItemsFromProject' quote_ui_fix.js
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add quote_ui_fix.js .github/workflows/fix_quote_casing_items.yml
+          git rm .github/workflows/fix_quote_casing_items.yml
+          git commit -m 'fix: sync quote casing quantities and material prices'
+          git push
