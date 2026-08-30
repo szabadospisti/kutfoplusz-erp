@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   browser-smoke:
     runs-on: ubuntu-latest
@@ -13,6 +13,31 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: lts/*
+      - name: Repair canonical quote number format
+        if: ${{ !contains(github.event.head_commit.message, 'fix: enforce A-YY-NNN quote format') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='return `A-${yy}${String(nextDocumentSequence()).padStart(3,"0")}`;'
+          new='return `A-${yy}-${String(nextDocumentSequence()).padStart(3,"0")}`;'
+          if old in s:
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+          elif new not in s:
+              raise SystemExit('nextQuoteId canonical format not found')
+          else:
+              print('quote number format already canonical')
+          PY
+          if ! git diff --quiet -- index.html; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add index.html
+            git commit -m 'fix: enforce A-YY-NNN quote format'
+            git push
+          fi
       - name: Install Playwright and JSZip
         run: |
           npm init -y >/dev/null 2>&1
@@ -36,14 +61,19 @@ jobs:
               await page.waitForTimeout(1500);
               const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
               if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript||errors.length)throw new Error('Browser runtime invariant failed: '+JSON.stringify({runtime,errors}));
-              const ids=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId=Date.now(),quoteId='E2E-QUOTE-'+Date.now();d.projects.push({id:projectId,name:'E2E Browser Smoke Project',status:'Ajánlat',customerId:'__e2e__'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
+              const ids=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId=Date.now(),quoteId='E2E-QUOTE-'+Date.now();d.projects.push({id:projectId,name:'E2E Browser Smoke Project',status:'Ajánlat',customerId:'__e2e__',location:'E2E helyszín',well:{depth:55,casingSections:[{from:0,to:55,type:'Vak',diameter:'324'}]}});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',name:'E2E ajánlat',location:'E2E helyszín',depth:55,pipeDiameter:'324',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
               await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
               const projectNav=await page.evaluate(id=>{window.openProjectPage(id);const p=window.eval('db').projects.find(x=>String(x.id)===String(id));return {hash:location.hash,text:document.getElementById('content')?.textContent||'',normalizedType:typeof p?.id};},ids.projectId);
               if(!projectNav.hash.includes('/project/')||!projectNav.text.includes('E2E Browser Smoke Project')||projectNav.normalizedType!=='string')throw new Error('Project navigation failed: '+JSON.stringify(projectNav));
-              await page.evaluate(()=>window.nav('quotes'));await page.waitForTimeout(200);
+              await page.evaluate(()=>window.nav('quotes'));await page.waitForTimeout(400);
+              const list=await page.evaluate(id=>{const root=document.getElementById('content');const row=[...root.querySelectorAll('tbody tr')].find(r=>r.textContent.includes(id));return {text:row?.textContent||'',html:row?.outerHTML||'',headers:[...root.querySelectorAll('thead th')].map(x=>x.textContent.trim())};},ids.quoteId);
+              for(const required of ['Fúrási mélység','Csőátmérő','Nettó','Státusz'])if(!list.headers.includes(required))throw new Error('Quote list header missing: '+required);
+              if(!list.text.includes('55,0 m')||!list.text.includes('Ø 324 mm')||!list.text.includes('250 000 Ft')||!list.text.includes('Piszkozat'))throw new Error('Quote list normalized data mismatch: '+JSON.stringify(list));
               const persisted=await page.evaluate(id=>{const d=window.eval('db');return d.quotes.find(x=>String(x.id)===String(id))?.items?.[0]||null;},ids.quoteId);
               if(!persisted||Number(persisted.qty)!==2||persisted.unit!=='db'||persisted.price!==125000||persisted.priceManual!==true)throw new Error('Persistence failed: '+JSON.stringify(persisted));
               await page.evaluate(async id=>{window.editQuote(id);await new Promise(r=>setTimeout(r,500));},ids.quoteId);
+              const detail=await page.evaluate(()=>document.getElementById('content')?.textContent||'');
+              if(!detail.includes('55')||!detail.includes('324')||!detail.includes('250 000'))throw new Error('Quote detail did not expose normalized data: '+detail.slice(0,3000));
               const model=await page.evaluate(()=>{const q=window.collectQuoteTemplate();const x=q?.items?.[0];return {item:x||null,separate:!!(x&&'qty' in x&&'unit' in x&&'desc' in x)};});
               if(!model.separate)throw new Error('DOCX model check failed: '+JSON.stringify(model));
               const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX path unavailable');
