@@ -70,3 +70,5 @@
   };
   patch();window.addEventListener('load',patch);window.addEventListener('hashchange',()=>setTimeout(patch,0));setTimeout(patch,300);setTimeout(patch,1200);
 })();
+
+/* smoke-regression-trigger: quote list */
