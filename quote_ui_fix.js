@@ -1,7 +1,7 @@
 /* Kútfő Plusz ERP 2.0 — quote UI/DOCX compatibility layer */
 (function(){
   "use strict";
-  const PATCH="ERP2.0-QUOTE-DOCX-AND-PROJECT-NAV-FIX-2026-08-30-33";
+  const PATCH="ERP2.0-QUOTE-DOCX-AND-PROJECT-NAV-FIX-2026-08-30-34";
   function getItems(){try{if(typeof quoteItems!=="undefined"&&Array.isArray(quoteItems))return quoteItems;}catch(e){}return Array.isArray(window.quoteItems)?window.quoteItems:null;}
   function loadJSZip(urls,index){if(window.JSZip)return Promise.resolve(window.JSZip);index=index||0;if(index>=urls.length)return Promise.reject(new Error("JSZip nem tölthető be."));return new Promise(function(resolve,reject){const s=document.createElement("script");s.src=urls[index];s.async=false;s.onload=function(){if(window.JSZip)resolve(window.JSZip);else loadJSZip(urls,index+1).then(resolve,reject);};s.onerror=function(){loadJSZip(urls,index+1).then(resolve,reject);};document.head.appendChild(s);});}
   function ensureJSZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(window.__KUTFOPLUSZ_JSZIP_PROMISE)return window.__KUTFOPLUSZ_JSZIP_PROMISE;return window.__KUTFOPLUSZ_JSZIP_PROMISE=loadJSZip(["jszip.min.js","https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js","https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"],0);}
@@ -49,9 +49,52 @@
     try{if(typeof window.recalculateQuoteMainItem==='function')window.recalculateQuoteMainItem();}catch(e){}
   }catch(e){console.warn('Ajánlat átmérő szinkron:',e);}
 }
+  function syncQuoteCasingItemsFromProject(){
+  try{
+    const items=getItems(),pe=document.getElementById("q_project");
+    if(!items||!pe||typeof db==="undefined"||!db)return;
+    const pid=String(pe.value||"").trim();
+    const p=(Array.isArray(db.projects)?db.projects:[]).find(x=>String(x.id)===pid);
+    if(!p)return;
+    const sections=Array.isArray(p.well?.casingSections)?p.well.casingSections:[];
+    if(!sections.length)return;
+    const normType=v=>{const x=String(v??"").trim().toLowerCase();return (x==="szűrő"||x==="szuro"||x==="szűrőcső"||x==="szurocso"||x==="filter")?"Szűrő":"Vak";};
+    const meters=type=>sections.filter(x=>normType(x.type)===type).reduce((a,x)=>a+Math.max(0,(Number(x.to)||0)-(Number(x.from)||0)),0);
+    const firstDia=String(document.getElementById("q_pipe_diameter")?.dataset.fullDiameter||sections.find(x=>x.diameter)?.diameter||"").replace(/\s+/g,"");
+    const materialRows=Array.isArray(db.materials)?db.materials:[];
+    function catalogPrice(type){
+      const nums=(firstDia.match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>x.replace(",","."));
+      const isFilter=type==="Szűrő";
+      const candidates=materialRows.filter(m=>{
+        const n=String(m.name||"").toLowerCase();
+        if(!n||!nums.some(d=>n.includes(d)))return false;
+        if(isFilter)return /szűr|szuro|filter/.test(n);
+        return /pvc|km|vak|cső|cso/.test(n)&&!/szűr|szuro|filter/.test(n);
+      });
+      return candidates.length?Number(candidates[0].price)||0:null;
+    }
+    function upsert(type,count){
+      if(count<=0)return;
+      const isFilter=type==="Szűrő";
+      const tag=isFilter?"__KPF_CASING_FILTER":"__KPF_CASING_BLANK";
+      let item=items.find(x=>x&&x[tag]);
+      if(!item)item=items.find(x=>{const n=String(x?.name||"").toLowerCase();return isFilter?/szűr|szuro|filter/.test(n):/béléscső|belescso|vak cső|vak cso|csövezés/.test(n)&&!/szűr|szuro|filter/.test(n)});
+      if(!item){item={name:"",quantity:0,unit:"m",price:0};items.push(item);}
+      item[tag]=true;
+      item.name=isFilter?`PVC szűrőcső ${firstDia?"Ø"+firstDia+" mm":""}`.trim():`PVC béléscső ${firstDia?"Ø"+firstDia+" mm":""}`.trim();
+      item.quantity=count;item.qty=count;item.unit="m";
+      const cp=catalogPrice(type);
+      if(!item.priceManual && cp!=null)item.price=cp;
+    }
+    upsert("Vak",meters("Vak"));
+    upsert("Szűrő",meters("Szűrő"));
+    try{if(typeof window.renderQuoteItems==="function")window.renderQuoteItems();else if(typeof window.renderQuoteEditor==="function")window.renderQuoteEditor();else if(typeof window.renderQuotePage==="function")window.renderQuotePage();}catch(e){}
+    try{if(typeof window.recalculateQuoteTotals==="function")window.recalculateQuoteTotals();else if(typeof window.recalculateQuoteMainItem==="function")window.recalculateQuoteMainItem();}catch(e){}
+  }catch(e){console.warn("Ajánlat csövezés/szűrőzés szinkron:",e);}
+}
   function installDocxGuard(){if(window.__KUTFOPLUSZ_DOCX_DEP_GUARD)return;window.__KUTFOPLUSZ_DOCX_DEP_GUARD=true;window.KUTFOPLUSZ_ensureJSZip=ensureJSZip;ensureJSZip().catch(function(){});}
   function installManualTracking(){if(window.__KUTFOPLUSZ_MANUAL_PRICE_TRACKING)return;window.__KUTFOPLUSZ_MANUAL_PRICE_TRACKING=true;document.addEventListener("input",function(e){const t=e.target;if(!t||!t.closest)return;const row=t.closest("#q_items tr");if(!row)return;const items=getItems();if(!items)return;const rows=Array.from(document.querySelectorAll("#q_items tr")),i=rows.indexOf(row);if(i<0||!items[i])return;const cells=row.children;if(cells[3]&&cells[3].contains(t))items[i].priceManual=true;},{capture:true});}
   function patchExport(){if(window.__KUTFOPLUSZ_EXPORT_GUARD)return;window.__KUTFOPLUSZ_EXPORT_GUARD=true;if(typeof window.customerId==="undefined")window.customerId=null;if(typeof window.exportQuoteDoc==="function"){const original=window.exportQuoteDoc;window.exportQuoteDoc=function(){try{const a=arguments[0];let q=null;if(a&&typeof a==="object")q=a;else if(typeof db!=="undefined"&&db&&Array.isArray(db.quotes))q=db.quotes.find(x=>String(x.id)===String(a))||null;if(q&&q.customerId!=null)window.customerId=q.customerId;else if(q&&q.customer_id!=null)window.customerId=q.customer_id;}catch(e){}return original.apply(this,arguments);};}}
-  function patch(){normalizeProjectIds();installDocxGuard();installManualTracking();disablePreviewFunctions();patchExport();normalizeProjectUi();syncQuoteDiameterFromProject();if(typeof window.openProjectPage==="function"&&!window.__KUTFOPLUSZ_PROJECT_NAV_WRAP){const o=window.openProjectPage;window.openProjectPage=function(){normalizeProjectIds();const r=o.apply(this,arguments);setTimeout(normalizeProjectUi,0);return r;};window.__KUTFOPLUSZ_PROJECT_NAV_WRAP=true;}if(typeof window.openQuotePage==="function"&&!window.__KUTFOPLUSZ_QUOTE_OPEN_WRAP){const o=window.openQuotePage;window.openQuotePage=function(){const r=o.apply(this,arguments);setTimeout(function(){removePreviewControls();disablePreviewFunctions();syncQuoteDiameterFromProject();},0);return r;};window.__KUTFOPLUSZ_QUOTE_OPEN_WRAP=true;}removePreviewControls();}
-  window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;patch();window.addEventListener("load",patch);window.addEventListener("hashchange",function(){normalizeProjectIds();setTimeout(function(){normalizeProjectUi();removePreviewControls();disablePreviewFunctions();},0);});setTimeout(patch,300);setTimeout(patch,1200);setTimeout(syncQuoteDiameterFromProject,1500);
+  function patch(){normalizeProjectIds();installDocxGuard();installManualTracking();disablePreviewFunctions();patchExport();normalizeProjectUi();syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();if(typeof window.openProjectPage==="function"&&!window.__KUTFOPLUSZ_PROJECT_NAV_WRAP){const o=window.openProjectPage;window.openProjectPage=function(){normalizeProjectIds();const r=o.apply(this,arguments);setTimeout(normalizeProjectUi,0);return r;};window.__KUTFOPLUSZ_PROJECT_NAV_WRAP=true;}if(typeof window.openQuotePage==="function"&&!window.__KUTFOPLUSZ_QUOTE_OPEN_WRAP){const o=window.openQuotePage;window.openQuotePage=function(){const r=o.apply(this,arguments);setTimeout(function(){removePreviewControls();disablePreviewFunctions();syncQuoteDiameterFromProject();syncQuoteCasingItemsFromProject();},0);return r;};window.__KUTFOPLUSZ_QUOTE_OPEN_WRAP=true;}removePreviewControls();}
+  window.KUTFOPLUSZ_QUOTE_VISUAL_FIX=PATCH;patch();window.addEventListener("load",patch);window.addEventListener("hashchange",function(){normalizeProjectIds();setTimeout(function(){normalizeProjectUi();removePreviewControls();disablePreviewFunctions();},0);});setTimeout(patch,300);setTimeout(patch,1200);setTimeout(syncQuoteDiameterFromProject,1500);setTimeout(syncQuoteCasingItemsFromProject,1800);
 })();
