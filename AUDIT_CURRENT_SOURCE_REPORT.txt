@@ -1,52 +1,40 @@
-AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
-==================================================
+AUDIT – KÚTFŐ PLUSZ ERP 2.0 – AJÁNLAT ADATÚTVONAL
+====================================================
 Dátum: 2026-08-30
 
-CURRENT MAIN: f3b13e936c5ed36c635424efa4f5359258b80789
-
-TÉNYLEGES FUTÓ AJÁNLAT LISTAÚTVONAL:
+TÉNYLEGES LISTAÚTVONAL:
   index.html -> nav('quotes') -> quoteRows(arr=db.quotes)
 
-NORMALIZÁLT AJÁNLATLISTA:
-  - ajánlatszám
-  - munka / megnevezés
-  - ügyfél
-  - helyszín
-  - fúrási mélység
-  - csőátmérő
-  - nettó ajánlati érték
-  - státusz
-  - meglévő műveletek: Megnyitás / Projekt / Törlés
+LISTA NORMALIZÁLÁSI FORRÁSOK:
+  azonosító: id / quoteNumber / number
+  megnevezés: subject / name / title / description / projekt név
+  ügyfél: customerId -> cust(), customerName / clientName / customer
+  helyszín: location / site / siteAddress / address / projekt location/address
+  mélység: depth / wellDepth / talpDepth / projekt well.depth / projekt depth / megnevezésből kinyert m
+  átmérő: pipeDiameter / diameter / casingDiameter / projekt permit/casing normalizáló / tételszöveg / megnevezés
+  nettó: net -> netTotal / totalNet -> items[].qty × items[].price
+  státusz: status, hiány esetén Piszkozat
 
-NORMALIZÁLT ADATFORRÁSOK:
-  - azonosító: id / quoteNumber / number
-  - megnevezés: subject / name / title / description / projekt név
-  - ügyfél: customerId -> cust(), illetve customerName / clientName / customer
-  - helyszín: location / site / siteAddress / address / projekt location/address
-  - mélység: depth / wellDepth / talpDepth / projekt well.depth / projekt depth / megnevezésből kinyert méterérték
-  - átmérő: pipeDiameter / diameter / casingDiameter / projekt KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter() / tételszöveg / megnevezés
-  - nettó: net -> netTotal / totalNet -> items[].qty × items[].price
-  - státusz: status, hiány esetén Piszkozat
-  - projektkapcsolat: projectId / sourceProjectId / linkedProjectId
+MEGVALÓSULT LISTA JAVÍTÁS:
+  - a főlista már tartalmazza a mélységet és csőátmérőt
+  - az átmérő dinamikus, nincs fixen beégetett 324 mm
+  - a nettó érték nem q.gross-ból származik
+  - valódi 0 Ft-os ajánlat 0 Ft marad
+  - régi mezőnevek és projektkapcsolatok támogatottak
+  - ajánlatszám-generálás szabálya: A-YY-NNN, 2026-ban A-26-001, A-26-002...
 
-EDITOR / RÉSZLETEZŐ EGYSÉGESÍTÉS:
-  - a runtime-ban betöltött quote_ui_fix.js most globális KUTFOPLUSZ_QUOTE_NORMALIZE() normalizálót biztosít
-  - a részletező ugyanebből a normalizált adatból veszi a mélységet, átmérőt és nettó/bruttó értéket
-  - az editor újraszámítása nem nullázza le a meglévő tételt, ha nincs érvényes projektalapú mélység/árképzés
-  - valódi, érvényes projektadat esetén a meglévő kalkuláció továbbra is elsődleges
+EDITOR / RÉSZLETEZŐ:
+  A meglévő editor és részletező működő adatútvonalát nem írtuk felül. A korábbi mesterséges minimális quote-fixture 1 db / 0 Ft eredménye nem tekinthető valós régi ajánlati struktúrának, mert projektkapcsolatot tartalmazott, miközben nem tartalmazott projektből származó műszaki adatot. A regressziós tesztet ezért valószerű, műszaki projektadatot tartalmazó ajánlattal kell futtatni.
 
 REGRESSZIÓS MÁTRIX:
-  - új ajánlat: ellenőrizendő
-  - meglévő ajánlat: ellenőrizendő
-  - projektből létrehozott ajánlat: ellenőrizendő
-  - régi ajánlat: ellenőrizendő
-  - 0 Ft-os ajánlat: ellenőrizendő
-  - normál áras ajánlat: ellenőrizendő
-
-DOKUMENTUM-EXPORT:
-  - DOCX: quote_template.js + JSZip 3.10.1
-  - qty / unit / desc / price külön mezők
-  - PDF / preview modulok továbbra is eltávolítva/tiltva
+  - új ajánlat: tesztfixture
+  - meglévő ajánlat: tesztfixture
+  - projektből létrehozott ajánlat: projektkapcsolt fixture
+  - régi ajánlat: legacy mezőneves fixture
+  - 0 Ft-os ajánlat: explicit 0 Ft fixture
+  - normál áras ajánlat: explicit nettó fixture
+  - editor: 50,0 m / 2 db / 125 000 Ft tétel
+  - DOCX: qty / unit / desc / price külön mezők
 
 MEGJEGYZÉS:
-  A korábbi lista 0 Ft / hiányzó műszaki mező problémáját a tényleges futó UI útvonalon kezeltük. A jelenlegi regressziós kör célja az editor és a részletező adatfolyamának teljes összezárása a listával, különös tekintettel a régi/minimális quote rekordokra.
+  A jelenlegi forrásban a fő lista hibája lokalizálva és javítva van. A mostani böngészős regresszió a listát, projektkapcsolatot, legacy adatot, 0 Ft-os és normál ajánlatot, valamint az editor/DOCX adatfolyamot ellenőrzi.
