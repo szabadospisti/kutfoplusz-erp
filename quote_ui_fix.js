@@ -54,27 +54,17 @@
   install();window.addEventListener('load',install);setTimeout(install,100);setTimeout(install,500);setTimeout(install,1200);
 })();
 
-/* ERP2.0-QUOTE-EDITOR-PRESERVE-2026-08-30 */
+/* ERP2.0-QUOTE-ITEM-ALIASES-2026-08-30 */
 (function(){
   "use strict";
-  const install=()=>{
-    if(typeof window.editQuote!=='function'||window.__KPF_QUOTE_EDIT_PRESERVE)return;
-    const original=window.editQuote;
-    window.editQuote=function(id){
-      const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
-      const snapshot=q&&Array.isArray(q.items)?q.items.map(x=>({...x})):null;
-      const r=original.apply(this,arguments);
-      if(q&&snapshot)setTimeout(()=>{try{
-        if(Array.isArray(window.quoteItems))window.quoteItems=snapshot.map(x=>({desc:String(x.desc??x.description??''),qty:Number(x.qty??x.quantity??x.count)||0,unit:String(x.unit??x.unitName??'db'),price:Number(x.price??x.unitPrice??x.unitPriceNet)||0,priceManual:!!x.priceManual,autoCalculated:!!x.autoCalculated}));
-        const d=document.getElementById('q_depth');if(d&&q.depth!=null)d.value=q.depth;
-        const e=document.getElementById('q_pipe_diameter');if(e&&q.pipeDiameter!=null){const value=String(q.pipeDiameter),numeric=value.split('/')[0].trim();if(e.tagName==='SELECT'&&!Array.from(e.options).some(o=>String(o.value)===numeric)){const opt=document.createElement('option');opt.value=numeric;opt.textContent=`Ø ${value} mm`;opt.dataset.fullDiameter=value;e.appendChild(opt);}e.value=e.tagName==='SELECT'?numeric:value;}
-        if(typeof window.renderQuoteItems==='function')window.renderQuoteItems();else if(typeof window.renderQuoteEditor==='function')window.renderQuoteEditor();
-        if(typeof window.recalculateQuoteTotals==='function')window.recalculateQuoteTotals();else if(typeof window.recalculateQuote==='function')window.recalculateQuote();
-      }catch(e){console.warn('Ajánlat szerkesztő adat-visszaállítás:',e);}},120);
-      return r;
-    };
-    window.__KPF_QUOTE_EDIT_PRESERVE=true;
-  };
+  const install=()=>{if(typeof window.editQuote!=='function'||window.__KPF_QUOTE_ITEM_ALIASES)return;const original=window.editQuote;window.editQuote=function(id){try{const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;if(q&&Array.isArray(q.items))q.items.forEach(i=>{if(!i||typeof i!=='object')return;if(i.quantity==null&&i.qty!=null)i.quantity=i.qty;if(i.qty==null&&i.quantity!=null)i.qty=i.quantity;if(i.unitPrice==null&&i.price!=null)i.unitPrice=i.price;if(i.price==null&&i.unitPrice!=null)i.price=i.unitPrice;if(i.unit==null&&i.unitName!=null)i.unit=i.unitName;});}catch(e){console.warn('Ajánlat tétel legacy alias normalizálás:',e);}return original.apply(this,arguments);};window.__KPF_QUOTE_ITEM_ALIASES=true;};
+  install();window.addEventListener('load',install);setTimeout(install,100);setTimeout(install,500);setTimeout(install,1200);setTimeout(install,2000);
+})();
+
+/* ERP2.0-QUOTE-EDIT-PRESERVE-2026-08-30 */
+(function(){
+  "use strict";
+  const install=()=>{if(typeof window.editQuote!=='function'||window.__KPF_QUOTE_EDIT_PRESERVE)return;const original=window.editQuote;window.editQuote=function(id){const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;const snapshot=q&&Array.isArray(q.items)?q.items.map(x=>({...x})):null;const r=original.apply(this,arguments);if(q&&snapshot)setTimeout(()=>{try{const restored=snapshot.map(x=>({desc:String(x.desc??x.description??''),qty:Number(x.qty??x.quantity??x.count)||0,unit:String(x.unit??x.unitName??'db'),price:Number(x.price??x.unitPrice??x.unitPriceNet)||0,priceManual:!!x.priceManual,autoCalculated:!!x.autoCalculated}));window.quoteItems=restored;const d=document.getElementById('q_depth');if(d&&q.depth!=null)d.value=q.depth;const e=document.getElementById('q_pipe_diameter');if(e&&q.pipeDiameter!=null){const value=String(q.pipeDiameter),numeric=value.split('/')[0].trim();if(e.tagName==='SELECT'&&!Array.from(e.options).some(o=>String(o.value)===numeric)){const opt=document.createElement('option');opt.value=numeric;opt.textContent=`Ø ${value} mm`;opt.dataset.fullDiameter=value;e.appendChild(opt);}e.value=e.tagName==='SELECT'?numeric:value;}if(typeof window.renderQuoteItems==='function')window.renderQuoteItems();else if(typeof window.renderQuoteEditor==='function')window.renderQuoteEditor();window.quoteItems=restored;}catch(e){console.warn('Ajánlat szerkesztő adat-visszaállítás:',e);}},120);return r;};window.__KPF_QUOTE_EDIT_PRESERVE=true;};
   install();window.addEventListener('load',install);setTimeout(install,100);setTimeout(install,500);setTimeout(install,1200);setTimeout(install,2000);
 })();
 
