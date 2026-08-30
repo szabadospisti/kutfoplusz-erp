@@ -101,7 +101,6 @@
       changed=true;
     });
 
-    // Persist the highest assigned current-year quote sequence.
     let max=0;
     db.quotes.forEach(function(q){
       const m=String(q?.id||"").match(pattern);
@@ -192,7 +191,7 @@
   }
 
   const s=document.createElement("script");
-  s.src="quote_ui_fix_legacy.js?v=20260830-5";
+  s.src="quote_ui_fix_legacy.js?v=20260830-6";
   s.onload=install;
   s.onerror=install;
   document.head.appendChild(s);
