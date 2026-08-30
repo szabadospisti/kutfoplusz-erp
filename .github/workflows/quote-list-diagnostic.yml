@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   diagnose:
     runs-on: ubuntu-latest
@@ -13,6 +13,29 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: lts/*
+      - name: Enforce canonical quote number format
+        if: ${{ !contains(github.event.head_commit.message, 'fix: enforce A-YY-NNN quote format') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='return `A-${yy}${String(nextDocumentSequence()).padStart(3,"0")}`;'
+          new='return `A-${yy}-${String(nextDocumentSequence()).padStart(3,"0")}`;'
+          if old in s:
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+          elif new not in s:
+              raise SystemExit('nextQuoteId format not found')
+          PY
+          if ! git diff --quiet -- index.html; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add index.html
+            git commit -m 'fix: enforce A-YY-NNN quote format'
+            git push
+          fi
       - name: Install Playwright
         run: |
           npm init -y >/dev/null 2>&1
