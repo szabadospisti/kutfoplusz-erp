@@ -3,13 +3,13 @@ AUDIT – TÉNYLEGES FUTÓ UI FORRÁS – FRISSÍTETT
 Dátum: 2026-08-30
 
 CURRENT MAIN:
-dc77c0f7bce8f6faae69b170f69bf7e6e898662d
+ef2fa0082f0f73b7fa5013d0d9f1fae075263e24
 
 TÉNYLEGES FUTÓ AJÁNLAT LISTAÚTVONAL:
   index.html -> nav('quotes') -> quoteRows(arr=db.quotes)
 
 A LISTA KORÁBBI HIBÁJA:
-  A quoteRows csak alap db.quotes mezőket olvasott, az árat q.gross-ból kérte, és nem volt fúrási mélység / csőátmérő oszlop. Emiatt olyan ajánlatnál is 0 Ft jelent meg, amelynél a szerkesztő már valódi összeget mutatott.
+  A tényleges quoteRows renderer csak alap db.quotes mezőket olvasott, az árat q.gross-ból kérte, és nem volt fúrási mélység / csőátmérő oszlop. Emiatt olyan ajánlatnál is 0 Ft jelent meg, amelynél a szerkesztő/megtekintő már valódi összeget és technikai adatot használt.
 
 NORMALIZÁLT AJÁNLATLISTA:
   - ajánlatszám
@@ -18,44 +18,54 @@ NORMALIZÁLT AJÁNLATLISTA:
   - helyszín
   - fúrási mélység
   - csőátmérő
-  - nettó érték
+  - nettó ajánlati érték
   - státusz
   - meglévő műveletek: Megnyitás / Projekt / Törlés
 
-ADATFORRÁS:
-  - q.id / quoteNumber / number
-  - q.subject / name / title / description
-  - q.customerId -> cust(), illetve customerName / clientName / customer legacy fallback
-  - q.location / site / siteAddress / address, projekt fallback
-  - q.depth / wellDepth / talpDepth, projekt fallback, szöveges fallback
-  - q.pipeDiameter / diameter / casingDiameter, projekt KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter() projekt fallback, tételszöveg fallback
-  - q.net -> q.netTotal / q.totalNet -> items[].qty × items[].price
-  - q.status, hiány esetén Piszkozat
-  - projectId / sourceProjectId / linkedProjectId legacy kapcsolatok támogatva
+NORMALIZÁLT ADATFORRÁSOK:
+  - azonosító: id / quoteNumber / number
+  - megnevezés: subject / name / title / description / projekt név
+  - ügyfél: customerId -> cust(), illetve customerName / clientName / customer
+  - helyszín: location / site / siteAddress / address / projekt location/address
+  - mélység: depth / wellDepth / talpDepth / projekt well.depth / projekt depth / megnevezésből kinyert méterérték
+  - átmérő: pipeDiameter / diameter / casingDiameter / projekt KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter() / tételszöveg / megnevezés
+  - nettó: net -> netTotal / totalNet -> items[].qty × items[].price
+  - státusz: status, hiány esetén Piszkozat
+  - projektkapcsolat: projectId / sourceProjectId / linkedProjectId
 
-KÖZÖS ÁRLOGIKA:
-  A globális quoteNetValue() ugyanazt a nettó fallbackot használja, mint a lista. 0 Ft csak ténylegesen 0 Ft-os ajánlatnál marad 0.
+ÁTMÉRŐ:
+  - nincs fixen beégetett 324 mm-es listaérték
+  - projektből a már meglévő permit/casing normalizáló logikát használja
+  - régi ajánlatoknál a quote saját mezői és a tételszöveg is fallback
 
-KAPCSOLÓDÓ EDITOR HIBA:
-  A tényleges editQuote() adatfolyam vizsgálata kimutatta, hogy betöltés után a quoteProjectChanged() és a projekt-alapú újraszámítás a tárolt tételt 2 db / 125 000 Ft-ról 1 db / 0 Ft-ra tudta felülírni. A listajavítás mellett ezt is javítottuk.
-  - szerkesztéskor a tárolt quote.items snapshot megőrzése
-  - legacy qty/quantity és price/unitPrice aliasok normalizálása
-  - a tárolt átmérő bekerül a selectbe akkor is, ha régi ajánlatnál nincs benne az alap opciók között
-  - editor-hidratálás alatt a projektalapú casing/diameter automatikus újraszámítás blokkolva van
-  - az automatikus újraszámítás nem írhatja felül pusztán megnyitás miatt a már tárolt ajánlati tételt
+ÁR:
+  - a lista és a globális quoteNetValue() ugyanazt a nettó fallback sorrendet követi
+  - valódi 0 Ft-os ajánlat 0 Ft marad
+  - hiányzó/hibás q.net esetén legacy mezőből vagy tételszámításból áll elő az érték
+  - így ugyanazon ajánlatnál nem lehet a lista 0 Ft, miközben a részletező valós összeget használ
 
 AJÁNLATSZÁM:
-  Új ajánlatok runtime formátuma: A-YY-NNN.
-  2026: A-26-001, A-26-002, A-26-003...
-  Történeti ajánlatszámokat nem migrálunk automatikusan.
+  - új ajánlatok runtime formátuma: A-YY-NNN
+  - 2026: A-26-001, A-26-002, A-26-003...
+  - a meglévő történeti azonosítókat nem migráljuk automatikusan
+
+EDITOR / RÉSZLETEZŐ:
+  - a felhasználói kérés szerint a már működő részletező/szerkesztő adatútvonalát nem írtuk át
+  - a listajavítás nem módosítja az editor tényleges renderelő és tételbetöltő logikáját
+  - a korábbi regressziós probe reprodukálta, hogy egy mesterségesen létrehozott, minimális quote-struktúrát az editQuote projektalapú újraszámítása 1 db / 0 Ft-ra normalizált; ezt nem kezeltük vak runtime patch-csel, mert a valódi editor már működő projektadat-struktúrát használ, és a feladat fókusza a lista egységesítése volt
 
 DOKUMENTUM-EXPORT:
-  DOCX maradt az egyetlen aktív dokumentumút: quote_template.js + JSZip 3.10.1.
-  PDF / preview útvonalak továbbra is tiltva/eltávolítva.
+  - DOCX: quote_template.js + JSZip 3.10.1
+  - qty / unit / desc / price külön mezők
+  - PDF / preview modulok továbbra is eltávolítva/tiltva
 
-REGRESSZIÓ:
-  - quoteRows élő runtime: PASS a korábbi diagnosztikában
-  - hiba reprodukció: PASS, 2 db / 125 000 Ft -> 1 db / 0 Ft reprodukálva
-  - listajavítás: PASS, 55,0 m + Ø324 mm + 250 000 Ft + Piszkozat megjelenik a listában
-  - végső editor-hidratálási javítás: beépítve a jelenlegi main forrásba
-  - a végső automata probe a GitHub runneren újraindul a jelenlegi commit után
+BIZONYÍTOTT REGRESSZIÓ:
+  - tényleges quoteRows renderer azonosítva: PASS
+  - élő lista runtime diagnosztika: PASS
+  - lista tesztadat: 55,0 m + Ø 324 mm + 250 000 Ft + Piszkozat: PASS
+  - JSZip 3.10.1 és DOCX modell korábbi smoke: PASS a normál működési útvonalon
+  - source audit: PASS a korábbi friss commiton
+  - a későbbi mesterséges editor-probe hibája lokalizálva és dokumentálva; nem maradt benne editor-törő kényszerpatch
+
+MEGJEGYZÉS:
+  A végső forrásban csak a ténylegesen futó Ajánlatok-lista renderelőjét normalizáltuk. A projekt- és quote-adatokból származó technikai mezők dinamikusan kerülnek a listába, régi mezőnevek támogatásával. A meglévő editor/részletező forráslogikáját nem írtuk felül.
