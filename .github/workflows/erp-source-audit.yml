@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   source-audit:
@@ -14,28 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply quote consistency runtime patch
-        if: github.event.head_commit.message != 'fix: apply quote consistency runtime patch'
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          target=Path('quote_ui_fix.js')
-          patch=Path('QUOTE_DATA_CONSISTENCY_PATCH.js').read_text(encoding='utf-8')
-          text=target.read_text(encoding='utf-8')
-          marker='__KPF_QUOTE_DATA_CONSISTENCY_V1'
-          if marker not in text:
-              target.write_text(text+'\n\n/* ERP2.0 QUOTE DATA CONSISTENCY */\n'+patch+'\n',encoding='utf-8')
-          PY
-          if ! git diff --quiet -- quote_ui_fix.js; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add quote_ui_fix.js
-            git commit -m "fix: apply quote consistency runtime patch"
-            git push origin HEAD:main
-          fi
 
       - name: Validate required files
         shell: bash
@@ -89,15 +67,6 @@ jobs:
           grep -Fq 'CASING|' quote_ui_fix.js
           grep -Fq 'FILTER' quote_ui_fix.js
           grep -Fq 'BLANK' quote_ui_fix.js
-
-      - name: Validate quote normalization contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -Fq '__KPF_QUOTE_DATA_CONSISTENCY_V1' quote_ui_fix.js
-          grep -Fq 'window.KUTFOPLUSZ_QUOTE_NORMALIZE' quote_ui_fix.js
-          grep -Fq '__KPF_QUOTE_PAGE_NORMALIZED' quote_ui_fix.js
-          grep -Fq '__KPF_RECALC_GUARD' quote_ui_fix.js
 
       - name: JavaScript syntax check
         shell: bash
