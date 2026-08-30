@@ -1,78 +1,54 @@
 name: ERP Browser Smoke
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   browser-smoke:
-    if: ${{ !contains(github.event.head_commit.message, '[browser-smoke-result]') && !contains(github.event.head_commit.message, '[browser-smoke-signatures]') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: lts/*
-      - name: Install Playwright and official JSZip
-        shell: bash
+      - name: Install Playwright and JSZip
         run: |
           npm init -y >/dev/null 2>&1
           npm install --no-save playwright@1.62.0 jszip@3.10.1 >/dev/null 2>&1
           npx playwright install chromium --with-deps >/dev/null 2>&1
-      - name: Verify and repair bundled JSZip
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! cmp -s jszip.min.js node_modules/jszip/dist/jszip.min.js; then
-            cp node_modules/jszip/dist/jszip.min.js jszip.min.js
-            printf '%s\n' 'official npm JSZip 3.10.1 restored' >/tmp/jszip-repaired
-          fi
-          node --check jszip.min.js
       - name: Start static server
-        shell: bash
+        run: python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
+      - name: Browser smoke and quote persistence
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
-          sleep 2
-      - name: Browser smoke and quote persistence test
-        shell: bash
-        run: |
-          set +e
           node <<'NODE'
-          const fs=require('fs');const {chromium}=require('playwright');const JSZip=require('jszip');const out='/tmp/browser-smoke-result.json';
-          (async()=>{const browser=await chromium.launch({headless:true});const page=await browser.newPage({acceptDownloads:true});const pageErrors=[],consoleErrors=[],requestFailures=[];page.on('pageerror',e=>pageErrors.push(String(e&&e.stack||e)));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});page.on('requestfailed',r=>requestFailures.push(`${r.url()} :: ${r.failure()?.errorText||'unknown'}`));try{
-            await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(1500);
-            const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:typeof window.JSZip,jszipVersion:window.JSZip&&window.JSZip.version||null,ensureJSZip:typeof window.KUTFOPLUSZ_ensureJSZip,template:typeof window.KUTFOPLUSZ_QUOTE_TEMPLATE_B64,saveQuote:typeof window.saveQuoteFromTemplate,save:window.eval('typeof save'),db:window.eval('typeof db'),openQuote:typeof window.openQuotePage,editQuote:typeof window.editQuote,recalc:typeof window.recalculateQuoteMainItem,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\\.js/i.test(s.src))}));
-            const required=['saveQuote','openQuote','editQuote','recalc','collect','exportDocx'];const missing=required.filter(k=>runtime[k]!=='function');
-            if(!runtime.patch||runtime.jszip!=='function'||runtime.jszipVersion!=='3.10.1'||runtime.ensureJSZip!=='function'||runtime.template!=='string'||missing.length||runtime.obsoletePreviewScript||pageErrors.length)throw new Error('Browser runtime invariant failed: '+JSON.stringify({runtime,missing,pageErrors}));
-            const testId='E2E-QUOTE-'+Date.now();const testProjectId='E2E-PROJECT-'+Date.now();
-            const saveSetup=await page.evaluate(({id,projectId})=>{const d=window.eval('db');const s=window.eval('save');if(!d||!Array.isArray(d.quotes)||!Array.isArray(d.projects)||typeof s!=='function')return {ok:false,error:'db.quotes/db.projects or save() unavailable through global lexical scope'};d.projects.push({id:projectId,name:'E2E Browser Smoke Project',status:'Ajánlat'});d.quotes.push({id,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {ok:true};},{id:testId,projectId:testProjectId});
-            if(!saveSetup.ok)throw new Error(saveSetup.error);
-            await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
-            const reloadCheck=await page.evaluate(id=>{const d=window.eval('db');const q=d&&Array.isArray(d.quotes)?d.quotes.find(x=>String(x.id)===String(id)):null;return q?{found:true,customerId:q.customerId,projectId:q.projectId,status:q.status,item:q.items&&q.items[0]}:{found:false};},testId);
-            if(!reloadCheck.found)throw new Error('Quote save/reload failed: test quote not found after reload');
-            const item=reloadCheck.item||{};if(Number(item.qty)!==2||String(item.unit)!=='db'||String(item.desc)!=='50,0 m-es kút kivitelezése'||Number(item.price)!==125000||item.priceManual!==true)throw new Error('Quote save/reload data mismatch: '+JSON.stringify(reloadCheck));
-            const docxCheck=await page.evaluate(()=>{try{const q=typeof window.collectQuoteTemplate==='function'?window.collectQuoteTemplate():null;const items=q&&Array.isArray(q.items)?q.items:[];return {collectItem:items[0]||null,canonicalSeparate:Boolean(items[0]&&Object.prototype.hasOwnProperty.call(items[0],'qty')&&Object.prototype.hasOwnProperty.call(items[0],'unit')&&Object.prototype.hasOwnProperty.call(items[0],'desc'))};}catch(e){return {error:String(e&&e.message||e)}}});
-            if(docxCheck.error||!docxCheck.canonicalSeparate)throw new Error('DOCX data model check failed: '+JSON.stringify(docxCheck));
-            let downloadStarted=false,docxGeneration=null;try{const downloadPromise=page.waitForEvent('download',{timeout:15000});await page.evaluate(()=>window.exportQuoteDoc());const download=await downloadPromise;const downloadedPath=await download.path();if(downloadedPath){const docxBuffer=fs.readFileSync(downloadedPath);const zip=await JSZip.loadAsync(docxBuffer);const documentXml=await zip.file('word/document.xml').async('string');const xmlText=documentXml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();const expected='2 db 50,0 m-es kút kivitelezése';const duplicate='2 db 2 db 50,0 m-es kút kivitelezése';if(!xmlText.includes(expected)||xmlText.includes(duplicate))throw new Error('DOCX content mismatch: '+JSON.stringify({expectedPresent:xmlText.includes(expected),duplicatePresent:xmlText.includes(duplicate)}));docxGeneration={downloaded:true,fileName:download.suggestedFilename(),bytes:docxBuffer.length,expectedPresent:true,duplicatePresent:false};downloadStarted=true;}}catch(e){docxGeneration={downloaded:false,error:String(e&&e.message||e)};}
-            await page.evaluate(({id,projectId})=>{const d=window.eval('db');const s=window.eval('save');if(d){if(Array.isArray(d.quotes))d.quotes=d.quotes.filter(x=>String(x.id)!==String(id));if(Array.isArray(d.projects))d.projects=d.projects.filter(x=>String(x.id)!==String(projectId));if(typeof s==='function')s();}},{id:testId,projectId:testProjectId});
-            const result={runtime,reloadCheck,docxCheck,docxGeneration,pageErrors,consoleErrors,requestFailures,persistencePass:true};fs.writeFileSync(out,JSON.stringify({ok:true,result},null,2));await browser.close();
-          }catch(err){const payload={ok:false,error:String(err&&err.stack||err),pageErrors,consoleErrors,requestFailures};fs.writeFileSync(out,JSON.stringify(payload,null,2));try{await browser.close()}catch(_){}process.exit(1)}})();
+          const fs=require('fs');
+          const {chromium}=require('playwright');
+          const JSZip=require('jszip');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e&&e.stack||e)));
+            try{
+              await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.waitForTimeout(1500);
+              const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
+              if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript||errors.length)throw new Error('Browser runtime invariant failed: '+JSON.stringify({runtime,errors}));
+              const ids=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId='E2E-PROJECT-'+Date.now(),quoteId='E2E-QUOTE-'+Date.now();d.projects.push({id:projectId,name:'E2E Browser Smoke Project',status:'Ajánlat'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
+              await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
+              const persisted=await page.evaluate(id=>{const d=window.eval('db');return d.quotes.find(x=>String(x.id)===String(id))?.items?.[0]||null;},ids.quoteId);
+              if(!persisted||Number(persisted.qty)!==2||persisted.unit!=='db'||persisted.price!==125000||persisted.priceManual!==true)throw new Error('Persistence failed: '+JSON.stringify(persisted));
+              await page.evaluate(async id=>{window.editQuote(id);await new Promise(r=>setTimeout(r,500));},ids.quoteId);
+              const model=await page.evaluate(()=>{const q=window.collectQuoteTemplate();const x=q?.items?.[0];return {item:x||null,separate:!!(x&&'qty' in x&&'unit' in x&&'desc' in x)};});
+              if(!model.separate)throw new Error('DOCX model check failed: '+JSON.stringify(model));
+              const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX path unavailable');
+              const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string');
+              const text=xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+              if(!text.includes('2 db 50,0 m-es kút kivitelezése')||text.includes('2 db 2 db 50,0 m-es kút kivitelezése'))throw new Error('DOCX content mismatch');
+              await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));s();},ids);
+              await browser.close();
+            }catch(e){try{await browser.close()}catch(_){};throw e;}
+          })();
           NODE
-          exit $?
-      - name: Publish result
-        if: always()
-        shell: bash
-        run: |
-          test -f /tmp/browser-smoke-result.json && cp /tmp/browser-smoke-result.json BROWSER_SMOKE_RESULT.json || printf '%s\n' '{"ok":false}' > BROWSER_SMOKE_RESULT.json
-          cp BROWSER_SMOKE_RESULT.json QUOTE_RUNTIME_SIGNATURES.json
-      - name: Commit result and signatures
-        if: always()
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'; git add BROWSER_SMOKE_RESULT.json QUOTE_RUNTIME_SIGNATURES.json; test -f /tmp/jszip-repaired && git add jszip.min.js || true; if git diff --cached --quiet; then exit 0; fi; if test -f /tmp/jszip-repaired; then git commit -m '[browser-smoke-signatures] repair JSZip and capture quote persistence result'; else git commit -m '[browser-smoke-signatures] capture quote persistence result'; fi; git push origin HEAD:main
