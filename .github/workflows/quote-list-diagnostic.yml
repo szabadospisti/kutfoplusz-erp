@@ -1,0 +1,43 @@
+name: Quote List Diagnostic
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.62.0 >/dev/null 2>&1
+          npx playwright install chromium --with-deps >/dev/null 2>&1
+      - name: Inspect quote list runtime
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage();
+            page.on('pageerror',e=>console.log('PAGEERROR',String(e&&e.stack||e)));
+            await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
+            await page.waitForTimeout(1500);
+            const before=await page.evaluate(()=>Object.keys(window).filter(k=>/quote|offer|aj[aá]nlat|render/i.test(k)).sort());
+            console.log('WINDOW_FUNCTIONS',before.join('\n'));
+            await page.evaluate(()=>window.nav('quotes'));
+            await page.waitForTimeout(500);
+            const out=await page.evaluate(()=>({hash:location.hash,html:document.getElementById('content')?.innerHTML||'',text:document.getElementById('content')?.textContent||'',functions:Object.keys(window).filter(k=>/quote|offer|aj[aá]nlat|render/i.test(k)&&typeof window[k]==='function').sort()}));
+            console.log('HASH',out.hash);
+            console.log('FUNCTIONS',out.functions.join('\n'));
+            console.log('HTML_START',out.html.slice(0,30000));
+            console.log('TEXT_START',out.text.slice(0,10000));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
