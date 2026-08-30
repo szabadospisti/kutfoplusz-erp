@@ -49,11 +49,24 @@ jobs:
           grep -Fq 'quote_template.js' index.html
           grep -Fq 'jszip.min.js' index.html
           grep -Fq 'function disablePreviewFunctions' quote_ui_fix.js
-          grep -Fq 'window.previewQuote=function' quote_ui_fix.js
-          grep -Fq 'window.printExactPdfPreview=function' quote_ui_fix.js
-          grep -Fq 'window.printQuote=function' quote_ui_fix.js
+          grep -Eq 'window\.previewQuote=(function|\(\)=>)' quote_ui_fix.js
+          grep -Eq 'window\.printExactPdfPreview=(function|\(\)=>)' quote_ui_fix.js
+          grep -Eq 'window\.printQuote=(function|\(\)=>)' quote_ui_fix.js
           test ! -e quote_preview_pages.js
           test ! -e quote_preview_vectors.js
+
+      - name: Validate canonical pipe catalog identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'window.KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY' quote_ui_fix.js
+          grep -Fq 'materialKey' quote_ui_fix.js
+          grep -Fq 'casingMaterialKey' quote_ui_fix.js
+          grep -Fq 'catalog-exact' quote_ui_fix.js
+          grep -Fq 'catalog-missing' quote_ui_fix.js
+          grep -Fq 'CASING|' quote_ui_fix.js
+          grep -Fq 'FILTER' quote_ui_fix.js
+          grep -Fq 'BLANK' quote_ui_fix.js
 
       - name: JavaScript syntax check
         shell: bash
