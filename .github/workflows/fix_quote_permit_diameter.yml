@@ -1,0 +1,72 @@
+name: fix quote permit diameter binding
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quote diameter binding
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('quote_ui_fix.js')
+          s=p.read_text(encoding='utf-8')
+          marker='  function installDocxGuard(){'
+          if 'function syncQuoteDiameterFromProject()' not in s:
+              fn=r'''  function syncQuoteDiameterFromProject(){
+            try{
+              const sel=document.getElementById("q_pipe_diameter"), pe=document.getElementById("q_project");
+              if(!sel||!pe||typeof db==="undefined"||!db)return;
+              const pid=String(pe.value||"").trim();
+              const p=(Array.isArray(db.projects)?db.projects:[]).find(x=>String(x.id)===pid);
+              if(!p)return;
+              const w=p.well||{};
+              const sections=Array.isArray(w.casingSections)?w.casingSections:[];
+              let full="";
+              for(const x of sections){
+                const type=String(x.type||"").toLowerCase();
+                const d=String(x.diameter||x.pipeDiameter||"").trim();
+                if(d && (!full || /bél|cső|casing|szűr/.test(type))) full=d;
+                if(d && /bél|casing/.test(type)){full=d;break;}
+              }
+              if(!full){
+                const text=String(p.name||p.quoteTitle||"");
+                const m=text.match(/(\d+(?:[.,]\d+)?\s*\/\s*\d+(?:[.,]\d+)?)\s*Ø?\s*mm/i) || text.match(/(\d+(?:[.,]\d+)?)\s*Ø?\s*mm/i);
+                if(m)full=m[1].replace(/\s+/g,"").replace(/,/g,".");
+              }
+              if(!full)return;
+              const numeric=String(full).split('/')[0].trim();
+              let opt=Array.from(sel.options).find(o=>String(o.value)===numeric);
+              if(!opt){opt=document.createElement('option');opt.value=numeric;sel.appendChild(opt);}
+              opt.textContent=`Ø ${full.replace(/\s+/g,"")} mm`;
+              opt.dataset.fullDiameter=full.replace(/\s+/g,"");
+              if(String(sel.value)!==numeric)sel.value=numeric;
+              sel.dataset.fullDiameter=full.replace(/\s+/g,"");
+              try{if(typeof window.recalculateQuoteMainItem==='function')window.recalculateQuoteMainItem();}catch(e){}
+            }catch(e){console.warn('Ajánlat átmérő szinkron:',e);}
+          }
+          '''
+              s=s.replace(marker,fn+marker,1)
+          s=s.replace('installDocxGuard();installManualTracking();disablePreviewFunctions();patchExport();normalizeProjectUi();', 'installDocxGuard();installManualTracking();disablePreviewFunctions();patchExport();normalizeProjectUi();syncQuoteDiameterFromProject();',1)
+          old='setTimeout(function(){removePreviewControls();disablePreviewFunctions();},0);'
+          s=s.replace(old,'setTimeout(function(){removePreviewControls();disablePreviewFunctions();syncQuoteDiameterFromProject();},0);',1)
+          s=s.replace('setTimeout(patch,1200);','setTimeout(patch,1200);setTimeout(syncQuoteDiameterFromProject,1500);',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate patch
+        run: |
+          node --check quote_ui_fix.js
+          grep -q 'syncQuoteDiameterFromProject' quote_ui_fix.js
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add quote_ui_fix.js .github/workflows/fix_quote_permit_diameter.yml
+          git rm .github/workflows/fix_quote_permit_diameter.yml
+          git commit -m 'fix: bind quote diameter to permit casing data'
+          git push
