@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   source-audit:
@@ -14,41 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply quote list display totals
-        if: ${{ !contains(github.event.head_commit.message, 'fix: quote list display totals') }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          node <<'NODE'
-          const fs=require('fs');
-          const {execSync}=require('child_process');
-          const p='all.js';
-          let s=fs.readFileSync(p,'utf8');
-          const helper=`\nfunction quoteDisplayGross(q){\n  const gross=Number(q?.gross);\n  if(Number.isFinite(gross)&&gross>0) return gross;\n  const storedNet=[Number(q?.net),Number(q?.netTotal),Number(q?.totalNet)].find(v=>Number.isFinite(v)&&v>0);\n  if(storedNet) return Math.round(storedNet*1.27);\n  const items=Array.isArray(q?.items)?q.items:[];\n  const net=items.reduce((sum,x)=>sum+(Number(x?.qty)||0)*(Number(x?.price)||0),0);\n  return Math.round(net*1.27);\n}\n`;
-          if(!s.includes('function quoteDisplayGross(q)')){
-            const anchor='function quoteRows(arr=db.quotes){';
-            const pos=s.indexOf(anchor);
-            if(pos<0) throw new Error('quoteRows anchor missing');
-            s=s.slice(0,pos)+helper+s.slice(pos);
-          }
-          const start=s.indexOf('function quoteRows(arr=db.quotes){');
-          if(start<0) throw new Error('quoteRows start missing');
-          const next=s.indexOf('\nfunction ',start+10);
-          if(next<0) throw new Error('quoteRows end anchor missing');
-          const replacement=`function quoteRows(arr=db.quotes){\n const statuses=["Piszkozat","Elkészítve","Elküldve","Tárgyalás alatt","Elfogadva","Elutasítva","Lezárva"];\n return \`<div class="tablewrap"><table class="table"><thead><tr><th>Ajánlat</th><th>Ügyfél</th><th>Helyszín</th><th>Bruttó</th><th>Státusz</th><th></th></tr></thead><tbody>\${arr.map(q=>{const displayGross=quoteDisplayGross(q);return \`<tr>\n <td><a href="#" class="link" data-quote-id="\${q.id}" onclick="openQuotePage('\\${q.id}');return false" title="Árajánlat megnyitása"><b>\${q.id}</b></a><br><span class="label">\${esc(q.name)}</span></td>\n <td>\${esc(cust(q.customerId))}</td><td>\${esc(q.location)}</td><td>\${money(displayGross)}</td>\n <td><select class="quote-status-pill quote-status-\${statusClass(q.status)}" onchange="changeQuoteStatus('\\${q.id}',this.value)" aria-label="Státusz">\${statuses.map(st=>\`<option value="\${esc(st)}" \${q.status===st?'selected':''}>\${esc(st)}</option>\`).join("")}</select></td>\n <td style="white-space:nowrap">\n   <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">\n    <button class="btn secondary small" onclick="openQuoteEditorPage('\\${q.id}');return false;">Megnyitás</button>\n    \${q.status==="Elfogadva"?\`<button class="btn small" onclick="convertQuote('\\${q.id}')">→ Projekt</button>\`:""}\n   </div>\n </td>\n</tr>\`;}).join("")}\</tbody></table></div>\`;\n}`;
-          s=s.slice(0,start)+replacement+s.slice(next);
-          const old='const total=qs.reduce((a,q)=>a+(Number(q.gross)||0),0);';
-          const neu='const total=qs.reduce((a,q)=>a+quoteDisplayGross(q),0);';
-          if(s.includes(old)) s=s.replace(old,neu);
-          fs.writeFileSync(p,s,'utf8');
-          execSync('node --check all.js',{stdio:'inherit'});
-          execSync('git config user.name "github-actions[bot]"');
-          execSync('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"');
-          execSync('git add all.js && git commit -m "fix: quote list display totals" && git push',{stdio:'inherit',env:{...process.env,GIT_CONFIG_COUNT:'1',GIT_CONFIG_KEY_0:'http.extraheader',GIT_CONFIG_VALUE_0:`AUTHORIZATION: bearer ${process.env.GH_TOKEN}`}});
-          NODE
 
       - name: Validate required files
         shell: bash
