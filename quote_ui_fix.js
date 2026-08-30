@@ -43,83 +43,39 @@
   const project=q=>{try{const id=q?.projectId??q?.sourceProjectId??q?.linkedProjectId;return id!=null?(db.projects||[]).find(p=>String(p.id)===String(id))||null:null;}catch(e){return null;}};
   const depthText=s=>{const m=String(s??'').replace(',','.').match(/(\d+(?:\.\d+)?)\s*m\b/i);return m?n(m[1]):NaN;};
   const diameterText=s=>{const m=String(s??'').replace(',','.').match(/(?:Ø\s*)?(\d+(?:\.\d+)?(?:\s*\/\s*\s*\d+(?:\.\d+)?)?)\s*mm\b/i);return m?m[1].replace(/\s+/g,''):'';};
-  const normalized=q=>{
-    const p=project(q),subject=String(q?.subject??q?.name??q?.title??q?.description??p?.name??'').trim();
-    let depth=n(q?.depth??q?.wellDepth??q?.talpDepth??p?.well?.depth??p?.depth); if(!Number.isFinite(depth)||depth<=0)depth=depthText(subject);
-    let diameter=String(q?.pipeDiameter??q?.diameter??q?.casingDiameter??'').trim();
-    if(!diameter&&p&&typeof window.KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY==='function'){try{diameter=String(window.KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter(p)||'');}catch(e){}}
-    if(!diameter)for(const x of items(q)){diameter=diameterText(x?.desc??x?.description??x?.name);if(diameter)break;}
-    if(!diameter)diameter=diameterText(subject);
-    let net=n(q?.net); if(!Number.isFinite(net)||net<0)net=NaN;
-    if(!Number.isFinite(net)||net===0){const stored=n(q?.netTotal??q?.totalNet);net=Number.isFinite(stored)&&stored>0?stored:itemNet(q);}
-    net=Math.round((net||0)*100)/100;
-    let gross=n(q?.gross??q?.grossTotal??q?.totalGross);if(!Number.isFinite(gross)||gross<0)gross=Math.round(net*1.27);if(gross===0&&net>0)gross=Math.round(net*1.27);
-    let customer='';try{customer=typeof window.cust==='function'?String(window.cust(q?.customerId)||''):'';}catch(e){}if(!customer)customer=String(q?.customerName??q?.clientName??q?.customer??'');
-    const location=String(q?.location??q?.site??q?.siteAddress??q?.address??p?.location??p?.address??'').trim();
-    return {q,p,id:String(q?.id??q?.quoteNumber??q?.number??''),name:subject,customer,location,depth,diameter,net,gross,status:String(q?.status??'Piszkozat')};
-  };
-  const patch=()=>{
-    if(typeof window.quoteRows!=='function'||window.__KPF_QUOTE_LIST_V2)return;
-    window.quoteRows=function(arr){
-      const rows=Array.isArray(arr)?arr:(db.quotes||[]),statuses=["Piszkozat","Elkészítve","Elküldve","Tárgyalás alatt","Elfogadva","Elutasítva","Lezárva"];
-      return `<div class="tablewrap"><table class="table"><thead><tr><th>Ajánlat</th><th>Ügyfél</th><th>Helyszín</th><th>Fúrási mélység</th><th>Csőátmérő</th><th>Nettó</th><th>Státusz</th><th></th></tr></thead><tbody>${rows.map(q=>{const x=normalized(q),d=Number.isFinite(x.depth)?`${x.depth.toLocaleString('hu-HU',{minimumFractionDigits:1,maximumFractionDigits:1})} m`:'—',dia=x.diameter?`Ø ${x.diameter} mm`:'—';return `<tr><td><a href="#" class="link" data-quote-id="${esc2(x.id)}" onclick="openQuotePage('${esc2(x.id)}');return false" title="Árajánlat megnyitása"><b>${esc2(x.id)}</b></a><br><span class="label">${esc2(x.name)}</span></td><td>${esc2(x.customer)}</td><td>${esc2(x.location)}</td><td>${d}</td><td>${esc2(dia)}</td><td>${money2(x.net)}</td><td><select class="quote-status-pill quote-status-${typeof window.statusClass==='function'?window.statusClass(x.status):'draft'}" onchange="changeQuoteStatus('${esc2(x.id)}',this.value)" aria-label="Státusz">${statuses.map(st=>`<option value="${esc2(st)}" ${x.status===st?'selected':''}>${esc2(st)}</option>`).join('')}</select></td><td style="white-space:nowrap"><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="btn secondary small" onclick="openQuoteEditorPage('${esc2(x.id)}');return false;">Megnyitás</button>${x.status==='Elfogadva'?`<button class="btn small" onclick="convertQuote('${esc2(x.id)}')">→ Projekt</button>`:''}<button class="btn danger small" onclick="deleteQuote('${esc2(x.id)}');return false;">Törlés</button></div></td></tr>`;}).join('')}</tbody></table></div>`;
-    };
-    if(typeof window.quoteNetValue==='function'&&!window.__KPF_QUOTE_NET_V2){window.quoteNetValue=function(q){const direct=n(q?.net);if(Number.isFinite(direct)&&direct>0)return direct;const legacy=n(q?.netTotal??q?.totalNet);if(Number.isFinite(legacy)&&legacy>0)return legacy;const calc=itemNet(q);return Number.isFinite(calc)?calc:0;};window.__KPF_QUOTE_NET_V2=true;}
-    window.__KPF_QUOTE_LIST_V2=true;
-    if(location.hash==='#/quotes'&&typeof window.nav==='function')setTimeout(()=>window.nav('quotes'),0);
-  };
-  patch();window.addEventListener('load',patch);window.addEventListener('hashchange',()=>setTimeout(patch,0));setTimeout(patch,300);setTimeout(patch,1200);
+  const normalized=q=>{const p=project(q),subject=String(q?.subject??q?.name??q?.title??q?.description??p?.name??'').trim();let depth=n(q?.depth??q?.wellDepth??q?.talpDepth??p?.well?.depth??p?.depth);if(!Number.isFinite(depth)||depth<=0)depth=depthText(subject);let diameter=String(q?.pipeDiameter??q?.diameter??q?.casingDiameter??'').trim();if(!diameter&&p&&typeof window.KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY==='function'){try{diameter=String(window.KUTFOPLUSZ_PIPE_MATERIAL_IDENTITY().permitDiameter(p)||'');}catch(e){}}if(!diameter)for(const x of items(q)){diameter=diameterText(x?.desc??x?.description??x?.name);if(diameter)break;}if(!diameter)diameter=diameterText(subject);let net=n(q?.net);if(!Number.isFinite(net)||net<0)net=NaN;if(!Number.isFinite(net)||net===0){const stored=n(q?.netTotal??q?.totalNet);net=Number.isFinite(stored)&&stored>0?stored:itemNet(q);}net=Math.round((net||0)*100)/100;let gross=n(q?.gross??q?.grossTotal??q?.totalGross);if(!Number.isFinite(gross)||gross<0)gross=Math.round(net*1.27);if(gross===0&&net>0)gross=Math.round(net*1.27);let customer='';try{customer=typeof window.cust==='function'?String(window.cust(q?.customerId)||''):'';}catch(e){}if(!customer)customer=String(q?.customerName??q?.clientName??q?.customer??'');const location=String(q?.location??q?.site??q?.siteAddress??q?.address??p?.location??p?.address??'').trim();return {q,p,id:String(q?.id??q?.quoteNumber??q?.number??''),name:subject,customer,location,depth,diameter,net,gross,status:String(q?.status??'Piszkozat')};};
+  const patch=()=>{if(typeof window.quoteRows!=='function'||window.__KPF_QUOTE_LIST_V2)return;window.quoteRows=function(arr){const rows=Array.isArray(arr)?arr:(db.quotes||[]),statuses=["Piszkozat","Elkészítve","Elküldve","Tárgyalás alatt","Elfogadva","Elutasítva","Lezárva"];return `<div class="tablewrap"><table class="table"><thead><tr><th>Ajánlat</th><th>Ügyfél</th><th>Helyszín</th><th>Fúrási mélység</th><th>Csőátmérő</th><th>Nettó</th><th>Státusz</th><th></th></tr></thead><tbody>${rows.map(q=>{const x=normalized(q),d=Number.isFinite(x.depth)?`${x.depth.toLocaleString('hu-HU',{minimumFractionDigits:1,maximumFractionDigits:1})} m`:'—',dia=x.diameter?`Ø ${x.diameter} mm`:'—';return `<tr><td><a href="#" class="link" data-quote-id="${esc2(x.id)}" onclick="openQuotePage('${esc2(x.id)}');return false" title="Árajánlat megnyitása"><b>${esc2(x.id)}</b></a><br><span class="label">${esc2(x.name)}</span></td><td>${esc2(x.customer)}</td><td>${esc2(x.location)}</td><td>${d}</td><td>${esc2(dia)}</td><td>${money2(x.net)}</td><td><select class="quote-status-pill quote-status-${typeof window.statusClass==='function'?window.statusClass(x.status):'draft'}" onchange="changeQuoteStatus('${esc2(x.id)}',this.value)" aria-label="Státusz">${statuses.map(st=>`<option value="${esc2(st)}" ${x.status===st?'selected':''}>${esc2(st)}</option>`).join('')}</select></td><td style="white-space:nowrap"><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="btn secondary small" onclick="openQuoteEditorPage('${esc2(x.id)}');return false;">Megnyitás</button>${x.status==='Elfogadva'?`<button class="btn small" onclick="convertQuote('${esc2(x.id)}')">→ Projekt</button>`:''}<button class="btn danger small" onclick="deleteQuote('${esc2(x.id)}');return false;">Törlés</button></div></td></tr>`;}).join('')}</tbody></table></div>`;};if(typeof window.quoteNetValue==='function'&&!window.__KPF_QUOTE_NET_V2){window.quoteNetValue=function(q){const direct=n(q?.net);if(Number.isFinite(direct)&&direct>0)return direct;const legacy=n(q?.netTotal??q?.totalNet);if(Number.isFinite(legacy)&&legacy>0)return legacy;const calc=itemNet(q);return Number.isFinite(calc)?calc:0;};window.__KPF_QUOTE_NET_V2=true;}window.__KPF_QUOTE_LIST_V2=true;if(location.hash==='#/quotes'&&typeof window.nav==='function')setTimeout(()=>window.nav('quotes'),0);};patch();window.addEventListener('load',patch);window.addEventListener('hashchange',()=>setTimeout(patch,0));setTimeout(patch,300);setTimeout(patch,1200);
 })();
 
 /* ERP2.0-QUOTE-NUMBER-CANONICAL-2026-08-30 */
 (function(){
   "use strict";
-  if(typeof window.nextQuoteId==='function'&&!window.__KPF_QUOTE_NUMBER_V2){
-    window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);const seq=String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():(typeof nextDocumentSequence==='function'?nextDocumentSequence():1)).padStart(3,'0');return `A-${yy}-${seq}`;};
-    window.__KPF_QUOTE_NUMBER_V2=true;
-  }
+  const install=()=>{if(typeof window.nextQuoteId!=='function'||window.__KPF_QUOTE_NUMBER_V2)return;if(typeof window.nextDocumentSequence!=='function'&&typeof nextDocumentSequence!=='function')return;window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);const seq=String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():nextDocumentSequence()).padStart(3,'0');return `A-${yy}-${seq}`;};window.__KPF_QUOTE_NUMBER_V2=true;};
+  install();window.addEventListener('load',install);setTimeout(install,100);setTimeout(install,500);setTimeout(install,1200);
 })();
 
-/* ERP2.0-QUOTE-ITEM-ALIASES-2026-08-30 */
+/* ERP2.0-QUOTE-EDITOR-PRESERVE-2026-08-30 */
 (function(){
   "use strict";
-  if(typeof window.editQuote==='function'&&!window.__KPF_QUOTE_ITEM_ALIASES){
-    const original=window.editQuote;
-    window.editQuote=function(id){
-      try{
-        const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
-        if(q&&Array.isArray(q.items))q.items.forEach(i=>{if(!i||typeof i!=='object')return;if(i.quantity==null&&i.qty!=null)i.quantity=i.qty;if(i.qty==null&&i.quantity!=null)i.qty=i.quantity;if(i.unitPrice==null&&i.price!=null)i.unitPrice=i.price;if(i.price==null&&i.unitPrice!=null)i.price=i.unitPrice;if(i.unit==null&&i.unitName!=null)i.unit=i.unitName;});
-      }catch(e){console.warn('Ajánlat tétel legacy alias normalizálás:',e);}
-      return original.apply(this,arguments);
-    };
-    window.__KPF_QUOTE_ITEM_ALIASES=true;
-  }
-})();
-
-/* ERP2.0-QUOTE-EDIT-PRESERVE-2026-08-30 */
-(function(){
-  "use strict";
-  if(typeof window.editQuote==='function'&&!window.__KPF_QUOTE_EDIT_PRESERVE){
+  const install=()=>{
+    if(typeof window.editQuote!=='function'||window.__KPF_QUOTE_EDIT_PRESERVE)return;
     const original=window.editQuote;
     window.editQuote=function(id){
       const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
       const snapshot=q&&Array.isArray(q.items)?q.items.map(x=>({...x})):null;
       const r=original.apply(this,arguments);
-      if(q&&snapshot)setTimeout(()=>{
-        try{
-          if(Array.isArray(window.quoteItems))window.quoteItems=snapshot.map(x=>({desc:String(x.desc??x.description??''),qty:Number(x.qty??x.quantity??x.count)||0,unit:String(x.unit??x.unitName??'db'),price:Number(x.price??x.unitPrice??x.unitPriceNet)||0,priceManual:!!x.priceManual,autoCalculated:!!x.autoCalculated}));
-          const d=document.getElementById('q_depth');if(d&&q.depth!=null)d.value=q.depth;
-          const e=document.getElementById('q_pipe_diameter');if(e&&q.pipeDiameter!=null){const value=String(q.pipeDiameter),numeric=value.split('/')[0].trim();if(e.tagName==='SELECT'&&!Array.from(e.options).some(o=>String(o.value)===numeric)){const opt=document.createElement('option');opt.value=numeric;opt.textContent=`Ø ${value} mm`;opt.dataset.fullDiameter=value;e.appendChild(opt);}e.value=e.tagName==='SELECT'?numeric:value;}
-          if(typeof window.renderQuoteItems==='function')window.renderQuoteItems();
-          else if(typeof window.renderQuoteEditor==='function')window.renderQuoteEditor();
-          if(typeof window.recalculateQuoteTotals==='function')window.recalculateQuoteTotals();
-          else if(typeof window.recalculateQuote==='function')window.recalculateQuote();
-        }catch(e){console.warn('Ajánlat szerkesztő adat-visszaállítás:',e);}
-      },120);
+      if(q&&snapshot)setTimeout(()=>{try{
+        if(Array.isArray(window.quoteItems))window.quoteItems=snapshot.map(x=>({desc:String(x.desc??x.description??''),qty:Number(x.qty??x.quantity??x.count)||0,unit:String(x.unit??x.unitName??'db'),price:Number(x.price??x.unitPrice??x.unitPriceNet)||0,priceManual:!!x.priceManual,autoCalculated:!!x.autoCalculated}));
+        const d=document.getElementById('q_depth');if(d&&q.depth!=null)d.value=q.depth;
+        const e=document.getElementById('q_pipe_diameter');if(e&&q.pipeDiameter!=null){const value=String(q.pipeDiameter),numeric=value.split('/')[0].trim();if(e.tagName==='SELECT'&&!Array.from(e.options).some(o=>String(o.value)===numeric)){const opt=document.createElement('option');opt.value=numeric;opt.textContent=`Ø ${value} mm`;opt.dataset.fullDiameter=value;e.appendChild(opt);}e.value=e.tagName==='SELECT'?numeric:value;}
+        if(typeof window.renderQuoteItems==='function')window.renderQuoteItems();else if(typeof window.renderQuoteEditor==='function')window.renderQuoteEditor();
+        if(typeof window.recalculateQuoteTotals==='function')window.recalculateQuoteTotals();else if(typeof window.recalculateQuote==='function')window.recalculateQuote();
+      }catch(e){console.warn('Ajánlat szerkesztő adat-visszaállítás:',e);}},120);
       return r;
     };
     window.__KPF_QUOTE_EDIT_PRESERVE=true;
-  }
+  };
+  install();window.addEventListener('load',install);setTimeout(install,100);setTimeout(install,500);setTimeout(install,1200);setTimeout(install,2000);
 })();
 
 /* smoke-regression-trigger: quote list */
