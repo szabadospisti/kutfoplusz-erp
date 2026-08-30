@@ -43,8 +43,11 @@ jobs:
               if(!model.separate)throw new Error('DOCX model fields are not separate: '+JSON.stringify(model));
               await page.evaluate(qid=>{const d=window.eval('db');const q=d.quotes.find(x=>String(x.id)===String(qid));window.customerId=q&&q.customerId||'';},id.quoteId);
               const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX download path unavailable');
-              const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string'),text=xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-              if(!text.includes('2 db 50,0 m-es kút kivitelezése')||text.includes('2 db 2 db 50,0 m-es kút kivitelezése'))throw new Error('DOCX text mismatch');
+              const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string');
+              const text=xml.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/\s+/g,' ').trim();
+              const hasExpected=/2\s*db\s*50,0\s*m-es\s*kút\s*kivitelezése/i.test(text);
+              const hasDuplicated=/2\s*db\s*2\s*db\s*50,0\s*m-es\s*kút\s*kivitelezése/i.test(text);
+              if(!hasExpected||hasDuplicated)throw new Error('DOCX text mismatch: '+text.slice(0,2000));
               await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));d.customers=d.customers.filter(x=>String(x.id)!=='__e2e__');s();},id);
               await browser.close();
             }catch(e){try{await browser.close()}catch(_){};throw e;}
