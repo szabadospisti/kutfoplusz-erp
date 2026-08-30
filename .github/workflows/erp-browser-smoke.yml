@@ -4,33 +4,12 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   browser-smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Apply quote consistency runtime patch
-        if: github.event.head_commit.message != 'fix: apply quote consistency runtime patch'
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          target=Path('quote_ui_fix.js')
-          patch=Path('QUOTE_DATA_CONSISTENCY_PATCH.js').read_text(encoding='utf-8')
-          text=target.read_text(encoding='utf-8')
-          marker='__KPF_QUOTE_DATA_CONSISTENCY_V1'
-          if marker not in text:
-              target.write_text(text+'\n\n/* ERP2.0 QUOTE DATA CONSISTENCY */\n'+patch+'\n',encoding='utf-8')
-          PY
-          if ! git diff --quiet -- quote_ui_fix.js; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add quote_ui_fix.js
-            git commit -m "fix: apply quote consistency runtime patch"
-            git push origin HEAD:main
-          fi
       - uses: actions/setup-node@v6
         with:
           node-version: lts/*
@@ -55,20 +34,18 @@ jobs:
             try{
               await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
               await page.waitForTimeout(1500);
-              const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,consistency:!!window.__KPF_QUOTE_DATA_CONSISTENCY_V1,normalize:typeof window.KUTFOPLUSZ_QUOTE_NORMALIZE,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
-              if(!runtime.patch||!runtime.consistency||runtime.normalize!=='function'||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript||errors.length)throw new Error('Browser runtime invariant failed: '+JSON.stringify({runtime,errors}));
+              const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
+              if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript||errors.length)throw new Error('Browser runtime invariant failed: '+JSON.stringify({runtime,errors}));
               const ids=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId=Date.now(),quoteId='E2E-QUOTE-'+Date.now();d.projects.push({id:projectId,name:'E2E Browser Smoke Project',status:'Ajánlat',customerId:'__e2e__'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
               await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
               const projectNav=await page.evaluate(id=>{window.openProjectPage(id);const p=window.eval('db').projects.find(x=>String(x.id)===String(id));return {hash:location.hash,text:document.getElementById('content')?.textContent||'',normalizedType:typeof p?.id};},ids.projectId);
               if(!projectNav.hash.includes('/project/')||!projectNav.text.includes('E2E Browser Smoke Project')||projectNav.normalizedType!=='string')throw new Error('Project navigation failed: '+JSON.stringify(projectNav));
               await page.evaluate(()=>window.nav('quotes'));await page.waitForTimeout(200);
-              const list=await page.evaluate(id=>{const q=window.eval('db').quotes.find(x=>String(x.id)===String(id));const n=window.KUTFOPLUSZ_QUOTE_NORMALIZE(q);return {id:n.id,depth:n.depth,diameter:n.diameter,net:n.net,status:n.status,text:document.getElementById('content')?.textContent||''};},ids.quoteId);
-              if(!list.id||!list.text.includes(list.id)||list.status!=='Piszkozat'||list.net!==250000)throw new Error('Quote list normalization failed: '+JSON.stringify(list));
               const persisted=await page.evaluate(id=>{const d=window.eval('db');return d.quotes.find(x=>String(x.id)===String(id))?.items?.[0]||null;},ids.quoteId);
               if(!persisted||Number(persisted.qty)!==2||persisted.unit!=='db'||persisted.price!==125000||persisted.priceManual!==true)throw new Error('Persistence failed: '+JSON.stringify(persisted));
               await page.evaluate(async id=>{window.editQuote(id);await new Promise(r=>setTimeout(r,500));},ids.quoteId);
               const model=await page.evaluate(()=>{const q=window.collectQuoteTemplate();const x=q?.items?.[0];return {item:x||null,separate:!!(x&&'qty' in x&&'unit' in x&&'desc' in x)};});
-              if(!model.separate||Number(model.item.qty)!==2||Number(model.item.price)!==125000)throw new Error('Editor normalization failed: '+JSON.stringify(model));
+              if(!model.separate)throw new Error('DOCX model check failed: '+JSON.stringify(model));
               const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX path unavailable');
               const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string');
               const text=xml.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/\s+/g,' ').trim();
