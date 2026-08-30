@@ -75,8 +75,25 @@
 (function(){
   "use strict";
   if(typeof window.nextQuoteId==='function'&&!window.__KPF_QUOTE_NUMBER_V2){
-    window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);return `A-${yy}-${String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():(typeof nextDocumentSequence==='function'?nextDocumentSequence():1)).padStart(3,'0')}`;};
+    const original=window.nextQuoteId;
+    window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);const seq=String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():(typeof nextDocumentSequence==='function'?nextDocumentSequence():1)).padStart(3,'0');return `A-${yy}-${seq}`;};
     window.__KPF_QUOTE_NUMBER_V2=true;
+  }
+})();
+
+/* ERP2.0-QUOTE-ITEM-ALIASES-2026-08-30 */
+(function(){
+  "use strict";
+  if(typeof window.editQuote==='function'&&!window.__KPF_QUOTE_ITEM_ALIASES){
+    const original=window.editQuote;
+    window.editQuote=function(id){
+      try{
+        const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
+        if(q&&Array.isArray(q.items))q.items.forEach(i=>{if(!i||typeof i!=='object')return;if(i.quantity==null&&i.qty!=null)i.quantity=i.qty;if(i.qty==null&&i.quantity!=null)i.qty=i.quantity;if(i.unitPrice==null&&i.price!=null)i.unitPrice=i.price;if(i.price==null&&i.unitPrice!=null)i.price=i.unitPrice;if(i.unit==null&&i.unitName!=null)i.unit=i.unitName;});
+      }catch(e){console.warn('Ajánlat tétel legacy alias normalizálás:',e);}
+      return original.apply(this,arguments);
+    };
+    window.__KPF_QUOTE_ITEM_ALIASES=true;
   }
 })();
 
