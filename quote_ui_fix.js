@@ -6,7 +6,7 @@
   function loadJSZip(urls,i){if(window.JSZip)return Promise.resolve(window.JSZip);i=i||0;if(i>=urls.length)return Promise.reject(new Error("JSZip nem tölthető be."));return new Promise((res,rej)=>{const s=document.createElement("script");s.src=urls[i];s.async=false;s.onload=()=>window.JSZip?res(window.JSZip):loadJSZip(urls,i+1).then(res,rej);s.onerror=()=>loadJSZip(urls,i+1).then(res,rej);document.head.appendChild(s);});}
   function ensureJSZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(window.__KUTFOPLUSZ_JSZIP_PROMISE)return window.__KUTFOPLUSZ_JSZIP_PROMISE;return window.__KUTFOPLUSZ_JSZIP_PROMISE=loadJSZip(["jszip.min.js","https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/dist/jszip.min.js","https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"]);}
   function removePreviewControls(){document.querySelectorAll("button,a").forEach(el=>{const t=String(el.textContent||"").replace(/\s+/g," ").trim();if(/Előnézet\s*\/\s*PDF|PDF\s*\/\s*Nyomtatás|Nyomtatás\s*\/\s*PDF/i.test(t))el.remove();});}
-  function disablePreviewFunctions(){if(typeof window.previewQuote==="function"&&!window.__KPF_preview){window.previewQuote=()=>{window.toast&&window.toast("A PDF/előnézet funkció ki van kapcsolva.");return false;};window.__KPF_preview=true;}if(typeof window.printExactPdfPreview==="function"&&!window.__KPF_printExact){window.printExactPdfPreview=()=>{window.toast&&window.toast("A PDF/előnézet funkció ki van kapcsolva.");return false;};window.__KPF_printExact=true;}if(typeof window.printQuote==="function"&&!window.__KPF_print){window.printQuote=()=>{window.toast&&window.toast("A PDF/nyomtatás funkció ki van kapcsolva. DOCX export használható.");return false;};window.__KPF_print=true;}}
+  function disablePreviewFunctions(){if(typeof window.previewQuote==="function"&&!window.__KPF_preview){window.previewQuote=()=>{window.toast&&window.toast("A PDF/előnézet funkció ki van kapcsolva.");return false;};window.__KPF_preview=true;}if(typeof window.printExactPdfPreview==="function"&&!window.__KPF_printExact){window.printExactPdfPreview=()=>{window.toast&&window.toast("A PDF/előnézet funkció ki van kapcsolva.");return false;};window.__KPF_printExact=true;}if(typeof window.printQuote==="function"&&!window.__KPF_print){window.printQuote=()=>{window.toast&&window.toast("A PDF/nyomtatás funkció ki van kapcsolva. DOCX/ajánlat export használható.");return false;};window.__KPF_print=true;}}
   function normalizeProjectIds(){try{if(typeof db==="undefined"||!db||!Array.isArray(db.projects))return;let ch=false;const ids=new Map();db.projects.forEach(p=>{if(!p||p.id==null)return;const n=String(p.id);ids.set(n,n);if(p.id!==n){p.id=n;ch=true;}});["quotes","worklogs","documents","services","purchases","stockMovements","invoices"].forEach(k=>(Array.isArray(db[k])?db[k]:[]).forEach(r=>["projectId","sourceProjectId","linkedProjectId"].forEach(f=>{if(r&&r[f]!=null){const n=ids.get(String(r[f]));if(n&&r[f]!==n){r[f]=n;ch=true;}}})));if(ch&&typeof save==="function")save();}catch(e){console.warn(e);}}
   function currentProject(){try{let pid=window.projectPageId||(typeof db!=="undefined"&&db?.ui?.openProjectId);if(!pid){const r=String(location.hash||"").replace(/^#\//,"");if(r.indexOf("project/")===0)pid=decodeURIComponent(r.split("/")[1]||"");}return typeof db!=="undefined"&&Array.isArray(db.projects)&&pid?db.projects.find(p=>String(p.id)===String(pid))||null:null;}catch(e){return null;}}
   function acceptedQuoteForProject(p){try{const q=(Array.isArray(db?.quotes)?db.quotes:[]).filter(x=>String(x.projectId||"")===String(p?.id)).filter(x=>String(x.status||"")==="Elfogadva");return q.length?q[q.length-1]:null;}catch(e){return null;}}
@@ -75,7 +75,6 @@
 (function(){
   "use strict";
   if(typeof window.nextQuoteId==='function'&&!window.__KPF_QUOTE_NUMBER_V2){
-    const original=window.nextQuoteId;
     window.nextQuoteId=function(){const yy=String(new Date().getFullYear()).slice(-2);const seq=String(typeof window.nextDocumentSequence==='function'?window.nextDocumentSequence():(typeof nextDocumentSequence==='function'?nextDocumentSequence():1)).padStart(3,'0');return `A-${yy}-${seq}`;};
     window.__KPF_QUOTE_NUMBER_V2=true;
   }
@@ -94,6 +93,32 @@
       return original.apply(this,arguments);
     };
     window.__KPF_QUOTE_ITEM_ALIASES=true;
+  }
+})();
+
+/* ERP2.0-QUOTE-EDIT-PRESERVE-2026-08-30 */
+(function(){
+  "use strict";
+  if(typeof window.editQuote==='function'&&!window.__KPF_QUOTE_EDIT_PRESERVE){
+    const original=window.editQuote;
+    window.editQuote=function(id){
+      const q=(typeof db!=='undefined'&&Array.isArray(db.quotes))?db.quotes.find(x=>String(x.id)===String(id)):null;
+      const snapshot=q&&Array.isArray(q.items)?q.items.map(x=>({...x})):null;
+      const r=original.apply(this,arguments);
+      if(q&&snapshot)setTimeout(()=>{
+        try{
+          if(Array.isArray(window.quoteItems))window.quoteItems=snapshot.map(x=>({desc:String(x.desc??x.description??''),qty:Number(x.qty??x.quantity??x.count)||0,unit:String(x.unit??x.unitName??'db'),price:Number(x.price??x.unitPrice??x.unitPriceNet)||0,priceManual:!!x.priceManual,autoCalculated:!!x.autoCalculated}));
+          const d=document.getElementById('q_depth');if(d&&q.depth!=null)d.value=q.depth;
+          const e=document.getElementById('q_pipe_diameter');if(e&&q.pipeDiameter!=null){const value=String(q.pipeDiameter),numeric=value.split('/')[0].trim();if(e.tagName==='SELECT'&&!Array.from(e.options).some(o=>String(o.value)===numeric)){const opt=document.createElement('option');opt.value=numeric;opt.textContent=`Ø ${value} mm`;opt.dataset.fullDiameter=value;e.appendChild(opt);}e.value=e.tagName==='SELECT'?numeric:value;}
+          if(typeof window.renderQuoteItems==='function')window.renderQuoteItems();
+          else if(typeof window.renderQuoteEditor==='function')window.renderQuoteEditor();
+          if(typeof window.recalculateQuoteTotals==='function')window.recalculateQuoteTotals();
+          else if(typeof window.recalculateQuote==='function')window.recalculateQuote();
+        }catch(e){console.warn('Ajánlat szerkesztő adat-visszaállítás:',e);}
+      },120);
+      return r;
+    };
+    window.__KPF_QUOTE_EDIT_PRESERVE=true;
   }
 })();
 
