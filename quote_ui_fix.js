@@ -8,23 +8,18 @@
 
   function nextContinuousQuoteNumber(){
     const year=new Date().getFullYear();
-    const storageKey="kutfoplusz_erp_quote_sequence_"+year;
     const pattern=quoteNumberPattern(year);
     let max=0;
     const quotes=Array.isArray(window.db?.quotes)?window.db.quotes:[];
 
+    // The persisted quote records are the source of truth. This prevents
+    // an unused/cancelled generated number from creating a permanent gap.
     quotes.forEach(function(q){
       const m=String(q?.id||q?.number||"").match(pattern);
       if(m)max=Math.max(max,Number(m[1]));
     });
 
-    try{
-      const stored=Number(localStorage.getItem(storageKey)||0);
-      if(Number.isFinite(stored))max=Math.max(max,stored);
-    }catch(e){}
-
     const next=max+1;
-    try{localStorage.setItem(storageKey,String(next));}catch(e){}
     return "A-"+String(year)+"-"+String(next).padStart(3,"0");
   }
 
@@ -100,13 +95,6 @@
       migrations.push({from:oldId,to:newId});
       changed=true;
     });
-
-    let max=0;
-    db.quotes.forEach(function(q){
-      const m=String(q?.id||"").match(pattern);
-      if(m)max=Math.max(max,Number(m[1]));
-    });
-    try{localStorage.setItem("kutfoplusz_erp_quote_sequence_"+year,String(max));}catch(e){}
 
     if(changed && typeof window.save==="function")window.save();
     window.__KPF_QUOTE_NUMBERING_MIGRATED=true;
@@ -191,7 +179,7 @@
   }
 
   const s=document.createElement("script");
-  s.src="quote_ui_fix_legacy.js?v=20260830-6";
+  s.src="quote_ui_fix_legacy.js?v=20260830-7";
   s.onload=install;
   s.onerror=install;
   document.head.appendChild(s);
