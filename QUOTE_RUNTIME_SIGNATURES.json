@@ -1,42 +1,7 @@
 {
-  "ok": true,
-  "result": {
-    "runtime": {
-      "patch": "ERP2.0-QUOTE-DOCX-ONLY-FIX-2026-08-29-26",
-      "jszip": "function",
-      "jszipVersion": "3.10.1",
-      "ensureJSZip": "function",
-      "template": "string",
-      "saveQuote": "function",
-      "save": "function",
-      "db": "object",
-      "openQuote": "function",
-      "editQuote": "function",
-      "recalc": "function",
-      "collect": "function",
-      "exportDocx": "function",
-      "obsoletePreviewScript": false
-    },
-    "reloadCheck": {
-      "found": true,
-      "customerId": "__e2e__",
-      "projectId": "__e2e__",
-      "status": "Piszkozat",
-      "item": {
-        "qty": 2,
-        "unit": "db",
-        "desc": "50,0 m-es kút kivitelezése",
-        "price": 125000,
-        "priceManual": true
-      }
-    },
-    "editorCheck": {
-      "attempted": true,
-      "quoteItems": "object"
-    },
-    "pageErrors": [],
-    "consoleErrors": [],
-    "requestFailures": [],
-    "persistencePass": true
-  }
+  "ok": false,
+  "error": "Error: DOCX data model check failed: {\"error\":\"Cannot read properties of null (reading 'value')\"}\n    at [stdin]:16:58",
+  "pageErrors": [],
+  "consoleErrors": [],
+  "requestFailures": []
 }
