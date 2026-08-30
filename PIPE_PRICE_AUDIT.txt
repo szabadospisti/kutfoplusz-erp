@@ -1,0 +1,538 @@
+=== PRICE/CATALOG SYMBOLS ===
+all.js:auditOfferUnitPriceRegression
+all.js:calculatePriceFromTargetMargin
+all.js:drillingPriceForDiameter
+all.js:drillingPriceLabel
+all.js:drillingPriceList
+all.js:ensureDrillingPriceList
+all.js:ensureMaterialCatalog
+all.js:ensurePipeTypeCatalog
+all.js:openDrillingPriceList
+all.js:refreshQuoteCurrentMeterPrice
+all.js:salePrice
+all.js:undocumentedPrice
+all.js:unitPrice
+all.js:unitPricePerMeter
+index.html:addDrillingPriceRow
+index.html:agreedMeterPrice
+index.html:calculatedMeterPrice
+index.html:deleteDrillingPriceRow
+index.html:drillingPriceForDiameter
+index.html:drillingPriceLabel
+index.html:drillingPriceList
+index.html:ensureDrillingPriceList
+index.html:ensureMaterialCatalog
+index.html:ensurePipeTypeCatalog
+index.html:formatDrillingPriceInput
+index.html:materialCatalogChanged
+index.html:meterPrice
+index.html:openDrillingPriceList
+index.html:refreshQuoteCurrentMeterPrice
+index.html:saveDrillingPriceList
+index.html:setUndocumentedMeterPriceFromDiameter
+index.html:syncMaterialCatalogToStock
+index.html:undocumentedDrillingPriceForDiameter
+index.html:undocumentedPrice
+index.html:undocumentedPrice_
+index.html:workPrice
+=== PIPE/CASING PRICE CONTEXT ===
+all.js-163-function auditPipeDbMeterRegression(){
+all.js-164-  const r=auditPipeDbMeterConsistency([
+all.js:165:    ["0","7","Vak"],["7","12","Szűrő"],["12","20","Vak"]
+all.js-166-  ],{});
+all.js-167-  return {ok:r.ok && r.rows.reduce((a,x)=>a+x.meters,0)===20,result:r};
+--
+all.js-171-  const rows=Array.isArray(sections)?sections:[];
+all.js-172-  const issues=[];
+all.js:173:  const roles={VEDOCSO:0,TERMELOCSO:0,SZUROCSO:0,VAK:0};
+all.js-174-  rows.forEach((s,i)=>{
+all.js-175-    const id=buildPipeMaterialIdentity(s,{});
+--
+all.js-184-    {type:"Vak",pipeRole:"védőcső",diameter:324,material:"ACÉL"},
+all.js-185-    {type:"Vak",pipeRole:"termelőcső",diameter:76,material:"HORGANYZOTT"},
+all.js:186:    {type:"Szűrő",pipeRole:"szűrőcső",diameter:76,material:"PVC"}
+all.js-187-  ];
+all.js-188-  const r=auditPipeRoleSeparation(rows);
+all.js:189:  return {ok:r.ok&&r.roles.VEDOCSO===1&&r.roles.TERMELOCSO===1&&r.roles.SZUROCSO===1,result:r};
+all.js-190-}
+all.js-191-
+--
+all.js-194-  if(["védőcső","vedocső","védő","vedo","protector","casing"].includes(s)) return "VEDOCSO";
+all.js-195-  if(["termelőcső","termelocső","termelő","termelo","production"].includes(s)) return "TERMELOCSO";
+all.js:196:  if(["szűrő","szuro","szűrőcső","szurocso","filter"].includes(s)) return "SZUROCSO";
+all.js-197-  if(["vak","blank"].includes(s)) return "VAK";
+all.js-198-  return s.toUpperCase();
+--
+all.js-210-  const issues=[];
+all.js-211-  if(!id.pipeRole) issues.push("hiányzó csőszerep");
+all.js:212:  if(id.pipeRole==="TERMELOCSO" && id.type==="SZUROCSO") issues.push("termelőcső/szűrőcső szerepütközés");
+all.js:213:  if(id.pipeRole==="VEDOCSO" && id.type==="SZUROCSO") issues.push("védőcső/szűrőcső szerepütközés");
+all.js-214-  if(id.diameter<0) issues.push("érvénytelen átmérő");
+all.js-215-  return {ok:issues.length===0,issues,identity:id};
+--
+all.js-217-function auditPipeMaterialIdentityRegression(){
+all.js-218-  const good=auditPipeMaterialIdentity({type:"Vak",pipeRole:"termelőcső",diameter:76,material:"HORGANYZOTT"}, {});
+all.js:219:  const filter=auditPipeMaterialIdentity({type:"Szűrő",pipeRole:"szűrőcső",diameter:76,material:"PVC"}, {});
+all.js:220:  const bad=auditPipeMaterialIdentity({type:"Szűrő",pipeRole:"termelőcső",diameter:76,material:"PVC"}, {});
+all.js-221-  return {good,filter,bad,ok:good.ok&&filter.ok&&!bad.ok};
+all.js-222-}
+--
+all.js-233-}
+all.js-234-function auditWellDepthRegression(){
+all.js:235:  const project={well:{casingSections:[["0","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]]}};
+all.js-236-  return {
+all.js-237-    pass:auditWellDepthAgainstProduction(project,{casingSections:project.well.casingSections,usedMeters:80}),
+all.js:238:    mismatch:auditWellDepthAgainstProduction(project,{casingSections:[["0","38","Vak"],["38","50","Szűrő"],["50","77","Vak"]],usedMeters:77})
+all.js-239-  };
+all.js-240-}
+--
+all.js-308-    well:{casingSections:[
+all.js-309-      ["0","38","Vak"],
+all.js:310:      ["38","50","Szűrő"],
+all.js-311-      ["50","80","Vak"]
+all.js-312-    ]}
+--
+all.js-794-function auditCasingEditRegression(){
+all.js-795-  const w={pipeLength:3};
+all.js:796:  const before=[["0","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]];
+all.js:797:  const deleted=[["0","38","Vak"],["38","50","Szűrő"]];
+all.js:798:  const inserted=[["0","20","Vak"],["20","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]];
+all.js-799-  return {
+all.js-800-    delete:auditCasingEditMutation(before,deleted,w),
+--
+all.js-818-}
+all.js-819-function auditCasingSavePolicyRegression(){
+all.js:820:  const good=prepareCasingSectionsForSave([["0","38","Vak"],["38","50","Szűrő"]]);
+all.js:821:  const gap=prepareCasingSectionsForSave([["0","38","Vak"],["40","50","Szűrő"]]);
+all.js:822:  const overlap=prepareCasingSectionsForSave([["0","38","Vak"],["37","50","Szűrő"]]);
+all.js-823-  const reversed=prepareCasingSectionsForSave([["50","80","Vak"],["0","50","Vak"]]);
+all.js-824-  return {
+--
+all.js-844-function auditCasingOrderRegression(){
+all.js-845-  return {
+all.js:846:    good:auditCasingOrder([["0","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]]),
+all.js:847:    badOrder:auditCasingOrder([["50","80","Vak"],["0","38","Vak"],["38","50","Szűrő"]]),
+all.js:848:    badRange:auditCasingOrder([["0","38","Vak"],["38","38","Szűrő"]])
+all.js-849-  };
+all.js-850-}
+--
+all.js-861-function auditCasingContinuityRegression(){
+all.js-862-  return {
+all.js:863:    contiguous:auditCasingContinuity([["0","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]]),
+all.js:864:    gap:auditCasingContinuity([["0","38","Vak"],["40","50","Szűrő"]]),
+all.js:865:    overlap:auditCasingContinuity([["0","38","Vak"],["37","50","Szűrő"]])
+all.js-866-  };
+all.js-867-}
+--
+all.js-870-  const rows=Array.isArray(sections)?sections:[];
+all.js-871-  const items=rows.map(s=>calculateCasingMaterial(s,well));
+all.js:872:  const byType={Vak:{meters:0,pieces:0,remainder:0},Szűrő:{meters:0,pieces:0,remainder:0}};
+all.js-873-  items.forEach(x=>{
+all.js-874-    const b=byType[x.type]||{meters:0,pieces:0,remainder:0};
+--
+all.js-898-function auditMultiSectionRegression(){
+all.js-899-  const w={pipeLength:3};
+all.js:900:  const s=[["0","38","Vak"],["38","50","Szűrő"],["50","80","Vak"]];
+all.js-901-  const r=calculateCasingSummary(s,w);
+all.js-902-  return {
+all.js-903-    ok:r.endDepth===80 && r.totalMeters===80 &&
+all.js:904:       r.byType.Vak.meters===68 && r.byType.Szűrő.meters===12 &&
+all.js:905:       r.byType.Vak.pieces===22 && r.byType.Szűrő.pieces===4,
+all.js-906-    result:r
+all.js-907-  };
+--
+all.js-1239-  if(![280,324,355].includes(r.casingDiameter)) issues.push("ismeretlen védőcső-átmérő");
+all.js-1240-  if(!['3"','4"'].includes(r.productionPipeDiameter)) issues.push("ismeretlen termelőcső-átmérő");
+all.js:1241:  if(!["Vak","Szűrő"].includes(r.type)) issues.push("ismeretlen szakasztípus");
+all.js-1242-  return {ok:issues.length===0,issues,result:r};
+all.js-1243-}
+--
+all.js-1245-function normalizeCasingSectionType(value){
+all.js-1246-  const s=String(value??"").trim().toLowerCase();
+all.js:1247:  if(s==="szűrő" || s==="szuro" || s==="szűrőcső" || s==="szurocso") return "Szűrő";
+all.js-1248-  return "Vak";
+all.js-1249-}
+--
+all.js-1258-    fullPieces:calc.pieces.fullPieces,
+all.js-1259-    remainder:calc.pieces.remainder,
+all.js:1260:    materialCategory:type==="Szűrő"?"SZŰRŐCSŐ":"VAK CSŐ"
+all.js-1261-  };
+all.js-1262-}
+all.js-1263-function auditCasingTypeIsolation(well){
+all.js-1264-  const vak=["0","38","Vak"];
+all.js:1265:  const szuro=["38","50","Szűrő"];
+all.js-1266-  const a=calculateCasingMaterial(vak,well);
+all.js:1267:  const b=calculateCasingMaterial(szuro,well);
+all.js-1268-  return {
+all.js-1269-    ok:a.length===38 && b.length===12 &&
+all.js-1270-       a.fullPieces===12 && a.remainder===2 &&
+all.js-1271-       b.fullPieces===4 && b.remainder===0 &&
+all.js:1272:       a.type==="Vak" && b.type==="Szűrő",
+all.js:1273:    vak:a,szuro:b
+all.js-1274-  };
+all.js-1275-}
+--
+all.js-1333-  const old=wlFilters;
+all.js-1334-  try{
+all.js:1335:    wlFilters=[["0","38","Vak"],["38","50","Szűrő"]];
+all.js-1336-    const d=wlCasingEndDepth();
+all.js-1337-    return {ok:d===50,depth:d};
+--
+all.js-1947-{id:"MN-2026-001",date:"2026-08-10",customerId:"C-003",projectId:"",location:"Porcsalma",wellNo:"1. kút",driller:"",rig:"",finalDepth:55,status:"Elkészült",
+all.js-1948-layers:[["0","4","Agyag","","",""],["4","16","Agyag","","",""],["16","22","Gyengébb agyag","","",""],["22","25","Iszapos agyag","","",""],["25","28","","","",""],["28","31","","Gyorsabb","",""],["31","34","","Jobb","",""],["34","37","","Ugrálós – legjobb réteg","",""],["37","38","","Jó","",""],["38","40","Gyenge agyag","","",""],["40","46","","Ugrálós réteg","",""],["46","49","","Lassú","",""],["49","52","","Jó","",""],["52","55","","Kevésbé jó","",""]],
+all.js:1949:filters:[["0","31","Vak",""],["31","55","Szűrő",""]],
+all.js-1950-prodPipe:"24",staticWL:"7.20",dynamicWL:"17.63",pump:"Cortex 910 literes",flow:733,power:5.5,dynamic2:"17.63",static2:"7.20",
+all.js-1951-pumpNote:"18 mp – 220 literes mérés. Megadott vízhozam: 733 l/perc. Fajlagos vízhozam: 73,3 l/perc/m.",
+all.js:1952:notes:"0–31 m vak, 31–55 m 24 m szűrő. A 34–37 m közötti szakasz a legjobb, ugrálós réteg. 38 m körül gyenge agyag jelentkezett.",
+all.js-1953-sourceTemplate:"kutfo_plusz_munkanaplo_porcsalma_2026-08-10"
+all.js-1954-}
+all.js-1955-],
+all.js-1956-materials:[
+all.js:1957:{id:"M-001",name:"280 mm KM PVC cső",unit:"m",stock:80,min:50,price:18500,pipeType:"KM-PVC",category:"Csövek"},
+all.js:1958:{id:"M-002",name:"280 mm szűrőcső",unit:"m",stock:24,min:30,price:24000,pipeType:"Szűrőcső",category:"Csövek"},
+all.js:1959:{id:"M-003",name:"Szűrőkavics",unit:"t",stock:12,min:5,price:21000},
+all.js-1960-{id:"M-004",name:"Cement",unit:"kg",stock:1800,min:500,price:160},
+all.js:1961:{id:"M-005",name:"125 mm KM PVC cső",unit:"m",stock:0,min:0,price:0,pipeType:"KM-PVC",category:"Csövek"},
+all.js:1962:{id:"M-006",name:"125 mm szűrőcső",unit:"m",stock:0,min:0,price:0,pipeType:"Szűrőcső",category:"Csövek"},
+all.js:1963:{id:"M-007",name:"160 mm KM PVC cső",unit:"m",stock:0,min:0,price:0,pipeType:"KM-PVC",category:"Csövek"},
+all.js:1964:{id:"M-008",name:"160 mm szűrőcső",unit:"m",stock:0,min:0,price:0,pipeType:"Szűrőcső",category:"Csövek"},
+all.js:1965:{id:"M-009",name:"225 mm KM PVC cső",unit:"m",stock:0,min:0,price:0,pipeType:"KM-PVC",category:"Csövek"},
+all.js:1966:{id:"M-010",name:"225 mm szűrőcső",unit:"m",stock:0,min:0,price:0,pipeType:"Szűrőcső",category:"Csövek"},
+all.js:1967:{id:"M-011",name:"315/290 mm KM PVC cső",unit:"m",stock:0,min:0,price:0,pipeType:"KM-PVC",category:"Csövek"},
+all.js:1968:{id:"M-012",name:"315/290 mm szűrőcső",unit:"m",stock:0,min:0,price:0,pipeType:"Szűrőcső",category:"Csövek"}
+all.js-1969-],
+all.js-1970-machines:[
+--
+all.js-2048-
+all.js-2049-ensureMaterialCatalog();
+all.js:2050:ensureDrillingPriceList();
+all.js-2051-
+all.js-2052-/* ÜGYFELEK – végleges specifikáció
+--
+all.js-2070- const template={id:"MN-2026-001",date:"2026-08-10",customerId:"C-003",projectId:"",location:"Porcsalma",wellNo:"1. kút",driller:"",rig:"",finalDepth:55,status:"Elkészült",
+all.js-2071- layers:[["0","4","Agyag","","",""],["4","16","Agyag","","",""],["16","22","Gyengébb agyag","","",""],["22","25","Iszapos agyag","","",""],["25","28","","","",""],["28","31","","Gyorsabb","",""],["31","34","","Jobb","",""],["34","37","","Ugrálós – legjobb réteg","",""],["37","38","","Jó","",""],["38","40","Gyenge agyag","","",""],["40","46","","Ugrálós réteg","",""],["46","49","","Lassú","",""],["49","52","","Jó","",""],["52","55","","Kevésbé jó","",""]],
+all.js:2072: filters:[["0","31","Vak",""],["31","55","Szűrő",""]],prodPipe:"24",staticWL:"7.20",dynamicWL:"17.63",pump:"Cortex 910 literes",flow:733,power:5.5,dynamic2:"17.63",static2:"7.20",
+all.js:2073: pumpNote:"18 mp – 220 literes mérés. Megadott vízhozam: 733 l/perc. Fajlagos vízhozam: 73,3 l/perc/m.",notes:"0–31 m vak, 31–55 m 24 m szűrő. A 34–37 m közötti szakasz a legjobb, ugrálós réteg. 38 m körül gyenge agyag jelentkezett.",sourceTemplate:"kutfo_plusz_munkanaplo_porcsalma_2026-08-10"};
+all.js-2074- const i=db.worklogs.findIndex(w=>w.sourceTemplate===template.sourceTemplate||w.id==="MN-2026-001"); if(i<0) db.worklogs.push({...template,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+all.js-2075- if(!db.customers.some(c=>c.id==="C-003")) db.customers.push({id:"C-003",name:"Kovács Balázs",tax:"",contact:"",phone:"",email:"",address:"Porcsalma",notes:"Munkanapló minta ügyfél"});
+--
+all.js-2297-          ${licenseInput("project_hrsz","Helyrajzi szám",data.project.hrsz)}
+all.js-2298-          ${licenseInput("project_well_count","Kút darabszám",data.project.wellCount||"1")}
+all.js:2299:          ${licenseInput("project_casing","Béléscső átmérő (mm)",data.project.casingDiameter)}
+all.js-2300-          ${licenseInput("project_permit","Engedélyszám",data.project.permitNumber)}
+all.js-2301-          ${licenseInput("project_depth","Engedélyezett mélység",data.project.permittedDepth)}
+--
+all.js-2396-    items:[
+all.js-2397-      {name:"Kútfúrás / kút kivitelezés",quantity:1,unit:"projekt",price:0},
+all.js:2398:      {name:"Csövezés és szűrőzés",quantity:1,unit:"projekt",price:0},
+all.js-2399-      {name:"Kútfej és kapcsolódó szerelvények",quantity:1,unit:"projekt",price:0},
+all.js-2400-      {name:"Vízhozamvizsgálat / próbaszivattyúzás",quantity:1,unit:"projekt",price:0}
+--
+all.js-3023-
+all.js-3024-  // Technical diameters: the 419/405 mm steel guide pipe is the planned bore/
+all.js:3025:  // guide-pipe diameter; 315/290 mm is the PVC casing and screen.
+all.js-3026-  f.wellDiameter=capturePermit(text,/Ø\s*([0-9]+\s*\/\s*[0-9]+)\s*mm\s+ac[eé]l\s+ir[aá]nycs[oő]/i);
+all.js-3027-  if(!f.wellDiameter)f.wellDiameter=capturePermit(text,/(?:furatátmérő|fúrási átmérő|kútátmérő)\s*[:\-]?\s*([0-9]+(?:[.,][0-9]+)?\s*mm)/i);
+all.js-3028-  f.steelPipe=f.wellDiameter||capturePermit(text,/(?:acél\s+iránycső|acélcső)\s*(?:átmérő)?\s*[:\-]?\s*(?:Ø\s*)?([0-9]+(?:\s*\/\s*[0-9]+)?(?:[.,][0-9]+)?\s*mm)/i);
+all.js:3029:  f.casingDiameter=capturePermit(text,/Ø\s*([0-9]+\s*\/\s*[0-9]+)\s*mm\s+PVC\s+b[eé]l[eé]scs[oő]/i);
+all.js-3030-  // Kútdarabszám: csak kifejezetten megadott darabszámot használunk, különben 1 db.
+all.js-3031-  f.wellCount=capturePermit(text,/(?:)([0-9]+)\s*db\s+(?:öntöző)?kút(?:ak)?/i);
+all.js-3032-  if(!f.wellCount)f.wellCount=capturePermit(text,/(?:kutak\s+száma|kút\s+darabszáma|kút\s+db)\s*[:\-]?\s*([0-9]+)/i);
+all.js-3033-  if(!f.wellCount)f.wellCount="1";
+all.js:3034:  f.filterDiameter=capturePermit(text,/Ø\s*([0-9]+\s*\/\s*[0-9]+)\s*mm\s+PVC\s+sz[uű]r[oő]/i);
+all.js:3035:  f.screenInterval=capturePermit(text,/Szűrőzés\s*:\s*([0-9]+(?:[.,][0-9]+)?\s*[–\-]\s*[0-9]+(?:[.,][0-9]+)?\s*m)/i);
+all.js-3036-  f.aquifer=capturePermit(text,/Vízadó réteg\s*:\s*([^\n;]{3,100})/i);
+all.js-3037-  f.waterUse=capturePermit(text,/Vízhasználat jellege\s*:\s*([^\n;]{3,100})/i) || capturePermit(text,/Vízhasználat célja\s*:\s*([^\n;]{3,100})/i);
+--
+all.js-3195-
+all.js-3196-
+all.js:3197:  // Csövezési / szűrőzési szakaszok: az engedélyben szereplő konkrét
+all.js-3198-  // mélységtartomány + átmérő + anyag adatok kerüljenek át az ajánlatba.
+all.js-3199-  const pipeSections=[];
+--
+all.js-3205-    const spec=full.slice(full.indexOf("Ø")>=0?full.indexOf("Ø"):full.toLowerCase().indexOf("ø"))
+all.js-3206-      .replace(/\s+/g," ").replace(/[.;,]+$/,"").trim();
+all.js:3207:    const material=(full.match(/\b(acél|KM\s*-?\s*PVC|PVC|KPE|HDPE|PE)\b/i)||[])[1]||"";
+all.js-3208-    pipeSections.push({
+all.js-3209-      from:range[1].replace(",","."),
+--
+all.js-3213-    });
+all.js-3214-  }
+all.js:3215:  // A szűrőszakasz külön mezőként is megjelenhet az engedélyben.
+all.js-3216-  const filterMatches=[];
+all.js:3217:  const filterRe=/([0-9]+[,.]?[0-9]*)\s*[–-]\s*([0-9]+[,.]?[0-9]*)\s*m[^.;]{0,160}?(?:szűrő|szűrőcső|szűrőzött)[^.;]{0,120}/gi;
+all.js-3218-  for(const mm of flat.matchAll(filterRe)){
+all.js-3219-    const full=mm[0].replace(/\s+/g," ").trim();
+all.js-3220-    const d=(full.match(/(?:Ø|ø)\s*([0-9]+(?:[,.][0-9]+)?\/[0-9]+(?:[,.][0-9]+)?)/i)||[])[1]||f.filterDiameter||"";
+all.js:3221:    const material=(full.match(/\b(KM\s*-?\s*PVC|PVC|KPE|acél)\b/i)||[])[1]||"";
+all.js-3222-    filterMatches.push({
+all.js-3223-      from:mm[1].replace(",","."),
+all.js-3224-      to:mm[2].replace(",","."),
+all.js-3225-      len:(Number(mm[2].replace(",","."))-Number(mm[1].replace(",","."))).toFixed(1).replace(/\.0$/,""),
+all.js:3226:      spec:[d,material,"szűrő"].filter(Boolean).join(" ")
+all.js-3227-    });
+all.js-3228-  }
+--
+all.js-3338-    ["waterUse","Vízkivétel / vízhasználat célja"],["waterDemand","Igényelt vízmennyiség"],
+all.js-3339-    ["plannedDepth","Engedélyezett / tervezett talpmélység (m)"],["wellDiameter","Tervezett furat / iránycső átmérő (mm)"],
+all.js:3340:    ["casingDiameter","Béléscső átmérő (mm)"],["filterDiameter","Szűrőcső átmérő (mm)"],
+all.js:3341:    ["screenInterval","Szűrőzött szakasz (m)"],
+all.js-3342-    ["authority","Engedélyező hatóság"],["validUntil","Engedély érvényessége"]
+all.js-3343-  ];
+--
+all.js-3350-    ["waterUse","Vízkivétel / vízhasználat célja"],["waterDemand","Igényelt vízmennyiség"],
+all.js-3351-    ["plannedDepth","Engedélyezett / tervezett talpmélység (m)"],["wellDiameter","Tervezett furatátmérő (mm)"],
+all.js:3352:    ["casingDiameter","Béléscső átmérő (mm)"],["filterDiameter","Szűrőcső átmérő (mm)"],
+all.js:3353:    ["screenInterval","Szűrőzött szakasz (m)"],
+all.js-3354-    ["authority","Engedélyező hatóság"],["validUntil","Engedély érvényessége"]
+all.js-3355-  ];
+--
+all.js-3622-    "engedélyes","kérelmező","tervező","adószám","engedélyszám","vízikönyvi",
+all.js-3623-    "helyrajzi szám","hrsz","eov","kút helye","talpmélység","kútmélység",
+all.js:3624:    "béléscső","szűrőzés","szűrőcső","vízadó","kútfej","vízhozam","vízigény",
+all.js-3625-    "éves vízmennyiség","öntözés","öntözött terület","üzemidő","vízkivétel",
+all.js-3626-    "vor","csövezés","próbaszivattyúzás","geofizika"
+--
+all.js-4156-        to:m[2].replace(",","."),
+all.js-4157-        len:(Number(m[2].replace(",","."))-Number(m[1].replace(",","."))).toFixed(1).replace(/\.0$/,""),
+all.js:4158:        spec:[f.filterDiameter||"",/PVC/i.test(String(f.pipeMaterial||""))?"KM-PVC":"","szűrő"].filter(Boolean).join(" ")
+all.js-4159-      }];
+all.js-4160-    }
+--
+all.js-4164-  // pipe sections. Never invent a diameter/material.
+all.js-4165-  if(!sections.length && casing){
+all.js:4166:    sections=[{type:"Béléscső",from:"0,0",to:depth||"",len:depth||"",spec:casing}];
+all.js-4167-  }
+all.js-4168-
+--
+all.js-4177-    })),
+all.js-4178-    ...filters.map(x=>({
+all.js:4179:      type:"Szűrőzés",
+all.js-4180-      from:String(x.from??""),
+all.js-4181-      to:String(x.to??""),
+--
+all.js-4185-  ];
+all.js-4186-
+all.js:4187:  ensureDrillingPriceList();
+all.js-4188-  const drillingDiameter=drillingDiameterFromText(casing||p?.name||f.quoteTitle||"");
+all.js-4189-  const meterRate=drillingPriceForDiameter(drillingDiameter);
+--
+all.js-4201-    laborUnit:0,
+all.js-4202-    price:drillingDiameter?depthNum*meterRate:0,
+all.js:4203:    priceListDiameter:drillingDiameter||0,
+all.js:4204:    priceListName:drillingDiameter?`Ø ${drillingPriceLabel(drillingDiameter)} mm kútfúrás`:""
+all.js-4205-  }];
+all.js-4206-  return {
+--
+all.js-4403-          const out=[];
+all.js-4404-          if(steel) out.push({type:"Acél iránycső",from:"0",to:String((Array.isArray(f.pipeSections)?f.pipeSections:[]).find(x=>/acél/i.test(String(x?.spec||"")))?.to||"6"),len:String((Array.isArray(f.pipeSections)?f.pipeSections:[]).find(x=>/acél/i.test(String(x?.spec||"")))?.len||"6"),diameter:steel,material:"acél"});
+all.js:4405:          if(casing && depth) out.push({type:"Cső",from:"0",to:depth,len:depth,diameter:casing,material:/PVC/i.test(casing)?"PVC":""});
+all.js:4406:          if(screen) out.push({type:"Szűrő",from:screen[1].replace(",","."),to:screen[2].replace(",","."),len:String(Number(screen[2].replace(",","."))-Number(screen[1].replace(",","."))),diameter:String(f.filterDiameter||casing),material:/PVC/i.test(String(f.filterDiameter||casing))?"PVC":""});
+all.js-4407-          return out;
+all.js-4408-        })()
+--
+all.js-4592-    const layers=(w.layers||[]).map((x,i)=>`<div class="project-mini-row"><div>${esc(x.from)}–${esc(x.to)} m</div><div>${esc(x.layer||"")}</div><div>${esc(x.note||"")}</div><div><button class="btn secondary small" onclick="editWellLayer('${p.id}',${i})">Szerkesztés</button></div></div>`).join("");
+all.js-4593-    const cas=(w.casingSections||[]).map((x,i)=>`<div class="project-mini-row"><div>${esc(x.from)}–${esc(x.to)} m</div><div>${esc(x.type||"")} ${esc(x.diameter||"")}</div><div>${esc(x.material||"")}</div><div><button class="btn secondary small" onclick="editCasingSection('${p.id}',${i})">Szerkesztés</button></div></div>`).join("");
+all.js:4594:    return `<h3>Rétegsor</h3>${layers||"Nincs rétegsor."}<h3 style="margin-top:16px">Csövezés / szűrőzés</h3>${cas||"Nincs csövezés."}<div class="project-page-actions" style="margin-top:10px"><button class="btn secondary small" onclick="addWellLayer('${p.id}')">+ Réteg</button><button class="btn secondary small" onclick="addCasingSection('${p.id}')">+ Cső / szűrő</button></div>`;
+all.js-4595-  }
+all.js-4596-
+--
+all.js-4767-  const s=String(value||"").trim();
+all.js-4768-  if(!s) return "";
+all.js:4769:  if(/sz[űu]r[őo]/i.test(s)) return "KM-PVC Szűrőcső";
+all.js:4770:  if(/km[- ]?pvc/i.test(s)) return "KM-PVC";
+all.js-4771-  if(/ac[eé]l/i.test(s)) return "Acél";
+all.js-4772-  if(/kpe/i.test(s)) return "KPE";
+all.js-4773-  if(/pe/i.test(s)) return "PE";
+all.js-4774-  if(/kg/i.test(s)) return "KG";
+all.js:4775:  if(/pvc/i.test(s)) return "PVC";
+all.js-4776-  return s;
+all.js-4777-}
+--
+all.js-4780-  // A Csőtípus mező kizárólag valódi csőtípusokat tartalmazzon.
+all.js-4781-  // Az átmérő és a falvastagság/specifikáció külön adat, ezért nem kerülhet
+all.js:4782:  // a csőtípus-listába (pl. "315/290 KM-PVC" nem önálló csőtípus).
+all.js:4783:  const allowed=["KM-PVC","KM-PVC Szűrőcső","Acél","KPE","KG"];
+all.js-4784-  const found=new Set();
+all.js-4785-  const add=v=>{ const n=normalizePipeType(v); if(n && allowed.includes(n)) found.add(n); };
+--
+all.js-4800-  if(!db.materials.length){
+all.js-4801-    db.materials=[
+all.js:4802:      {id:"MAT-001",name:"KM PVC kútcső 280 mm",unit:"m",cost:0,sale:0,stock:0},
+all.js:4803:      {id:"MAT-002",name:"KM PVC szűrőcső 280 mm",unit:"m",cost:0,sale:0,stock:0},
+all.js:4804:      {id:"MAT-003",name:"Szűrőkavics",unit:"t",cost:0,sale:0,stock:0},
+all.js-4805-      {id:"MAT-004",name:"Cement / tömedékelő anyag",unit:"kg",cost:0,sale:0,stock:0},
+all.js-4806-      {id:"MAT-005",name:"Kútfej / karima – egyedi gyártás",unit:"db",cost:0,sale:0,stock:0},
+--
+all.js-4900-
+all.js-4901-function refreshQuoteCurrentMeterPrice(qid){
+all.js:4902:  ensureDrillingPriceList();
+all.js-4903-  const q=(db.quotes||[]).find(x=>String(x.id)===String(qid));
+all.js-4904-  if(!q)return;
+all.js-4905-  let changed=0,missing=0;
+all.js-4906-  (q.items||[]).forEach(x=>{
+all.js:4907:    const d=Number(x.priceListDiameter)||drillingDiameterFromText(x.name||x.desc||q.pipeDiameter||"");
+all.js-4908-    if(!d)return;
+all.js-4909-    const rate=drillingPriceForDiameter(d);
+all.js:4910:    x.priceListDiameter=d;
+all.js:4911:    x.priceListName=`Ø ${drillingPriceLabel(d)} mm kútfúrás`;
+all.js-4912-    if(rate>0){
+all.js-4913-      x.materialUnit=rate;
+--
+all.js-5029-  const e=p.execution||{};
+all.js-5030-  const logs=(db.worklogs||[]).filter(w=>w.projectId===p.id);
+all.js:5031:  const steps=["Munkaterv","Felvonulás","Fúrás","Csövezés","Szűrőzés","Kavicsolás","Tömedékelés","Próbaszivattyúzás","Kész kút"];
+all.js-5032-  const current=Number(e.stepIndex)||0;
+all.js-5033-  return `<div class="execution-panel">
+--
+all.js-5064-  openModal("Kivitelezési munkaterv",`<form onsubmit="saveExecutionPlan(event,'${pid}')"><div class="formgrid">
+all.js-5065-    <div class="field"><label>Kezdés dátuma</label><input class="input" type="date" name="startDate" value="${esc(e.startDate||"")}"></div>
+all.js:5066:    <div class="field"><label>Aktuális lépés</label><select class="select" name="stepIndex">${["Munkaterv","Felvonulás","Fúrás","Csövezés","Szűrőzés","Kavicsolás","Tömedékelés","Próbaszivattyúzás","Kész kút"].map((x,i)=>`<option value="${i}" ${Number(e.stepIndex)===i?"selected":""}>${i+1}. ${x}</option>`).join("")}</select></div>
+all.js-5067-    <div class="field full"><label>Munkaterv megjegyzés</label><textarea class="textarea" name="note">${esc(e.note||"")}</textarea></div>
+all.js-5068-  </div><div class="modalfoot"><button type="button" class="btn secondary" onclick="closeModal()">Mégse</button><button class="btn">Mentés</button></div></form>`);
+--
+all.js-5674-  openModal("Új munkanapló",`<form onsubmit="saveWorklog(event,'${pid}')"><div class="formgrid">
+all.js-5675-    <div class="field"><label>Dátum</label><input class="input" type="date" name="date" value="${new Date().toISOString().slice(0,10)}" required></div>
+all.js:5676:    <div class="field"><label>Tevékenység</label><select class="select" name="activity"><option>Felvonulás</option><option>Fúrás</option><option>Csövezés</option><option>Szűrőzés</option><option>Kavicsolás</option><option>Tömedékelés</option><option>Próbaszivattyúzás</option><option>Egyéb</option></select></div>
+all.js-5677-    <div class="field"><label>Aktuális mélység (m)</label><input class="input" type="number" step="0.1" name="depth"></div>
+all.js-5678-    <div class="field"><label>Napi fúrás (m)</label><input class="input" type="number" step="0.1" name="dailyMeters"></div>
+--
+all.js-5693-}
+all.js-5694-function worklogStep(activity){
+all.js:5695:  const m={"Felvonulás":1,"Fúrás":2,"Csövezés":3,"Szűrőzés":4,"Kavicsolás":5,"Tömedékelés":6,"Próbaszivattyúzás":7};
+all.js-5696-  return m[activity]??2;
+all.js-5697-}
+--
+all.js-5759-    items:[
+all.js-5760-      {name:"Kútfúrás / kút kivitelezés",quantity:1,unit:"projekt",price:0},
+all.js:5761:      {name:"Csövezés és szűrőzés",quantity:1,unit:"projekt",price:0},
+all.js-5762-      {name:"Kútfej és kapcsolódó szerelvények",quantity:1,unit:"projekt",price:0},
+all.js-5763-      {name:"Vízhozamvizsgálat / próbaszivattyúzás",quantity:1,unit:"projekt",price:0}
+--
+all.js-6083-        <div class="kpi"><span>Tervezett mélység</span><b>${esc(q.depth||"—")}</b></div>
+all.js-6084-        <div class="kpi"><span>Vízhozam</span><b>${esc(q.waterNeed||"—")}</b></div>
+all.js:6085:        <div class="kpi"><span>Béléscső</span><b>${esc(q.pipeDiameter||"—")} ${esc(q.pipeMaterial||"")}</b></div>
+all.js-6086-        ${tech.length?`<div class="tablewrap"><table class="table"><thead><tr><th>Típus</th><th>-tól</th><th>-ig</th><th>Hossz</th><th>Specifikáció</th></tr></thead><tbody>${tech.map(x=>`<tr><td>${esc(x.type)}</td><td>${esc(x.from)}</td><td>${esc(x.to)}</td><td>${esc(x.len)}</td><td>${esc(x.spec)}</td></tr>`).join("")}</tbody></table></div>`:""}
+all.js-6087-      </div>
+--
+all.js-6156-    ["build","📋","Építési napló","A mentett munkanapló napi kivitelezési adataiból és a kapcsolódó létesítési engedélyből."],
+all.js-6157-    ["layers","🪨","Fúrási rétegsor","A munkanapló rétegsora alapján; az egymást követő azonos rétegek összevonásával."],
+all.js:6158:    ["casing","🕳️","Csövezési vázlat","A létesítési engedély műszaki adataiból és a munkanapló csövezési/szűrőzési adataiból."]
+all.js-6159-  ];
+all.js-6160-  const docCards=docs.map(d=>`
+--
+all.js-6238-    <div><h3 style="margin:0">📏 Kútfúrás folyóméter árlista <span class="net-badge">NETTÓ</span></h3>
+all.js-6239-    <div class="label">Az ajánlatokban használt aktuális <b>nettó</b> Ft/m árak.</div></div>
+all.js:6240:    <button class="btn secondary small" onclick="openDrillingPriceList()">Árak szerkesztése</button>
+all.js-6241-   </div>
+all.js-6242-   <div class="tablewrap"><table class="table">
+all.js-6243-    <thead><tr><th>Átmérő</th><th>Aktuális nettó folyóméter ár</th><th>Dokumentáció nélküli folyóméter ár</th><th>Módosítva</th></tr></thead>
+all.js:6244:    <tbody>${db.drillingPriceList.map(r=>`<tr><td><b>Ø ${drillingPriceLabel(r.diameter)} mm</b></td><td>${Number(r.price)?money(r.price)+"/m":"Nincs megadva"}</td><td>${Number(r.undocumentedPrice)?money(r.undocumentedPrice)+"/m":"Nincs megadva"}</td><td>${r.updatedAt?esc(new Date(r.updatedAt).toLocaleDateString("hu-HU")):"—"}</td></tr>`).join("")}</tbody>
+all.js-6245-   </table></div>
+all.js-6246-  </div>
+--
+all.js-6267- </div>`,
+all.js-6268-materials:()=>{
+all.js:6269: ensureDrillingPriceList();ensureStockModel();
+all.js-6270- const items=db.stock,low=items.filter(x=>Number(x.qty||0)<=Number(x.minQty||0)).length,value=stockValue(items),purchases=(db.purchases||[]).filter(x=>x.status!=='Beérkezett').length;
+all.js-6271- return `<div class="raktar-page">
+--
+all.js-6335-  <button type="button" class="btn secondary small" onclick="addWorklogLayerRow()">+ Réteg hozzáadása</button>
+all.js-6336-
+all.js:6337:  <h3 style="margin-top:22px">Kútkiképzés / szűrőzés</h3>
+all.js-6338-  <div class="formgrid">
+all.js-6339-   <div class="field"><label>Vak szakasz -tól (m)</label><input class="input" name="blindFrom" value="${esc(w.blindFrom)}"></div>
+all.js-6340-   <div class="field"><label>Vak szakasz -ig (m)</label><input class="input" name="blindTo" value="${esc(w.blindTo)}"></div>
+all.js:6341:   <div class="field"><label>Szűrő -tól (m)</label><input class="input" name="filterFrom" value="${esc(w.filterFrom)}"></div>
+all.js:6342:   <div class="field"><label>Szűrő -ig (m)</label><input class="input" name="filterTo" value="${esc(w.filterTo)}"></div>
+all.js:6343:   <div class="field"><label>Szűrő hossza (m)</label><input class="input" name="filterLength" value="${esc(w.filterLength)}"></div>
+all.js-6344-  </div>
+all.js-6345-
+--
+all.js-6416-[55,58,"","Közepes/lassú","","57 m-nél agyag"]
+all.js-6417-];
+all.js:6418:const filterData=[[22,31,"Szűrő",""],[40,55,"Szűrő",""]];
+all.js-6419-
+all.js-6420-function addLayer(v=[0,0,"","","",""]){
+--
+all.js-6423- const td=tr.insertCell(); const b=document.createElement("button"); b.className="danger"; b.textContent="×"; b.onclick=()=>tr.remove(); td.appendChild(b);
+all.js-6424-}
+all.js:6425:function addFilter(v=[0,0,"Szűrő",""]){
+all.js-6426- const tr=document.querySelector("#filters tbody").insertRow();
+all.js-6427- v.forEach((x,i)=>{const td=tr.insertCell(); const inp=document.createElement("input"); inp.value=x; inp.type=i<2?"number":"text"; if(i<2) inp.step=".1"; td.appendChild(inp)});
+--
+all.js-6459-   const a=Number(r[0]),b=Number(r[1]); if(!Number.isFinite(a)||!Number.isFinite(b))return;
+all.js-6460-   const el=document.createElement("div"); el.style.cssText=`position:absolute;left:-6px;right:-6px;top:${a*scale}px;height:${(b-a)*scale}px;border:3px solid #1769aa;border-radius:4px;background:#1769aa22;pointer-events:none`;
+all.js:6461:   const tag=document.createElement("span");tag.textContent=" SZŰRŐ";tag.style.cssText="position:absolute;right:4px;top:2px;font-size:10px;font-weight:700;color:#1769aa";el.appendChild(tag);well.appendChild(el);
+all.js-6462- });
+all.js-6463- box.appendChild(well);
+--
+all.js-6689-function openQuoteModalLegacy(customerId){
+all.js-6690- quoteItems=[{desc:"",qty:1,unit:"db",price:0}];
+all.js:6691: quoteTech=[{type:"Csövezés / szűrőzés",from:"",to:"",len:"",spec:""}];
+all.js-6692- const customerOptions=(db.customers||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+all.js-6693- const projectOptions=(db.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} – ${esc(p.name)}</option>`).join("");
+--
+all.js-6727-    <input type="hidden" id="q_pipe_diameter"><input type="hidden" id="q_steel_pipe"><input type="hidden" id="q_pipe_material"><input type="hidden" id="q_purpose">
+all.js-6728-   </div>
+all.js:6729:   <h4>Csövezés / szűrőzés</h4>
+all.js-6730-   <div class="offer-table-wrap"><table class="table"><thead><tr><th>Megnevezés</th><th>Kezdő</th><th>Vég</th><th>Hossz</th><th>Műszaki adat</th><th></th></tr></thead><tbody id="q_tech"></tbody></table></div>
+all.js-6731-   <button type="button" class="btn secondary small" onclick="addQuoteTech()">＋ Műszaki sor</button>
+--
+all.js-6771- const depth=w.permittedDepth??p.permittedDepth??p.plannedDepth??"";
+all.js-6772- const flow=w.permittedFlow??w.designFlow??p.permittedFlow??p.designFlow??"";
+all.js:6773: // Az ajánlati árlista a csőátmérőhöz (béléscsőhöz) tartozó Ft/m árat használja.
+all.js-6774- // A furat/iránycső átmérője (pl. 419/405) ettől külön műszaki adat.
+all.js-6775- const casing=w.casingDiameter??w.casing??p.casingDiameter??"";
+--
+all.js-6830- quoteItems[0].price=depth>0 && meterRate>0 ? depth*meterRate : 0;
+all.js-6831- quoteItems[0].autoCalculated=true;
+all.js:6832: quoteItems[0].priceListDiameter=diameter;
+all.js-6833- quoteItems[0].meterRate=meterRate;
+all.js-6834- if(doRender) renderQuoteEditor();
+all.js-6835-}
+all.js-6836-function addQuoteItem(){quoteItems.push({desc:"",qty:1,unit:"db",price:0});renderQuoteEditor()}
+all.js:6837:function addQuoteTech(){quoteTech.push({type:"Csövezés / szűrőzés",from:"",to:"",len:"",spec:""});renderQuoteEditor()}
+all.js-6838-function updateQuoteTechLength(i){
+all.js-6839- const x=quoteTech?.[i]; if(!x)return;
+--
+all.js-7317-function openQuote(customerId){
+all.js-7318-  quoteItems=[{desc:"",qty:1,unit:"db",price:0}];
+all.js:7319:  quoteTech=[{type:"Csövezés / szűrőzés",from:"",to:"",len:"",spec:""}];
+all.js-7320-  window.editingQuoteId=null;
+all.js-7321-  window.openQuotePageId="";
+--
+all.js-7345-  const casingSections=Array.isArray(w.casingSections)?w.casingSections:[];
+all.js-7346-  const isSteel=x=>String(x?.type||x?.name||"").toLowerCase().includes("acél") || String(x?.type||x?.name||"").toLowerCase().includes("iránycső");
+all.js:7347:  const addSection=(x, fallbackType="Csövezés / szűrőzés")=>{
+all.js-7348-    const fromRaw=String(x?.from??"").trim(), toRaw=String(x?.to??"").trim();
+all.js-7349-    const from=fromRaw!==""?huFormat(fromRaw,1):"", to=toRaw!==""?huFormat(toRaw,1):"";
+--
+all.js-7356-      type:String(x?.type||fallbackType),
+all.js-7357-      from,to,len,
+all.js:7358:      spec:[x?.diameter||w.casingDiameter||w.casing||"",x?.material || (/^szűr/i.test(String(x?.type||"")) || /^cső$/i.test(String(x?.type||"")) ? "KM-PVC" : "")].filter(Boolean).join(" ")
+all.js-7359-    });
+all.js-7360-  };
+--
+all.js-7375-    if(Number.isFinite(from)&&Number.isFinite(to)){
+all.js-7376-      if(from>0) rows.push({type:"Csövezés",from:huFormat(0,1),to:huFormat(from,1),len:huFormat(from,1),spec:casing});
+all.js:7377:      rows.push({type:"Szűrőzés",from:huFormat(from,1),to:huFormat(to,1),len:huFormat(to-from,1),spec:casing});
+all.js-7378-      return rows;
+all.js-7379-    }
+--
+all.js-7381-  if(casing){
+all.js-7382-    const depth=String(w.permittedDepth||project.permittedDepth||"").trim();
+all.js:7383:    rows.push({type:"Csövezés / szűrőzés",from:huFormat(0,1),to:huFormat(depth,1),len:huFormat(depth,1),spec:casing});
+all.js-7384-  }
+all.js-7385-  return rows;
+--
+all.js-7400-   // Ha a régi ajánlatban csak az üres alapértelmezett műszaki sor maradt,
+all.js-7401-   // ne azt tekintsük valódi adatnak: töltsük fel a kapcsolt projekt
+all.js:7402:   // aktuális csövezési / szűrőzési szakaszaival.
+all.js-7403-   // Az üres alapértelmezett sorban a type mező szándékosan nem üres,
+all.js-7404-   // ezért azt önmagában nem szabad valódi műszaki adatnak tekinteni.
+--
+all.js-7406-     const type=String(x.type??"").trim();
+all.js-7407-     const hasValues=[x.from,x.to,x.len,x.spec].some(v=>String(v??"").trim()!=="");
+all.js:7408:     const hasCustomType=type!=="" && type!=="Csövezés / szűrőzés";
+all.js-7409-     return hasValues || hasCustomType;
