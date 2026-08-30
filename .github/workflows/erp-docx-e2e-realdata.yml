@@ -34,17 +34,18 @@ jobs:
               await page.waitForTimeout(1200);
               const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
               if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript)throw new Error('Runtime invariant failed: '+JSON.stringify(runtime));
-              const id=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId='E2E-DOCX-PROJECT-'+Date.now(),quoteId='E2E-DOCX-'+Date.now();d.projects.push({id:projectId,name:'E2E DOCX Project',status:'Ajánlat'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
+              const id=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId='E2E-DOCX-PROJECT-'+Date.now(),quoteId='E2E-DOCX-'+Date.now();if(!Array.isArray(d.customers))d.customers=[];d.customers.push({id:'__e2e__',name:'E2E DOCX Customer'});d.projects.push({id:projectId,name:'E2E DOCX Project',status:'Ajánlat',customerId:'__e2e__'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
               await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
               const persisted=await page.evaluate(qid=>{const d=window.eval('db');return d.quotes.find(x=>String(x.id)===String(qid))?.items?.[0]||null;},id.quoteId);
               if(!persisted||persisted.qty!==2||persisted.unit!=='db'||persisted.price!==125000||persisted.priceManual!==true)throw new Error('Persistence failed');
               await page.evaluate(async qid=>{window.editQuote(qid);await new Promise(r=>setTimeout(r,500));},id.quoteId);
               const model=await page.evaluate(()=>{const x=window.collectQuoteTemplate()?.items?.[0];return {item:x||null,separate:!!(x&&'qty' in x&&'unit' in x&&'desc' in x)};});
               if(!model.separate)throw new Error('DOCX model fields are not separate: '+JSON.stringify(model));
+              await page.evaluate(qid=>{const d=window.eval('db');const q=d.quotes.find(x=>String(x.id)===String(qid));window.customerId=q&&q.customerId||'';},id.quoteId);
               const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX download path unavailable');
               const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string'),text=xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
               if(!text.includes('2 db 50,0 m-es kút kivitelezése')||text.includes('2 db 2 db 50,0 m-es kút kivitelezése'))throw new Error('DOCX text mismatch');
-              await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));s();},id);
+              await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));d.customers=d.customers.filter(x=>String(x.id)!=='__e2e__');s();},id);
               await browser.close();
             }catch(e){try{await browser.close()}catch(_){};throw e;}
           })();
