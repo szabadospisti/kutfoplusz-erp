@@ -1,22 +1,16 @@
 name: ERP DOCX Real Data E2E
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   docx-e2e:
-    if: ${{ !contains(github.event.head_commit.message, '[docx-e2e-result]') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: lts/*
       - name: Install Playwright and JSZip
@@ -25,40 +19,33 @@ jobs:
           npm install --no-save playwright@1.62.0 jszip@3.10.1 >/dev/null 2>&1
           npx playwright install chromium --with-deps >/dev/null 2>&1
       - name: Start static server
+        run: python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
+      - name: Real data quote to DOCX
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/erp-http.log 2>&1 &
-          sleep 2
-      - name: Real data quote -> save -> reload -> DOCX
-        shell: bash
-        run: |
-          set +e
           node <<'NODE'
-          const fs=require('fs');const {chromium}=require('playwright');const JSZip=require('jszip');
-          (async()=>{const browser=await chromium.launch({headless:true});const page=await browser.newPage({acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(String(e&&e.stack||e)));try{
-            await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(1200);
-            const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,previewScripts:Array.from(document.scripts).filter(s=>/quote_preview_(pages|vectors)\\.js/i.test(s.src)).map(s=>s.src)}));
-            if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.previewScripts.length)throw new Error('Runtime invariant failed: '+JSON.stringify(runtime));
-            const setup=await page.evaluate(()=>{const d=window.eval('db');const quotes=Array.isArray(d?.quotes)?d.quotes:[];const base=quotes.find(q=>q&&q.projectId&&(d.projects||[]).some(p=>String(p.id)===String(q.projectId)));if(!base)return {ok:false,error:'No quote with an existing linked project found'};const clone=JSON.parse(JSON.stringify(base));clone.id='E2E-DOCX-'+Date.now();clone.status='Piszkozat';clone.items=Array.isArray(clone.items)?clone.items:[];if(!clone.items.length)clone.items=[{qty:1,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}];clone.items[0]={...clone.items[0],qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true};d.quotes.push(clone);window.eval('save')();return {ok:true,id:clone.id,baseId:base.id,customerId:clone.customerId,projectId:clone.projectId};});
-            if(!setup.ok)throw new Error(setup.error);const id=setup.id;
-            await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(600);
-            const persisted=await page.evaluate(id=>{const d=window.eval('db');const q=d.quotes.find(x=>String(x.id)===String(id));return q?{found:true,customerId:q.customerId,projectId:q.projectId,item:q.items?.[0]}:{found:false};},id);
-            if(!persisted.found)throw new Error('Saved quote not found after reload');
-            if(Number(persisted.item.qty)!==2||String(persisted.item.unit)!=='db'||String(persisted.item.desc)!=='50,0 m-es kút kivitelezése'||Number(persisted.item.price)!==125000||persisted.item.priceManual!==true)throw new Error('Persisted item mismatch: '+JSON.stringify(persisted));
-            const editor=await page.evaluate(async id=>{window.editQuote(id);await new Promise(r=>setTimeout(r,500));return {isArray:Array.isArray(window.quoteItems),items:Array.isArray(window.quoteItems)?window.quoteItems.map(x=>({qty:x.qty,unit:x.unit,desc:x.desc,price:x.price,priceManual:x.priceManual})):null};},id);
-            if(!editor.isArray)throw new Error('Quote editor failed to initialize quoteItems: '+JSON.stringify(editor));
-            const model=await page.evaluate(()=>{const q=window.collectQuoteTemplate();return {item:q?.items?.[0]||null,separate:Boolean(q?.items?.[0]&&'qty' in q.items[0]&&'unit' in q.items[0]&&'desc' in q.items[0])};});
-            if(!model.separate)throw new Error('DOCX model fields are not separate: '+JSON.stringify(model));
-            const dl=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const download=await dl;const path=await download.path();if(!path)throw new Error('DOCX download path unavailable');const buf=fs.readFileSync(path);const zip=await JSZip.loadAsync(buf);const xml=await zip.file('word/document.xml').async('string');const text=xml.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();const expected='2 db 50,0 m-es kút kivitelezése';const duplicate='2 db 2 db 50,0 m-es kút kivitelezése';if(!text.includes(expected)||text.includes(duplicate))throw new Error('DOCX text mismatch: '+JSON.stringify({expected:text.includes(expected),duplicate:text.includes(duplicate)}));
-            await page.evaluate(id=>{const d=window.eval('db');d.quotes=d.quotes.filter(q=>String(q.id)!==String(id));window.eval('save')();},id);
-            const result={ok:true,runtime,persisted,editor,model,docx:{fileName:download.suggestedFilename(),bytes:buf.length,expectedPresent:true,duplicatePresent:false},pageErrors:errors};fs.writeFileSync('DOCX_E2E_RESULT.json',JSON.stringify(result,null,2));await browser.close();
-          }catch(e){fs.writeFileSync('DOCX_E2E_RESULT.json',JSON.stringify({ok:false,error:String(e&&e.stack||e),pageErrors:errors},null,2));try{await browser.close()}catch(_){}process.exit(1)}})();
+          const fs=require('fs');
+          const {chromium}=require('playwright');
+          const JSZip=require('jszip');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({acceptDownloads:true});
+            try{
+              await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.waitForTimeout(1200);
+              const runtime=await page.evaluate(()=>({patch:window.KUTFOPLUSZ_QUOTE_VISUAL_FIX||null,jszip:window.JSZip&&window.JSZip.version||null,save:window.eval('typeof save'),db:window.eval('typeof db'),editQuote:typeof window.editQuote,collect:typeof window.collectQuoteTemplate,exportDocx:typeof window.exportQuoteDoc,obsoletePreviewScript:Array.from(document.scripts).some(s=>/quote_preview_(pages|vectors)\.js/i.test(s.src))}));
+              if(!runtime.patch||runtime.jszip!=='3.10.1'||runtime.save!=='function'||runtime.db!=='object'||runtime.editQuote!=='function'||runtime.collect!=='function'||runtime.exportDocx!=='function'||runtime.obsoletePreviewScript)throw new Error('Runtime invariant failed: '+JSON.stringify(runtime));
+              const id=await page.evaluate(()=>{const d=window.eval('db'),s=window.eval('save');const projectId='E2E-DOCX-PROJECT-'+Date.now(),quoteId='E2E-DOCX-'+Date.now();d.projects.push({id:projectId,name:'E2E DOCX Project',status:'Ajánlat'});d.quotes.push({id:quoteId,customerId:'__e2e__',projectId,status:'Piszkozat',items:[{qty:2,unit:'db',desc:'50,0 m-es kút kivitelezése',price:125000,priceManual:true}]});s();return {projectId,quoteId};});
+              await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(700);
+              const persisted=await page.evaluate(qid=>{const d=window.eval('db');return d.quotes.find(x=>String(x.id)===String(qid))?.items?.[0]||null;},id.quoteId);
+              if(!persisted||persisted.qty!==2||persisted.unit!=='db'||persisted.price!==125000||persisted.priceManual!==true)throw new Error('Persistence failed');
+              await page.evaluate(async qid=>{window.editQuote(qid);await new Promise(r=>setTimeout(r,500));},id.quoteId);
+              const model=await page.evaluate(()=>{const x=window.collectQuoteTemplate()?.items?.[0];return {item:x||null,separate:!!(x&&'qty' in x&&'unit' in x&&'desc' in x)};});
+              if(!model.separate)throw new Error('DOCX model fields are not separate: '+JSON.stringify(model));
+              const dp=page.waitForEvent('download',{timeout:20000});await page.evaluate(()=>window.exportQuoteDoc());const dl=await dp,path=await dl.path();if(!path)throw new Error('DOCX download path unavailable');
+              const buf=fs.readFileSync(path),zip=await JSZip.loadAsync(buf),xml=await zip.file('word/document.xml').async('string'),text=xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+              if(!text.includes('2 db 50,0 m-es kút kivitelezése')||text.includes('2 db 2 db 50,0 m-es kút kivitelezése'))throw new Error('DOCX text mismatch');
+              await page.evaluate(ids=>{const d=window.eval('db'),s=window.eval('save');d.quotes=d.quotes.filter(x=>String(x.id)!==String(ids.quoteId));d.projects=d.projects.filter(x=>String(x.id)!==String(ids.projectId));s();},id);
+              await browser.close();
+            }catch(e){try{await browser.close()}catch(_){};throw e;}
+          })();
           NODE
-          exit $?
-      - name: Commit E2E result
-        if: always()
-        run: |
-          test -f DOCX_E2E_RESULT.json || printf '%s\n' '{"ok":false}' > DOCX_E2E_RESULT.json
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add DOCX_E2E_RESULT.json
-          if ! git diff --cached --quiet; then git commit -m '[docx-e2e-result] capture real-data DOCX E2E result'; git push origin HEAD:main; fi
